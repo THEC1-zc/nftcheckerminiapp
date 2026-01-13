@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner</title>
+    <script type="module">
+        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+        const run = async () => { await sdk.actions.ready(); };
+        run();
+    </script>
+    <style>
+        /* STILI IDENTICI A PRIMA + TASTO BACK */
+        :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --green: #2ecc71; --red: #ff4757; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        
+        .nav-header { width: 100%; max-width: 600px; display: flex; align-items: center; margin-bottom: 20px; }
+        .back-btn { text-decoration: none; color: #666; font-weight: 600; display: flex; align-items: center; gap: 5px; font-size: 14px; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .back-btn:hover { color: var(--primary); }
+
+        .container { background: var(--card-bg); padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; }
+        h1 { margin-top: 0; text-align: center; }
+        
+        /* ... Stili CSS precedenti per input e tabelle ... */
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 14px; border: 2px solid #e1e4e8; border-radius: 12px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { background-color: var(--primary); color: white; border: none; padding: 14px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+        td { padding: 15px; background: #fff; border: 1px solid #f0f0f0; }
+        tr td:first-child { border-left: 1px solid #f0f0f0; border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+        tr td:last-child { border-right: 1px solid #f0f0f0; border-top-right-radius: 10px; border-bottom-right-radius: 10px; text-align: right; }
+        .badge { padding: 5px 12px; border-radius: 20px; color: white; font-weight: bold; }
+        .badge.green { background: var(--green); } .badge.red { background: var(--bg); color: #ccc; }
+        #status { text-align: center; margin: 15px 0; font-weight: 600; color: var(--primary); min-height: 20px;}
+    </style>
+</head>
+<body>
+
+    <div class="nav-header">
+        <a href="index.html" class="back-btn">⬅ Menu</a>
+    </div>
+
+    <div class="container">
+        <h1>NFT Scanner</h1>
+        <div class="input-group">
+            <input type="text" id="walletInput" placeholder="Wallet Address (0x...)" />
+            <button id="btnAction">Check</button>
+        </div>
+        <div id="status"></div>
+        <table id="resultsTable"><tbody id="resultsBody"></tbody></table>
+    </div>
+
+    <script>
+        /* IL TUO SCRIPT FUNZIONANTE v17 */
+        const API_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
+        const TARGETS = { "0x160650efd60032aa49bbec70920a870aacffdc39": "HOWLERS", "0x1c07bd01467c240b3f15f1c17924bb192888cc1b": "GRATITOAD", "0x09049cb63dfce2011f892561904fc1cf17d92d88": "FIRST THANKS", "0x0f302b8c1aa90b49b066423317567525523be863": "MRDOOMROBOT" };
+
+        document.getElementById('btnAction').addEventListener('click', runScan);
+        async function runScan() {
+            const wallet = document.getElementById('walletInput').value.trim();
+            const status = document.getElementById('status');
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = "";
+            if (!wallet.startsWith('0x')) { status.innerText = "Invalid Wallet"; return; }
+            status.innerText = "Scanning...";
+            
+            try {
+                let allNfts = [], pageKey = null, count = 0;
+                do {
+                    if(++count > 50) break;
+                    let url = `https://base-mainnet.g.alchemy.com/nft/v3/${API_KEY}/getNFTsForOwner?owner=${wallet}&withMetadata=true&pageSize=100` + (pageKey ? `&pageKey=${pageKey}` : "");
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    if (data.ownedNfts) allNfts = allNfts.concat(data.ownedNfts);
+                    pageKey = data.pageKey;
+                } while(pageKey);
+
+                let counts = {}; for (let t in TARGETS) counts[t] = 0;
+                allNfts.forEach(n => {
+                    if (n.contract?.address) {
+                        let a = n.contract.address.toLowerCase();
+                        if (TARGETS[a]) counts[a] += (n.balance ? parseInt(n.balance) : 1);
+                    }
+                });
+
+                for (let [a, n] of Object.entries(TARGETS)) {
+                    let c = counts[a];
+                    tbody.innerHTML += `<tr><td><strong>${n}</strong><br><small>${a.slice(0,6)}...</small></td><td><span class="badge ${c>0?'green':'red'}">${c}</span></td></tr>`;
+                }
+                status.innerText = "Done ✅";
+            } catch (e) { status.innerText = "Error"; console.error(e); }
+        }
+    </script>
+</body>
+</html>
