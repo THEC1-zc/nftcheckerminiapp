@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Analyzer</title>
+    <title>Master Analyzer 2.0</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -88,8 +88,8 @@
         </div>
 
         <div class="btn-group">
-            <button class="btn-fast" id="btnFast">⚡ Last 50 (Fast)</button>
-            <button class="btn-full" id="btnFull">🐢 All History (Slow)</button>
+            <button class="btn-fast" id="btnFast">⚡ Last 100</button>
+            <button class="btn-full" id="btnFull">🐢 All History</button>
         </div>
         
         <div id="status"></div>
@@ -136,10 +136,11 @@
     <script>
         const API_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
 
-        document.getElementById('btnFast').addEventListener('click', () => runAnalysis('fast'));
-        document.getElementById('btnFull').addEventListener('click', () => runAnalysis('full'));
+        // Unified Listeners
+        document.getElementById('btnFast').addEventListener('click', () => runAnalysis(100)); // Test 100
+        document.getElementById('btnFull').addEventListener('click', () => runAnalysis(5000)); // Try 5000
 
-        async function runAnalysis(mode) {
+        async function runAnalysis(limitMode) {
             const wallet = document.getElementById('walletInput').value.trim().toLowerCase();
             const tokenCA = document.getElementById('tokenInput').value.trim().toLowerCase();
             const status = document.getElementById('status');
@@ -152,35 +153,29 @@
             if (!wallet.startsWith('0x') || !tokenCA.startsWith('0x')) return errorStatus("Invalid Address");
 
             try {
-                // 1. FETCH TRANSACTIONS
-                let rawTxs = [];
-                if (mode === 'fast') {
-                    status.innerText = "Fetching recent activity...";
-                    status.style.color = "#0052FF";
-                    rawTxs = await fetchTransfers(wallet, tokenCA, 50); 
-                } else {
-                    status.innerText = "Downloading ALL history (This takes time)...";
-                    status.style.color = "#e67e22"; 
-                    // Use a large number to trigger full fetch mode logic
-                    rawTxs = await fetchTransfers(wallet, tokenCA, 999999); 
-                }
+                // 1. FETCH TRANSACTIONS (Unified Logic)
+                status.innerText = `Fetching last ${limitMode} transactions...`;
+                status.style.color = "#0052FF";
+                
+                // We use the same function for both, just different limits
+                const rawTxs = await fetchUnifiedTransfers(wallet, tokenCA, limitMode);
 
                 if (rawTxs.length === 0) return errorStatus("No transactions found.");
 
-                status.innerText = `Inspecting ${rawTxs.length} receipts... (0%)`;
+                status.innerText = `Analyzing ${rawTxs.length} receipts...`;
                 
                 // 2. ANALYZE RECEIPTS (Deep Logic)
                 let totals = { buy: 0, sell: 0, receive: 0, send: 0 };
                 let tokenSymbol = "TOKEN";
                 const tbody = document.getElementById('txList');
                 
-                // Process in batches
                 const batchSize = 5;
                 for (let i = 0; i < rawTxs.length; i += batchSize) {
                     const batch = rawTxs.slice(i, i + batchSize);
                     
+                    // Show progress
                     const pct = Math.round((i / rawTxs.length) * 100);
-                    if (mode === 'full') status.innerText = `Analyzing Deep Logic... ${pct}%`;
+                    if (rawTxs.length > 200) status.innerText = `Deep Analyzing... ${pct}%`;
 
                     await Promise.all(batch.map(async (tx) => {
                         const val = parseFloat(tx.value);
@@ -197,8 +192,8 @@
                         else if (category === 'RECEIVE') totals.receive += val;
                         else if (category === 'SEND') totals.send += val;
 
-                        // UI: Show only first 50 in table to save memory
-                        if (i < 50) {
+                        // UI: Show only first 100 in table to save memory
+                        if (i < 100) {
                             const dateObj = new Date(tx.metadata.blockTimestamp);
                             let badgeClass = "";
                             if(category === 'BUY') badgeClass = 'bg-buy';
@@ -223,8 +218,8 @@
                     }));
                 }
 
-                if (rawTxs.length > 50) {
-                    tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="2" style="text-align:center;color:#999">... and ${rawTxs.length - 50} more (calculated but hidden)</td></tr>`);
+                if (rawTxs.length > 100) {
+                    tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="2" style="text-align:center;color:#999">... and ${rawTxs.length - 100} more (calculated but hidden)</td></tr>`);
                 }
 
                 // 3. GET PRICE
@@ -259,7 +254,7 @@
                 status.innerText = "Complete ✅";
                 status.style.color = "#2ecc71";
 
-            } catch (err) { console.error(err); errorStatus("Analysis Error. Try again."); }
+            } catch (err) { console.error(err); errorStatus("Analysis Error: " + err.message); }
         }
 
         // --- CORE LOGIC: DID I PAY? ---
@@ -291,10 +286,8 @@
                     const isToMe = log.topics[2] && log.topics[2].toLowerCase() === walletTopic;
 
                     if (isTargetIn) {
-                        // Logic: I received Target. Did I send anything else out?
                         if (!isTargetToken && isFromMe) hasOtherOut = true;
                     } else {
-                        // Logic: I sent Target. Did I receive anything else in?
                         if (!isTargetToken && isToMe) hasOtherIn = true;
                     }
                 }
@@ -305,106 +298,78 @@
             } catch (e) { return isTargetIn ? 'RECEIVE' : 'SEND'; }
         }
 
-        // --- FETCHING LOGIC (ROBUST PAGINATION) ---
-        async function fetchTransfers(walletAddr, tokenAddr, limit) {
-            // Fast mode logic
-            if (limit <= 100) {
-                return await fetchFastMode(walletAddr, tokenAddr, limit);
-            }
-            // Full history logic
-            return await fetchAllHistory(walletAddr, tokenAddr);
-        }
-
-        async function fetchFastMode(wallet, token, limit) {
-            const params = { 
-                "fromBlock": "0x0", "toBlock": "latest", 
-                "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, 
-                "contractAddresses": [token],
-                "maxCount": "0x" + limit.toString(16),
-                "order": "desc" 
-            };
-            
-            const [inTxs, outTxs] = await Promise.all([
-                fetchAlchemyDirection(wallet, token, params, 'to'),
-                fetchAlchemyDirection(wallet, token, params, 'from')
-            ]);
-
-            return [...inTxs, ...outTxs]
-                .sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16))
-                .slice(0, limit);
-        }
-
-        async function fetchAllHistory(wallet, token) {
+        // --- NEW UNIFIED FETCH FUNCTION ---
+        // Loops until it hits the 'limit' or runs out of history
+        async function fetchUnifiedTransfers(walletAddr, tokenAddr, limit) {
             const status = document.getElementById('status');
-            let totalFetched = 0;
-
-            const baseParams = { 
-                "fromBlock": "0x0", "toBlock": "latest", 
-                "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, 
-                "contractAddresses": [token]
-            };
-
-            const fetchAllPages = async (direction) => {
-                let allTx = [];
+            
+            // Helper to fetch one direction (IN or OUT) with pagination loop
+            const fetchDirectionLoop = async (direction) => {
+                let accumulated = [];
                 let pageKey = null;
-                let loopCount = 0;
                 
+                // Alchemy allows us to ask for "latest first" using order: desc
+                // We loop until we have enough to satisfy the limit or no more data
                 do {
-                    loopCount++;
-                    if (loopCount % 2 === 0) {
-                        status.innerText = `Fetching history... (${totalFetched} found)`;
-                    }
+                    const params = { 
+                        "fromBlock": "0x0", 
+                        "toBlock": "latest", 
+                        "category": ["erc20"], 
+                        "withMetadata": true, 
+                        "excludeZeroValue": true, 
+                        "contractAddresses": [tokenAddr],
+                        "order": "desc", // Latest first
+                        "maxCount": "0x3e8" // Ask for 1000 at a time (hex 3e8)
+                    };
 
-                    const params = { ...baseParams };
-                    if (pageKey) params.pageKey = pageKey;
+                    if (direction === 'to') params.toAddress = walletAddr;
+                    else params.fromAddress = walletAddr;
                     
-                    // Construct payload manually to handle pagination
-                    const payload = { ...params };
-                    if (direction === 'to') payload.toAddress = wallet;
-                    else payload.fromAddress = wallet;
+                    if (pageKey) params.pageKey = pageKey;
 
-                    const apiRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
                         method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [payload] })
+                        body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] })
                     });
                     
-                    const data = await apiRes.json();
-                    if (!data.result) break;
-
-                    const txs = data.result.transfers || [];
-                    allTx = allTx.concat(txs);
-                    totalFetched += txs.length;
+                    const d = await res.json();
+                    if (!d.result) break;
                     
-                    pageKey = data.result.pageKey; 
+                    const newTxs = d.result.transfers || [];
+                    accumulated = accumulated.concat(newTxs);
+                    
+                    // Update Page Key for next loop
+                    pageKey = d.result.pageKey;
+
+                    // Update UI status slightly
+                    if(accumulated.length % 500 === 0) {
+                        status.innerText = `Found ${accumulated.length} ${direction === 'to' ? 'IN' : 'OUT'} txs...`;
+                    }
+
+                    // SAFETY BREAK: If we have way more than the limit for this single direction, stop.
+                    // (We fetch a bit more than limit to be safe before sorting)
+                    if (accumulated.length >= limit) break;
 
                 } while (pageKey);
 
-                return allTx;
+                return accumulated;
             };
 
-            status.innerText = "Downloading Inbound & Outbound streams...";
-            
+            // Run both directions in parallel
+            status.innerText = "Downloading IN/OUT streams...";
             const [inTxs, outTxs] = await Promise.all([
-                fetchAllPages('to'),
-                fetchAllPages('from')
+                fetchDirectionLoop('to'),
+                fetchDirectionLoop('from')
             ]);
 
-            status.innerText = `Found ${inTxs.length + outTxs.length} txs. Sorting...`;
+            // Combine
+            const allTxs = [...inTxs, ...outTxs];
+            
+            // Sort by Block Number Descending (Newest first)
+            allTxs.sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16));
 
-            return [...inTxs, ...outTxs].sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16));
-        }
-
-        async function fetchAlchemyDirection(wallet, token, params, direction) {
-            const p = { ...params };
-            if (direction === 'to') p.toAddress = wallet;
-            else p.fromAddress = wallet;
-
-            const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [p] })
-            });
-            const d = await res.json();
-            return d.result ? d.result.transfers : [];
+            // Slice to exact limit requested
+            return allTxs.slice(0, limit);
         }
 
         // --- HELPERS ---
