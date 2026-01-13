@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Analyzer 3.6 (No Dollar Sign)</title>
+    <title>Master Analyzer 3.7 (Deep Scan)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -267,10 +267,10 @@
             } catch (err) { console.error(err); errorStatus("Analysis Error: " + err.message); }
         }
 
-        // --- IMPROVED STAKED SEARCH (Clean Text: No $) ---
+        // --- DEEP STAKED SEARCH (Pagination + Extended Prefixes) ---
         async function checkStakedBalance(wallet, mainTokenCA) {
             try {
-                // 1. Get Official Symbol of Main Token
+                // 1. Get Official Symbol
                 const metaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -283,67 +283,98 @@
 
                 if (!mainSymbol) return;
 
-                // CLEAN THE SYMBOL (Remove $ if present, trim spaces)
                 const cleanMain = mainSymbol.replace('$', '').trim().toLowerCase();
                 const displayTicker = cleanMain.toUpperCase(); 
 
-                // 2. UPDATE UI: Clean message without dollar sign
                 document.getElementById('valStacked').innerText = `Scanning st/stk${displayTicker}...`;
-                
-                // 3. Fetch ALL Token Balances
-                const balRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances",
-                        "params": [wallet]
-                    })
-                });
-                const balData = await balRes.json();
-                const tokens = balData.result?.tokenBalances || [];
+                console.log(`[STAKED] Looking for variants of: ${cleanMain}`);
+
+                // 2. Fetch ALL Token Balances (with Pagination)
+                let allTokens = [];
+                let pageKey = null;
+                let safetyLoop = 0;
+
+                do {
+                    safetyLoop++;
+                    const balParams = { "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", "params": [wallet] };
+                    if (pageKey) balParams.params.push({ pageKey: pageKey });
+
+                    const balRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(balParams)
+                    });
+                    const balData = await balRes.json();
+                    
+                    if (balData.result?.tokenBalances) {
+                        allTokens = allTokens.concat(balData.result.tokenBalances);
+                    }
+                    
+                    pageKey = balData.result?.pageKey;
+                    // Limit deep scan to 5 pages (approx 500 tokens) to prevent rate limits
+                    if (safetyLoop > 5) break; 
+
+                } while (pageKey);
+
+                console.log(`[STAKED] Total tokens found in wallet: ${allTokens.length}`);
 
                 let foundBalance = 0;
                 let foundSymbol = "";
 
-                // 4. Scan tokens with FUZZY MATCH logic
-                for (const t of tokens) {
+                // 3. Scan tokens with ROBUST FUZZY MATCH logic
+                for (const t of allTokens) {
+                    // Skip zero balance or the main token itself
                     if (t.tokenBalance === "0x0000000000000000000000000000000000000000000000000000000000000000") continue;
+                    if (t.contractAddress.toLowerCase() === mainTokenCA.toLowerCase()) continue;
 
-                    const tMetaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                        method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenMetadata",
-                            "params": [t.contractAddress]
-                        })
-                    });
-                    const tMeta = await tMetaRes.json();
-                    let sym = tMeta.result?.symbol || "";
-                    
-                    const cleanCand = sym.replace('$', '').trim().toLowerCase();
+                    try {
+                        const tMetaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                            method: "POST", headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenMetadata",
+                                "params": [t.contractAddress]
+                            })
+                        });
+                        const tMeta = await tMetaRes.json();
+                        let sym = tMeta.result?.symbol || "";
+                        
+                        const cleanCand = sym.replace('$', '').trim().toLowerCase();
+                        
+                        // Debug log for checking what we see (visible in F12)
+                        if (cleanCand.includes(cleanMain)) console.log(`[STAKED] Candidate found: ${cleanCand}`);
 
-                    // LOGIC: Matches *BANGER but starts with st/stk/x/v/w
-                    if (cleanCand !== cleanMain && cleanCand.includes(cleanMain)) {
-                        const isStaked = cleanCand.startsWith('st') || 
-                                         cleanCand.startsWith('x') || 
-                                         cleanCand.startsWith('v') || 
-                                         cleanCand.startsWith('w');
+                        // LOGIC: Contains ticker AND starts with common defi prefixes
+                        if (cleanCand.includes(cleanMain)) {
+                            
+                            const isStaked = cleanCand.startsWith('st') || 
+                                             cleanCand.startsWith('x') || 
+                                             cleanCand.startsWith('v') || 
+                                             cleanCand.startsWith('w') || 
+                                             cleanCand.startsWith('es') || // Escrowed
+                                             cleanCand.startsWith('s') ||  // Simple Staked
+                                             cleanCand.startsWith('g') ||  // Governance
+                                             cleanCand.startsWith('rl');   // Relocked
 
-                        if (isStaked) {
-                            const decimals = tMeta.result.decimals || 18;
-                            const raw = parseInt(t.tokenBalance, 16);
-                            foundBalance = raw / Math.pow(10, decimals);
-                            foundSymbol = sym;
-                            break; // Stop at first match
+                            if (isStaked) {
+                                const decimals = tMeta.result.decimals || 18;
+                                const raw = parseInt(t.tokenBalance, 16);
+                                foundBalance = raw / Math.pow(10, decimals);
+                                foundSymbol = sym;
+                                console.log(`[STAKED] MATCH! ${sym}`);
+                                break; // Stop at first match
+                            }
                         }
+                    } catch (err) {
+                        // Ignore individual token fetch errors to keep loop alive
+                        continue;
                     }
                 }
 
-                // 5. Update UI Result
+                // 4. Update UI Result
                 if (foundSymbol) {
                     document.getElementById('qtyStacked').innerText = formatShort(foundBalance) + " " + foundSymbol;
                     document.getElementById('valStacked').innerText = "Found in Wallet";
                 } else {
                     document.getElementById('qtyStacked').innerText = "0";
-                    // ERROR MESSAGE FIX: Clean text without dollar sign
                     document.getElementById('valStacked').innerText = `No st/stk${displayTicker} found`;
                 }
 
