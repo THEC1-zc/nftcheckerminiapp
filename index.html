@@ -3,294 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base NFT Tracker</title>
+    <title>TYSM Ecosystem Hub</title>
     
-    <meta property="og:title" content="Base NFT Portfolio Scanner" />
-    <meta property="og:description" content="Check your holdings for Howlers, Gratitoad, First Thanks & MrDoomRobot instantly." />
-    <meta property="og:image" content="https://placehold.co/600x400/0052FF/ffffff?text=Base+NFT+Scanner" />
-    
+    <meta property="og:image" content="https://nftcheckerminiapp.vercel.app/icon.png" />
     <meta name="fc:miniapp" content='{
         "version": "1",
-        "imageUrl": "https://placehold.co/600x400/0052FF/ffffff?text=Base+NFT+Scanner",
+        "imageUrl": "https://nftcheckerminiapp.vercel.app/icon.png",
         "button": {
-            "title": "🚀 Launch Scanner",
+            "title": "🚀 Open Hub",
             "action": {
                 "type": "launch_miniapp",
-                "name": "Base NFT Tracker",
+                "name": "TYSM Hub",
                 "url": "https://nftcheckerminiapp.vercel.app",
-                "splashImageUrl": "https://placehold.co/200x200/0052FF/ffffff?text=Loading",
+                "splashImageUrl": "https://nftcheckerminiapp.vercel.app/icon.png",
                 "splashBackgroundColor": "#0052FF"
             }
         }
     }' />
+    <meta name="fc:frame" content='{"version":"1","imageUrl":"https://nftcheckerminiapp.vercel.app/icon.png","button":{"title":"🚀 Open Hub","action":{"type":"launch_frame","name":"TYSM Hub","url":"https://nftcheckerminiapp.vercel.app","splashImageUrl":"https://nftcheckerminiapp.vercel.app/icon.png","splashBackgroundColor":"#0052FF"}}}' />
 
-    <meta name="fc:frame" content='{
-        "version": "1",
-        "imageUrl": "https://placehold.co/600x400/0052FF/ffffff?text=Base+NFT+Scanner",
-        "button": {
-            "title": "🚀 Launch Scanner",
-            "action": {
-                "type": "launch_frame",
-                "name": "Base NFT Tracker",
-                "url": "https://nftcheckerminiapp.vercel.app",
-                "splashImageUrl": "https://placehold.co/200x200/0052FF/ffffff?text=Loading",
-                "splashBackgroundColor": "#0052FF"
-            }
-        }
-    }' />
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-        const run = async () => {
-            // Segnale che l'app è pronta (Rimuove lo splash screen)
-            await sdk.actions.ready();
-        };
+        const run = async () => { await sdk.actions.ready(); };
         run();
     </script>
 
     <style>
-        :root {
-            --primary: #0052FF;
-            --bg: #f5f5f7;
-            --card-bg: #ffffff;
-            --text: #1a1a1a;
-            --green: #2ecc71;
-            --red: #ff4757;
-        }
+        :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 40px 20px; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        
+        .header { text-align: center; margin-bottom: 40px; }
+        .logo { width: 80px; height: 80px; background: white; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); object-fit: contain; }
+        h1 { margin: 0; font-size: 24px; letter-spacing: -0.5px; }
+        p { color: #666; margin-top: 5px; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
-            margin: 0;
-        }
-
-        h1 { margin-bottom: 5px; color: #333; letter-spacing: -0.5px; }
-        p.subtitle { color: #666; margin-bottom: 40px; font-size: 1rem; }
-
-        .container {
+        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
+        
+        .menu-card {
             background: var(--card-bg);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.06);
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .input-group {
+            padding: 25px;
+            border-radius: 16px;
+            text-decoration: none;
+            color: var(--text);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
             display: flex;
-            gap: 12px;
-            margin-bottom: 30px;
-        }
-
-        input {
-            flex: 1;
-            padding: 16px;
-            border: 2px solid #e1e4e8;
-            border-radius: 12px;
-            font-size: 16px;
-            transition: border-color 0.2s;
-            outline: none;
-            background: #fafafa;
-        }
-
-        input:focus { border-color: var(--primary); background: #fff; }
-
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 16px;
-            transition: transform 0.1s, opacity 0.2s;
-            box-shadow: 0 4px 12px rgba(0, 82, 255, 0.2);
-        }
-
-        button:hover { opacity: 0.95; transform: translateY(-1px); }
-        button:active { transform: scale(0.98); }
-
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 12px;
-        }
-
-        td {
-            padding: 20px;
-            background: #fff;
-            border: 1px solid #f0f0f0;
-            vertical-align: middle;
+            align-items: center;
+            gap: 15px;
+            border: 2px solid transparent;
         }
         
-        tr td:first-child {
-            border-right: none;
-            border-top-left-radius: 16px;
-            border-bottom-left-radius: 16px;
-        }
-
-        tr td:last-child {
-            border-left: none;
-            border-top-right-radius: 16px;
-            border-bottom-right-radius: 16px;
-            text-align: right;
-        }
-
-        .collection-name {
-            font-weight: 700;
-            font-size: 1.1rem;
-            display: block;
-            color: #2c3e50;
-        }
-
-        .collection-addr {
-            font-family: 'SF Mono', 'Roboto Mono', monospace;
-            color: #95a5a6;
-            font-size: 0.75rem;
-            margin-top: 6px;
-            display: block;
-            letter-spacing: 0.5px;
-        }
-
-        .badge {
-            padding: 8px 18px;
-            border-radius: 30px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: white;
-            display: inline-block;
-            min-width: 40px;
-            text-align: center;
-        }
-
-        .badge.green {
-            background-color: var(--green);
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-        }
-
-        .badge.red {
-            background-color: var(--bg);
-            color: #bdc3c7;
-            font-size: 1rem;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        #status {
-            text-align: center;
-            color: var(--primary);
-            font-weight: 600;
-            margin: 20px 0;
-            min-height: 24px;
-            font-size: 0.95rem;
-        }
+        .menu-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,82,255,0.15); border-color: var(--primary); }
+        .icon { font-size: 28px; background: #eff4ff; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+        .title { font-weight: 700; font-size: 18px; display: block; }
+        .desc { font-size: 13px; color: #888; display: block; margin-top: 2px; }
     </style>
 </head>
 <body>
 
-    <h1>Base Portfolio Tracker</h1>
-    <p class="subtitle">Real-time asset analysis and tracking</p>
-
-    <div class="container">
-        <div class="input-group">
-            <input type="text" id="walletInput" placeholder="Paste Wallet Address (0x...)" />
-            <button id="btnAction">Analyze</button>
-        </div>
-
-        <div id="status"></div>
-
-        <table id="resultsTable">
-            <tbody id="resultsBody"></tbody>
-        </table>
+    <div class="header">
+        <img src="icon.png" class="logo" alt="Logo">
+        <h1>TYSM Ecosystem</h1>
+        <p>Select a tool to start</p>
     </div>
 
-    <script>
-        const API_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
-        
-        const TARGETS = {
-            "0x160650efd60032aa49bbec70920a870aacffdc39": "HOWLERS",
-            "0x1c07bd01467c240b3f15f1c17924bb192888cc1b": "GRATITOAD",
-            "0x09049cb63dfce2011f892561904fc1cf17d92d88": "FIRST THANKS",
-            "0x0f302b8c1aa90b49b066423317567525523be863": "MRDOOMROBOT"
-        };
+    <div class="menu-grid">
+        <a href="scanner.html" class="menu-card">
+            <div class="icon">💎</div>
+            <div>
+                <span class="title">TYSM NFTs</span>
+                <span class="desc">Check your NFT Holdings</span>
+            </div>
+        </a>
 
-        document.getElementById('btnAction').addEventListener('click', runScan);
-        document.getElementById('walletInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') runScan();
-        });
+        <a href="txs.html" class="menu-card">
+            <div class="icon">🧾</div>
+            <div>
+                <span class="title">Check your TXs</span>
+                <span class="desc">Analyze wallet history</span>
+            </div>
+        </a>
+    </div>
 
-        async function runScan() {
-            const wallet = document.getElementById('walletInput').value.trim();
-            const status = document.getElementById('status');
-            const tbody = document.getElementById('resultsBody');
-            
-            tbody.innerHTML = "";
-            status.style.color = "#0052FF"; 
-            
-            if (!wallet || !wallet.startsWith('0x')) {
-                status.innerText = "⚠️ Please enter a valid wallet address";
-                status.style.color = "#ff4757";
-                return;
-            }
-
-            status.innerText = "Connecting to Blockchain...";
-            let allNfts = [];
-            let pageKey = null;
-            let pageCount = 0;
-            const MAX_PAGES = 50; 
-
-            try {
-                do {
-                    pageCount++;
-                    if (pageCount > MAX_PAGES) break;
-                    if (pageCount > 1) status.innerText = `Downloading page ${pageCount}...`;
-                    
-                    let url = `https://base-mainnet.g.alchemy.com/nft/v3/${API_KEY}/getNFTsForOwner?owner=${wallet}&withMetadata=true&pageSize=100`;
-                    if (pageKey) url += `&pageKey=${pageKey}`;
-
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error("API Connection Error");
-                    
-                    const data = await res.json();
-                    if (data.ownedNfts) allNfts = allNfts.concat(data.ownedNfts);
-                    pageKey = data.pageKey;
-                } while(pageKey);
-
-                status.innerText = "Processing quantities...";
-                let counts = {};
-                for (let t in TARGETS) counts[t] = 0;
-
-                allNfts.forEach(nft => {
-                    if (nft && nft.contract && nft.contract.address) {
-                        let addr = nft.contract.address.toLowerCase();
-                        if (TARGETS[addr]) {
-                            // Check for ERC-1155 balance, otherwise assume 1
-                            let qty = nft.balance ? parseInt(nft.balance) : 1;
-                            counts[addr] += qty;
-                        }
-                    }
-                });
-
-                for (let [addr, name] of Object.entries(TARGETS)) {
-                    let finalCount = counts[addr];
-                    let badgeClass = finalCount > 0 ? "badge green" : "badge red";
-                    let row = `<tr><td><span class="collection-name">${name}</span><span class="collection-addr">${addr.slice(0,6)}...${addr.slice(-4)}</span></td><td><span class="${badgeClass}">${finalCount}</span></td></tr>`;
-                    tbody.innerHTML += row;
-                }
-
-                status.innerText = "Scan completed successfully ✅";
-                status.style.color = "#2ecc71"; 
-
-            } catch (err) {
-                console.error(err);
-                status.innerText = "❌ An error occurred.";
-                status.style.color = "#ff4757";
-            }
-        }
-    </script>
 </body>
 </html>
