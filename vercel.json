@@ -17,5 +17,12 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/.well-known/farcaster.json",
+      "destination": "https://api.farcaster.xyz/miniapps/hosted-manifest/019bb733-2b3f-1718-c9c1-0b86225c2a06",
+      "permanent": false
+    }
   ]
 }
