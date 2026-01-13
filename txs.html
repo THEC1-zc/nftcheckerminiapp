@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Analyzer 3.5 (st/stk Fix)</title>
+    <title>Master Analyzer 3.6 (No Dollar Sign)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -267,7 +267,7 @@
             } catch (err) { console.error(err); errorStatus("Analysis Error: " + err.message); }
         }
 
-        // --- IMPROVED STAKED SEARCH (Visual Feedback $st/$stk) ---
+        // --- IMPROVED STAKED SEARCH (Clean Text: No $) ---
         async function checkStakedBalance(wallet, mainTokenCA) {
             try {
                 // 1. Get Official Symbol of Main Token
@@ -287,8 +287,8 @@
                 const cleanMain = mainSymbol.replace('$', '').trim().toLowerCase();
                 const displayTicker = cleanMain.toUpperCase(); 
 
-                // 2. UPDATE UI: Show "Scanning $st/$stk..."
-                document.getElementById('valStacked').innerText = `Scanning $st/$stk${displayTicker}...`;
+                // 2. UPDATE UI: Clean message without dollar sign
+                document.getElementById('valStacked').innerText = `Scanning st/stk${displayTicker}...`;
                 
                 // 3. Fetch ALL Token Balances
                 const balRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
@@ -343,8 +343,8 @@
                     document.getElementById('valStacked').innerText = "Found in Wallet";
                 } else {
                     document.getElementById('qtyStacked').innerText = "0";
-                    // ERROR MESSAGE FIX:
-                    document.getElementById('valStacked').innerText = `No $st/$stk${displayTicker} found`;
+                    // ERROR MESSAGE FIX: Clean text without dollar sign
+                    document.getElementById('valStacked').innerText = `No st/stk${displayTicker} found`;
                 }
 
             } catch(e) { console.error("Staked check failed", e); }
