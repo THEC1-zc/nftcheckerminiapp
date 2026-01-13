@@ -14,7 +14,6 @@
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            /* BACKGROUND CONFIGURATION */
             background-color: var(--bg);
             background-image: url('back.png');
             background-size: cover;
@@ -34,11 +33,26 @@
         .back-btn { text-decoration: none; color: #666; font-weight: 600; display: flex; align-items: center; gap: 5px; font-size: 14px; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .back-btn:hover { color: var(--primary); }
         
-        .wallet-badge { font-size: 0.75rem; background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 10px; color: #0052FF; font-weight: bold; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* IDENTITY BADGE */
+        .identity-badge { 
+            font-size: 0.75rem; 
+            background: rgba(255,255,255,0.95); 
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            color: var(--primary); 
+            font-weight: 700; 
+            display: none; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+            border: 1px solid rgba(0,82,255,0.1);
+        }
 
         .container { background: var(--card-bg); padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; }
         h1 { margin-top: 0; text-align: center; }
         
+        .label-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.75rem; font-weight: 600; color: #666; text-transform: uppercase; }
+        .clear-link { color: var(--primary); cursor: pointer; text-decoration: none; font-weight: 700; opacity: 0.8; }
+        .clear-link:hover { opacity: 1; text-decoration: underline; }
+
         .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
         input { flex: 1; padding: 14px; border: 2px solid #e1e4e8; border-radius: 12px; outline: none; background: #fafafa; }
         input:focus { border-color: var(--primary); background: #fff; }
@@ -60,13 +74,19 @@
 
     <div class="nav-header">
         <a href="index.html" class="back-btn">⬅ Menu</a>
-        <div id="walletBadge" class="wallet-badge"></div>
+        <div id="identityBadge" class="identity-badge"></div>
     </div>
 
     <div class="container">
         <h1>NFT Scanner</h1>
+        
+        <div class="label-row">
+            <span>Target Wallet</span>
+            <span id="btnClearWallet" class="clear-link">Change 🔄</span>
+        </div>
+
         <div class="input-group">
-            <input type="text" id="walletInput" placeholder="Wallet Address (0x...)" />
+            <input type="text" id="walletInput" placeholder="0x..." />
             <button id="btnAction">Check</button>
         </div>
         <div id="status"></div>
@@ -82,27 +102,44 @@
             "0x0f302b8c1aa90b49b066423317567525523be863": "MRDOOMROBOT" 
         };
 
-        // --- CHECK LOGIN STATE ---
+        // --- GESTIONE IDENTITA' E TARGET ---
         window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            let wallet = urlParams.get('wallet');
-
-            if (!wallet) {
-                wallet = localStorage.getItem('tysm_wallet');
-            }
+            // 1. Recupera identità (Login)
+            const myIdentity = localStorage.getItem('tysm_wallet');
             
-            if (wallet && wallet.startsWith('0x')) {
-                const wInput = document.getElementById('walletInput');
-                wInput.value = wallet;
-                
-                const badge = document.getElementById('walletBadge');
-                badge.innerText = `🟢 ${wallet.slice(0,6)}...`;
+            // 2. Recupera Target (URL o Default)
+            const urlParams = new URLSearchParams(window.location.search);
+            let targetWallet = urlParams.get('wallet');
+
+            // --- GESTIONE HEADER (Identità) ---
+            if (myIdentity) {
+                const badge = document.getElementById('identityBadge');
+                badge.innerText = `Connected: ${myIdentity.slice(0,6)}...`;
                 badge.style.display = "block";
+            }
+
+            // --- GESTIONE INPUT (Target) ---
+            const wInput = document.getElementById('walletInput');
+            
+            if (targetWallet) {
+                wInput.value = targetWallet;
+            } else if (myIdentity) {
+                wInput.value = myIdentity;
             }
         });
 
+        // --- TASTO CHANGE ---
+        document.getElementById('btnClearWallet').addEventListener('click', () => {
+            const wInput = document.getElementById('walletInput');
+            wInput.value = "";
+            wInput.focus();
+            
+            const url = new URL(window.location);
+            url.searchParams.delete('wallet');
+            window.history.pushState({}, '', url);
+        });
+
         document.getElementById('btnAction').addEventListener('click', runScan);
-        
         async function runScan() {
             const wallet = document.getElementById('walletInput').value.trim();
             const status = document.getElementById('status');
@@ -114,7 +151,7 @@
             try {
                 let allNfts = [], pageKey = null, count = 0;
                 do {
-                    if(++count > 50) break; // Safety break
+                    if(++count > 50) break;
                     let url = `https://base-mainnet.g.alchemy.com/nft/v3/${API_KEY}/getNFTsForOwner?owner=${wallet}&withMetadata=true&pageSize=100` + (pageKey ? `&pageKey=${pageKey}` : "");
                     const res = await fetch(url);
                     const data = await res.json();
