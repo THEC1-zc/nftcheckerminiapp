@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer</title>
+    <title>WAST Analyzer 5.0</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -17,7 +17,7 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: var(--bg);
-            background-image: url('back.png'); /* Sfondo Uniformato */
+            background-image: url('back.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -33,40 +33,30 @@
         
         .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
         .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
-        
-        /* WAST BRANDING MINI */
         .wast-mini { font-weight: 900; font-size: 1rem; letter-spacing: 2px; color: var(--primary); margin-left: 10px; }
-
         .identity-badge { font-size: 0.75rem; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 20px; color: var(--primary); font-weight: 700; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid rgba(0,82,255,0.1); }
 
         .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; }
         
-        .input-group { margin-bottom: 12px; }
+        .input-group { margin-bottom: 15px; }
         
-        label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.75rem; margin-bottom: 4px; color: #666; text-transform: uppercase; }
+        label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.75rem; margin-bottom: 6px; color: #666; text-transform: uppercase; }
         
-        /* MODIFICATO: Change Button Ingrandito */
         .clear-link { 
-            color: white; 
-            background-color: var(--primary);
-            padding: 4px 10px;
-            border-radius: 6px;
-            cursor: pointer; 
-            font-size: 0.75rem; 
-            text-decoration: none; 
-            font-weight: 700; 
-            box-shadow: 0 2px 5px rgba(0,82,255,0.2);
-            transition: opacity 0.2s;
+            color: white; background-color: var(--primary); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; text-decoration: none; font-weight: 700; box-shadow: 0 2px 5px rgba(0,82,255,0.2); transition: opacity 0.2s;
         }
         .clear-link:hover { opacity: 0.8; }
 
-        input { width: 100%; padding: 12px; border: 2px solid #e1e4e8; border-radius: 12px; font-size: 14px; outline: none; background: #fafafa; box-sizing: border-box; }
-        input:focus { border-color: var(--primary); background: #fff; }
+        /* INPUT STYLES */
+        input, select { width: 100%; padding: 12px; border: 2px solid #e1e4e8; border-radius: 12px; font-size: 14px; outline: none; background: #fafafa; box-sizing: border-box; font-family: inherit; }
+        input:focus, select:focus { border-color: var(--primary); background: #fff; }
         
+        /* Loading Animation */
+        .loading-text { font-size: 0.8rem; color: #999; font-style: italic; margin-top: 5px; display: none; }
+
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         button { flex: 1; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: opacity 0.2s; color: white; }
         button:hover { opacity: 0.9; }
-        
         .btn-fast { background-color: var(--primary); box-shadow: 0 4px 12px rgba(0,82,255,0.2); }
         .btn-full { background-color: var(--dark); box-shadow: 0 4px 12px rgba(52,73,94,0.2); }
 
@@ -111,9 +101,23 @@
             </label>
             <input type="text" id="walletInput" placeholder="0x..." />
         </div>
+
         <div class="input-group">
-            <label>Token Contract (CA)</label>
-            <input type="text" id="tokenInput" placeholder="0x..." />
+            <label>
+                Token to Analyze
+                <span id="toggleTokenMode" class="clear-link" style="background:#34495e;">Enter Custom CA ✍️</span>
+            </label>
+            
+            <div id="selectContainer">
+                <select id="tokenSelect">
+                    <option value="" disabled selected>Connect wallet to load tokens...</option>
+                </select>
+                <div id="loadingTokens" class="loading-text">Fetching portfolio & sorting by USD...</div>
+            </div>
+
+            <div id="inputContainer" style="display:none;">
+                <input type="text" id="tokenInput" placeholder="Paste Token CA (0x...)" />
+            </div>
         </div>
 
         <div class="btn-group">
@@ -175,7 +179,9 @@
     <script>
         const API_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
         const symbolCache = {}; 
+        let isCustomTokenMode = false; // Track active mode
 
+        // --- INIT ---
         window.addEventListener('DOMContentLoaded', () => {
             const myIdentity = localStorage.getItem('tysm_wallet');
             const urlParams = new URLSearchParams(window.location.search);
@@ -183,16 +189,21 @@
 
             if (myIdentity) {
                 const badge = document.getElementById('identityBadge');
-                // MODIFICATO: Primi 2 + ultimi 4
                 badge.innerText = `Connected: ${myIdentity.slice(0,2)}...${myIdentity.slice(-4)}`;
                 badge.style.display = "block";
             }
 
             const wInput = document.getElementById('walletInput');
-            if (targetWallet) wInput.value = targetWallet;
-            else if (myIdentity) wInput.value = myIdentity;
+            if (targetWallet) {
+                wInput.value = targetWallet;
+                loadUserTokens(targetWallet); // Load tokens for target
+            } else if (myIdentity) {
+                wInput.value = myIdentity;
+                loadUserTokens(myIdentity); // Load tokens for me
+            }
         });
 
+        // --- CHANGE WALLET TARGET ---
         document.getElementById('btnChangeTarget').addEventListener('click', () => {
             const wInput = document.getElementById('walletInput');
             wInput.value = "";
@@ -200,21 +211,155 @@
             const url = new URL(window.location);
             url.searchParams.delete('wallet');
             window.history.pushState({}, '', url);
+            
+            // Reset dropdown
+            document.getElementById('tokenSelect').innerHTML = '<option disabled selected>Enter wallet first...</option>';
         });
 
+        // --- TOGGLE TOKEN INPUT MODE ---
+        document.getElementById('toggleTokenMode').addEventListener('click', () => {
+            const selectDiv = document.getElementById('selectContainer');
+            const inputDiv = document.getElementById('inputContainer');
+            const btn = document.getElementById('toggleTokenMode');
+            const select = document.getElementById('tokenSelect');
+            const input = document.getElementById('tokenInput');
+
+            isCustomTokenMode = !isCustomTokenMode;
+
+            if (isCustomTokenMode) {
+                selectDiv.style.display = 'none';
+                inputDiv.style.display = 'block';
+                btn.innerText = "Select from List 📋";
+                btn.style.backgroundColor = "#27ae60"; // Greenish
+            } else {
+                selectDiv.style.display = 'block';
+                inputDiv.style.display = 'none';
+                btn.innerText = "Enter Custom CA ✍️";
+                btn.style.backgroundColor = "#34495e"; // Dark
+                
+                // Sync values: if input has address, try to reset select or ignore
+                // When going back to list, we rely on selection
+            }
+        });
+
+        // --- FETCH & POPULATE TOKENS (Sorted by USD) ---
+        async function loadUserTokens(walletAddr) {
+            const select = document.getElementById('tokenSelect');
+            const loading = document.getElementById('loadingTokens');
+            
+            select.style.display = 'none';
+            loading.style.display = 'block';
+            select.innerHTML = '';
+
+            try {
+                // 1. Get Balances
+                const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances",
+                        "params": [walletAddr]
+                    })
+                });
+                const data = await res.json();
+                const tokens = data.result?.tokenBalances || [];
+                
+                // 2. Filter > 0
+                const nonZero = tokens.filter(t => t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000");
+
+                if (nonZero.length === 0) {
+                    select.innerHTML = '<option disabled>No tokens found</option>';
+                    loading.style.display = 'none';
+                    select.style.display = 'block';
+                    return;
+                }
+
+                // 3. Metadata & Approx Price Sorting
+                // Optimization: Fetch details for top 20 tokens to stay fast, ignore dust
+                // We'll map them to an array of objects
+                let richTokens = [];
+
+                await Promise.all(nonZero.slice(0, 30).map(async (t) => {
+                    try {
+                        const metaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                            method: "POST", headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenMetadata", "params": [t.contractAddress] })
+                        });
+                        const meta = await metaRes.json();
+                        const decimals = meta.result.decimals || 18;
+                        const symbol = meta.result.symbol || "UNK";
+                        const rawBal = parseInt(t.tokenBalance, 16);
+                        const balance = rawBal / Math.pow(10, decimals);
+
+                        // Try fetching price from DexScreener (Best Effort)
+                        let price = 0;
+                        try {
+                            const pairRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${t.contractAddress}`);
+                            const pairData = await pairRes.json();
+                            if(pairData.pairs && pairData.pairs[0]) {
+                                price = parseFloat(pairData.pairs[0].priceUsd);
+                            }
+                        } catch(e) {}
+
+                        richTokens.push({
+                            ca: t.contractAddress,
+                            symbol: symbol,
+                            balance: balance,
+                            valueUsd: balance * price
+                        });
+                    } catch(err) {}
+                }));
+
+                // 4. Sort by USD Value Descending
+                richTokens.sort((a, b) => b.valueUsd - a.valueUsd);
+
+                // 5. Build Options
+                select.innerHTML = '<option value="" disabled selected>Select a token...</option>';
+                richTokens.forEach(t => {
+                    const label = `${t.symbol} - $${t.valueUsd.toLocaleString(undefined, {maximumFractionDigits:2})} (${t.balance.toLocaleString(undefined, {maximumFractionDigits:2})})`;
+                    const opt = document.createElement('option');
+                    opt.value = t.ca;
+                    opt.innerText = label;
+                    select.appendChild(opt);
+                });
+
+            } catch (error) {
+                console.error(error);
+                select.innerHTML = '<option disabled>Error loading tokens</option>';
+            } finally {
+                loading.style.display = 'none';
+                select.style.display = 'block';
+            }
+        }
+
+        // --- SYNC DROPDOWN TO INPUT ---
+        // When dropdown changes, we secretly update the input value because `runAnalysis` reads it from there or from variable
+        document.getElementById('tokenSelect').addEventListener('change', (e) => {
+            document.getElementById('tokenInput').value = e.target.value;
+        });
+
+        // --- BUTTON ACTIONS ---
         document.getElementById('btnFast').addEventListener('click', () => runAnalysis(100)); 
         document.getElementById('btnFull').addEventListener('click', () => runAnalysis(5000)); 
 
         async function runAnalysis(limitMode) {
             const wallet = document.getElementById('walletInput').value.trim().toLowerCase();
-            const tokenCA = document.getElementById('tokenInput').value.trim().toLowerCase();
+            
+            // LOGIC: Get token CA based on mode
+            let tokenCA = "";
+            if (isCustomTokenMode) {
+                tokenCA = document.getElementById('tokenInput').value.trim().toLowerCase();
+            } else {
+                tokenCA = document.getElementById('tokenSelect').value.trim().toLowerCase();
+            }
+
             const status = document.getElementById('status');
             
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('txTable').style.display = 'none';
             document.getElementById('txList').innerHTML = "";
 
-            if (!wallet.startsWith('0x') || !tokenCA.startsWith('0x')) return errorStatus("Invalid Address");
+            if (!wallet.startsWith('0x')) return errorStatus("Invalid Wallet Address");
+            if (!tokenCA.startsWith('0x')) return errorStatus("Please select or enter a Token Contract");
 
             try {
                 status.innerText = "Initializing...";
