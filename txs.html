@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Analyzer 4.5</title>
+    <title>WAST Analyzer</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -17,7 +17,7 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: var(--bg);
-            background-image: url('back.png');
+            background-image: url('back.png'); /* Sfondo Uniformato */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -34,27 +34,31 @@
         .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
         .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
         
-        /* IDENTITY BADGE (Sempre visibile se loggato) */
-        .identity-badge { 
-            font-size: 0.75rem; 
-            background: rgba(255,255,255,0.95); 
-            padding: 6px 12px; 
-            border-radius: 20px; 
-            color: var(--primary); 
-            font-weight: 700; 
-            display: none; /* Appare via JS */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-            border: 1px solid rgba(0,82,255,0.1);
-        }
+        /* WAST BRANDING MINI */
+        .wast-mini { font-weight: 900; font-size: 1rem; letter-spacing: 2px; color: var(--primary); margin-left: 10px; }
+
+        .identity-badge { font-size: 0.75rem; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 20px; color: var(--primary); font-weight: 700; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid rgba(0,82,255,0.1); }
 
         .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; }
         
         .input-group { margin-bottom: 12px; }
         
-        /* Label con Tasto Change */
         label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.75rem; margin-bottom: 4px; color: #666; text-transform: uppercase; }
-        .clear-link { color: var(--primary); cursor: pointer; font-size: 0.75rem; text-decoration: none; font-weight: 700; opacity: 0.8; }
-        .clear-link:hover { opacity: 1; text-decoration: underline; }
+        
+        /* MODIFICATO: Change Button Ingrandito */
+        .clear-link { 
+            color: white; 
+            background-color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer; 
+            font-size: 0.75rem; 
+            text-decoration: none; 
+            font-weight: 700; 
+            box-shadow: 0 2px 5px rgba(0,82,255,0.2);
+            transition: opacity 0.2s;
+        }
+        .clear-link:hover { opacity: 0.8; }
 
         input { width: 100%; padding: 12px; border: 2px solid #e1e4e8; border-radius: 12px; font-size: 14px; outline: none; background: #fafafa; box-sizing: border-box; }
         input:focus { border-color: var(--primary); background: #fff; }
@@ -62,6 +66,7 @@
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         button { flex: 1; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: opacity 0.2s; color: white; }
         button:hover { opacity: 0.9; }
+        
         .btn-fast { background-color: var(--primary); box-shadow: 0 4px 12px rgba(0,82,255,0.2); }
         .btn-full { background-color: var(--dark); box-shadow: 0 4px 12px rgba(52,73,94,0.2); }
 
@@ -91,7 +96,7 @@
 <body>
 
     <div class="nav-header">
-        <a href="index.html" class="back-btn">⬅ Home</a>
+        <a href="index.html" class="back-btn">⬅ Home <span class="wast-mini">WAST</span></a>
         <div id="identityBadge" class="identity-badge"></div>
     </div>
 
@@ -102,7 +107,7 @@
         <div class="input-group">
             <label>
                 Target Wallet 
-                <span id="btnChangeTarget" class="clear-link">Change 🔄</span>
+                <span id="btnChangeTarget" class="clear-link">Change Target Wallet 🔄</span>
             </label>
             <input type="text" id="walletInput" placeholder="0x..." />
         </div>
@@ -129,7 +134,6 @@
                 <span class="stat-qty" id="qtySell">0</span>
                 <span class="stat-val" id="valSell">$0.00</span>
             </div>
-            
             <div class="stat-card">
                 <span class="stat-label c-cyan">STAKED (Out)</span>
                 <span class="stat-qty" id="qtyStake">0</span>
@@ -140,7 +144,6 @@
                 <span class="stat-qty" id="qtyUnstake">0</span>
                 <span class="stat-val" id="valUnstake">$0.00</span>
             </div>
-
             <div class="stat-card">
                 <span class="stat-label c-purple">Total RECEIVE</span>
                 <span class="stat-qty" id="qtyReceive">0</span>
@@ -151,7 +154,6 @@
                 <span class="stat-qty" id="qtySend">0</span>
                 <span class="stat-val" id="valSend">$0.00</span>
             </div>
-
             <div class="stat-card main">
                 <span class="stat-label c-blue">Current Net Balance</span>
                 <span class="stat-qty c-blue" id="qtyNet">0</span>
@@ -174,41 +176,27 @@
         const API_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
         const symbolCache = {}; 
 
-        // --- GESTIONE IDENTITA' E TARGET ---
         window.addEventListener('DOMContentLoaded', () => {
-            // 1. Recupera identità (Login)
             const myIdentity = localStorage.getItem('tysm_wallet');
-            
-            // 2. Recupera Target (URL o Default)
             const urlParams = new URLSearchParams(window.location.search);
             let targetWallet = urlParams.get('wallet');
 
-            // --- GESTIONE HEADER (Identità) ---
             if (myIdentity) {
                 const badge = document.getElementById('identityBadge');
-                badge.innerText = `Connected: ${myIdentity.slice(0,6)}...`;
+                // MODIFICATO: Primi 2 + ultimi 4
+                badge.innerText = `Connected: ${myIdentity.slice(0,2)}...${myIdentity.slice(-4)}`;
                 badge.style.display = "block";
             }
 
-            // --- GESTIONE INPUT (Target) ---
             const wInput = document.getElementById('walletInput');
-            
-            if (targetWallet) {
-                // Se c'è un target nell'URL, usalo
-                wInput.value = targetWallet;
-            } else if (myIdentity) {
-                // Se non c'è target ma sono loggato, analizzo me stesso di default
-                wInput.value = myIdentity;
-            }
+            if (targetWallet) wInput.value = targetWallet;
+            else if (myIdentity) wInput.value = myIdentity;
         });
 
-        // --- TASTO CHANGE (Svuota solo il campo Input) ---
         document.getElementById('btnChangeTarget').addEventListener('click', () => {
             const wInput = document.getElementById('walletInput');
-            wInput.value = ""; // Svuota campo
-            wInput.focus(); // Mette cursore per scrivere
-            
-            // Rimuove parametro URL per pulizia (ma NON tocca localStorage)
+            wInput.value = "";
+            wInput.focus();
             const url = new URL(window.location);
             url.searchParams.delete('wallet');
             window.history.pushState({}, '', url);
