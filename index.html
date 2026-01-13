@@ -9,23 +9,28 @@
     <meta property="og:description" content="Check your holdings for Howlers, Gratitoad, First Thanks & MrDoomRobot instantly." />
     <meta property="og:image" content="https://placehold.co/600x400/0052FF/ffffff?text=Base+NFT+Scanner" />
     
-    <meta property="fc:frame" content="vNext" />
-    <meta property="fc:frame:image" content="https://placehold.co/600x400/0052FF/ffffff?text=Base+NFT+Scanner" />
-    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
-    
-    <meta property="fc:frame:button:1" content="🚀 Launch Scanner" />
-    <meta property="fc:frame:button:1:action" content="link" />
-    <meta property="fc:frame:button:1:target" content="https://nftcheckerminiapp-rez15it77-thecs-projects.vercel.app" />
+    <meta name="fc:frame" content='{
+        "version": "1",
+        "imageUrl": "https://placehold.co/600x400/0052FF/ffffff?text=Base+NFT+Scanner",
+        "button": {
+            "title": "🚀 Launch Scanner",
+            "action": {
+                "type": "launch_frame",
+                "name": "Base NFT Tracker",
+                "url": "https://nftcheckerminiapp-rez15it77-thecs-projects.vercel.app",
+                "splashImageUrl": "https://placehold.co/200x200/0052FF/ffffff?text=Loading",
+                "splashBackgroundColor": "#0052FF"
+            }
+        }
+    }' />
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-
         const run = async () => {
-            // Tell Farcaster the app is ready to be shown
             await sdk.actions.ready();
         };
-
         run();
     </script>
+
     <style>
         :root {
             --primary: #0052FF;
@@ -247,7 +252,6 @@
                     if (nft && nft.contract && nft.contract.address) {
                         let addr = nft.contract.address.toLowerCase();
                         if (TARGETS[addr]) {
-                            // Check for ERC-1155 balance, otherwise assume 1
                             let qty = nft.balance ? parseInt(nft.balance) : 1;
                             counts[addr] += qty;
                         }
