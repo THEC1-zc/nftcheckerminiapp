@@ -16,6 +16,16 @@
     <meta property="fc:frame:button:1" content="🚀 Launch Scanner" />
     <meta property="fc:frame:button:1:action" content="link" />
     <meta property="fc:frame:button:1:target" content="https://nftcheckerminiapp-rez15it77-thecs-projects.vercel.app" />
+    <script type="module">
+        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+
+        const run = async () => {
+            // Tell Farcaster the app is ready to be shown
+            await sdk.actions.ready();
+        };
+
+        run();
+    </script>
     <style>
         :root {
             --primary: #0052FF;
