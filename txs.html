@@ -247,3 +247,94 @@
 
                 // 6. UPDATE DASHBOARD
                 const updateCard = (id, qty) => {
+                    document.getElementById('qty'+id).innerText = formatShort(qty);
+                    document.getElementById('val'+id).innerText = currentPrice > 0 ? `$${formatShort(qty * currentPrice)}` : "-";
+                };
+
+                updateCard('Buy', totals.buy);
+                updateCard('Sell', totals.sell);
+                updateCard('Receive', totals.receive);
+                updateCard('Send', totals.send);
+
+                const netQty = (totals.buy + totals.receive) - (totals.sell + totals.send);
+                document.getElementById('qtyNet').innerText = formatShort(netQty) + " " + tokenSymbol;
+                document.getElementById('valNet').innerText = currentPrice > 0 ? `$${formatNum(netQty * currentPrice, 2)}` : "Price N/A";
+
+                document.getElementById('dashboard').style.display = 'grid';
+                document.getElementById('txTable').style.display = 'table';
+                status.innerText = "Analysis Complete ✅";
+                status.style.color = "#2ecc71";
+
+            } catch (err) { console.error(err); errorStatus("Analysis failed. Try again."); }
+        }
+
+        // --- HELPERS ---
+
+        function errorStatus(msg) {
+            const s = document.getElementById('status');
+            s.innerText = "❌ " + msg; s.style.color = "#ff4757";
+        }
+
+        // Formattazione Intelligente (es. 1.2M invece di 1200000)
+        function formatShort(num) {
+            if (num === 0) return "0";
+            if (num < 0.01) return num.toExponential(2);
+            if (num > 1000000) return (num / 1000000).toFixed(2) + "M";
+            if (num > 1000) return (num / 1000).toFixed(2) + "K";
+            return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        }
+
+        function formatNum(num, decimals = 2) {
+            return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: decimals });
+        }
+
+        // NUOVA FUNZIONE: Fetch con Paginazione Automatica
+        async function fetchAllTransfers(walletAddr, tokenAddr, direction) {
+            let allTransfers = [];
+            let pageKey = null;
+            let loops = 0;
+            const MAX_LOOPS = 50; // Limite di sicurezza (50k transazioni)
+
+            do {
+                const params = { 
+                    "fromBlock": "0x0", 
+                    "toBlock": "latest", 
+                    "category": ["erc20"], 
+                    "withMetadata": true, 
+                    "excludeZeroValue": true, 
+                    "contractAddresses": [tokenAddr] 
+                };
+                if (direction === "to") params.toAddress = walletAddr; else params.fromAddress = walletAddr;
+                if (pageKey) params.pageKey = pageKey;
+
+                const response = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] })
+                });
+                const data = await response.json();
+                
+                if (data.result && data.result.transfers) {
+                    allTransfers = allTransfers.concat(data.result.transfers);
+                    pageKey = data.result.pageKey;
+                } else {
+                    pageKey = null;
+                }
+                loops++;
+            } while (pageKey && loops < MAX_LOOPS);
+
+            return allTransfers;
+        }
+
+        async function isContract(address) {
+            try {
+                const response = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getCode", "params": [address, "latest"] })
+                });
+                const data = await response.json();
+                return data.result && data.result !== "0x";
+            } catch (e) { return false; }
+        }
+    </script>
+</body>
+</html>
