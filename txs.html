@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Analyzer 3.0 (Stacked)</title>
+    <title>Master Analyzer 3.1 (Staked Fix)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -12,7 +12,7 @@
     </script>
 
     <style>
-        :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --green: #2ecc71; --red: #ff4757; --orange: #ff9f43; --purple: #9c27b0; --dark: #34495e; }
+        :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --green: #2ecc71; --red: #ff4757; --orange: #ff9f43; --purple: #9c27b0; --dark: #34495e; --pink: #d63384; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 15px; margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
         
         .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; }
@@ -52,7 +52,7 @@
         .c-orange { color: var(--orange); }
         .c-purple { color: var(--purple); }
         .c-blue { color: var(--primary); }
-        .c-pink { color: #d63384; }
+        .c-pink { color: var(--pink); }
 
         /* TABLE */
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 15px; table-layout: fixed; }
@@ -121,7 +121,7 @@
             </div>
             
             <div class="stat-card stacked">
-                <span class="stat-label c-pink">STACKED (st-Token)</span>
+                <span class="stat-label c-pink">STAKED (st/stk)</span>
                 <span class="stat-qty c-pink" id="qtyStacked">0</span>
                 <span class="stat-val" id="valStacked" style="font-weight:700;">Scanning...</span>
             </div>
@@ -172,8 +172,7 @@
                 
                 const rawTxs = await fetchUnifiedTransfers(wallet, tokenCA, limitMode);
 
-                // --- NEW: SCAN FOR STAKED TOKENS (Async in background or before UI) ---
-                // We do this immediately to show it asap
+                // --- CHECK STAKED BALANCE IN PARALLEL ---
                 checkStakedBalance(wallet, tokenCA);
 
                 if (rawTxs.length === 0) return errorStatus("No transactions found.");
@@ -268,10 +267,10 @@
             } catch (err) { console.error(err); errorStatus("Analysis Error: " + err.message); }
         }
 
-        // --- NEW LOGIC: FIND STAKED TOKEN (st-Ticker) ---
+        // --- IMPROVED STAKED SEARCH ---
         async function checkStakedBalance(wallet, mainTokenCA) {
             try {
-                // 1. Get Official Symbol of Main Token (e.g. "BANGER")
+                // 1. Get Official Symbol of Main Token
                 const metaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -280,14 +279,14 @@
                     })
                 });
                 const metaData = await metaRes.json();
-                const mainSymbol = metaData.result?.symbol || "";
-                
-                if (!mainSymbol) return;
-                
-                // Target: "st" + "BANGER" -> "stBANGER" (case insensitive check)
-                const targetPrefix = "st" + mainSymbol.toLowerCase();
+                let mainSymbol = metaData.result?.symbol || "";
 
-                // 2. Fetch ALL Token Balances for Wallet
+                if (!mainSymbol) return;
+
+                // CLEAN THE SYMBOL (Remove $ if present, trim spaces)
+                const cleanMain = mainSymbol.replace('$', '').trim().toLowerCase();
+                
+                // 2. Fetch ALL Token Balances
                 const balRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -298,17 +297,13 @@
                 const balData = await balRes.json();
                 const tokens = balData.result?.tokenBalances || [];
 
-                let foundStaked = null;
                 let foundBalance = 0;
                 let foundSymbol = "";
 
-                // 3. Scan tokens to find matching symbol
-                // We limit parallel requests to avoid rate limits
+                // 3. Scan tokens with FUZZY MATCH logic
                 for (const t of tokens) {
-                    // Skip zero balance
                     if (t.tokenBalance === "0x0000000000000000000000000000000000000000000000000000000000000000") continue;
 
-                    // Fetch Metadata for this token
                     const tMetaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
                         method: "POST", headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -317,16 +312,28 @@
                         })
                     });
                     const tMeta = await tMetaRes.json();
-                    const sym = tMeta.result?.symbol || "";
+                    let sym = tMeta.result?.symbol || "";
                     
-                    // Check if symbol looks like "stBANGER"
-                    if (sym.toLowerCase() === targetPrefix) {
-                        const decimals = tMeta.result.decimals || 18;
-                        const raw = parseInt(t.tokenBalance, 16);
-                        foundBalance = raw / Math.pow(10, decimals);
-                        foundSymbol = sym;
-                        foundStaked = t.contractAddress;
-                        break; // Found it!
+                    // Clean candidate symbol
+                    const cleanCand = sym.replace('$', '').trim().toLowerCase();
+
+                    // LOGIC:
+                    // 1. Candidate must contain the main symbol (e.g. stkBANGER contains banger)
+                    // 2. Candidate must start with a staking prefix (st, stk, x, v, w)
+                    if (cleanCand !== cleanMain && cleanCand.includes(cleanMain)) {
+                        
+                        const isStaked = cleanCand.startsWith('st') || 
+                                         cleanCand.startsWith('x') || 
+                                         cleanCand.startsWith('v') || 
+                                         cleanCand.startsWith('w');
+
+                        if (isStaked) {
+                            const decimals = tMeta.result.decimals || 18;
+                            const raw = parseInt(t.tokenBalance, 16);
+                            foundBalance = raw / Math.pow(10, decimals);
+                            foundSymbol = sym;
+                            break; // Stop at first match
+                        }
                     }
                 }
 
