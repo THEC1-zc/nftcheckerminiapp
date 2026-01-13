@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Analyzer 4.3</title>
+    <title>Master Analyzer 4.5</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -16,14 +16,12 @@
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            /* BACKGROUND CONFIGURATION */
             background-color: var(--bg);
             background-image: url('back.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
-            
             color: var(--text); 
             padding: 15px; 
             margin: 0; 
@@ -36,67 +34,65 @@
         .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
         .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
         
-        .wallet-badge { font-size: 0.75rem; background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 10px; color: #0052FF; font-weight: bold; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* IDENTITY BADGE (Sempre visibile se loggato) */
+        .identity-badge { 
+            font-size: 0.75rem; 
+            background: rgba(255,255,255,0.95); 
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            color: var(--primary); 
+            font-weight: 700; 
+            display: none; /* Appare via JS */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+            border: 1px solid rgba(0,82,255,0.1);
+        }
 
         .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; }
         
         .input-group { margin-bottom: 12px; }
-        label { display: block; font-weight: 600; font-size: 0.75rem; margin-bottom: 4px; color: #666; text-transform: uppercase; }
+        
+        /* Label con Tasto Change */
+        label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.75rem; margin-bottom: 4px; color: #666; text-transform: uppercase; }
+        .clear-link { color: var(--primary); cursor: pointer; font-size: 0.75rem; text-decoration: none; font-weight: 700; opacity: 0.8; }
+        .clear-link:hover { opacity: 1; text-decoration: underline; }
+
         input { width: 100%; padding: 12px; border: 2px solid #e1e4e8; border-radius: 12px; font-size: 14px; outline: none; background: #fafafa; box-sizing: border-box; }
         input:focus { border-color: var(--primary); background: #fff; }
         
-        /* BUTTONS GROUP */
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         button { flex: 1; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: opacity 0.2s; color: white; }
         button:hover { opacity: 0.9; }
-        
         .btn-fast { background-color: var(--primary); box-shadow: 0 4px 12px rgba(0,82,255,0.2); }
         .btn-full { background-color: var(--dark); box-shadow: 0 4px 12px rgba(52,73,94,0.2); }
 
-        /* DASHBOARD GRID */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; margin-bottom: 10px; display: none; }
         .stat-card { background: #f8f9fa; padding: 10px; border-radius: 10px; border: 1px solid #eee; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-        
         .stat-card.main { grid-column: span 2; background: #eff4ff; border-color: #dbeafe; padding: 15px; }
-
         .stat-label { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; opacity: 0.7; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .stat-qty { font-size: 0.95rem; font-weight: 800; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .stat-val { font-size: 0.75rem; font-weight: 500; margin-top: 2px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .c-green { color: var(--green); } .c-red { color: var(--red); } .c-orange { color: var(--orange); } .c-purple { color: var(--purple); } .c-blue { color: var(--primary); } .c-cyan { color: var(--cyan); } .c-indigo { color: var(--indigo); }
 
-        /* COLORS */
-        .c-green { color: var(--green); }
-        .c-red { color: var(--red); }
-        .c-orange { color: var(--orange); }
-        .c-purple { color: var(--purple); }
-        .c-blue { color: var(--primary); }
-        .c-cyan { color: var(--cyan); }
-        .c-indigo { color: var(--indigo); }
-
-        /* TABLE */
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 15px; table-layout: fixed; }
         th { text-align: left; color: #999; font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid #eee; }
         td { padding: 10px 0; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-        
-        .col-type { width: 40%; }
-        .col-amount { width: 60%; text-align: right; }
+        .col-type { width: 40%; } .col-amount { width: 60%; text-align: right; }
         .tx-sub { font-size: 0.7rem; color: #bbb; display: block; margin-top: 2px; }
         .tag { font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 700; text-transform: uppercase; margin-right: 4px; display: inline-block; }
-        
         .bg-buy { background: #e6fffa; color: var(--green); border: 1px solid #b2f5ea; }
         .bg-sell { background: #fff5f5; color: var(--red); border: 1px solid #fed7d7; }
         .bg-send { background: #fffaf0; color: var(--orange); border: 1px solid #feebc8; }
         .bg-receive { background: #f3e5f5; color: var(--purple); border: 1px solid #e1bee7; }
         .bg-stake { background: #e0f7fa; color: var(--cyan); border: 1px solid #b2ebf2; }
         .bg-unstake { background: #e8eaf6; color: var(--indigo); border: 1px solid #c5cae9; }
-
         #status { text-align: center; margin: 15px 0; font-weight: 600; font-size: 0.85rem; min-height: 20px; padding: 0 10px; }
     </style>
 </head>
 <body>
 
     <div class="nav-header">
-        <a href="index.html" class="back-btn">⬅ Menu</a>
-        <div id="walletBadge" class="wallet-badge"></div>
+        <a href="index.html" class="back-btn">⬅ Home</a>
+        <div id="identityBadge" class="identity-badge"></div>
     </div>
 
     <div class="container">
@@ -104,7 +100,10 @@
         <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: PnL + Staking Detection</p>
         
         <div class="input-group">
-            <label>Your Wallet</label>
+            <label>
+                Target Wallet 
+                <span id="btnChangeTarget" class="clear-link">Change 🔄</span>
+            </label>
             <input type="text" id="walletInput" placeholder="0x..." />
         </div>
         <div class="input-group">
@@ -175,24 +174,44 @@
         const API_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
         const symbolCache = {}; 
 
-        // --- CHECK LOGIN STATE ON LOAD ---
+        // --- GESTIONE IDENTITA' E TARGET ---
         window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            let wallet = urlParams.get('wallet');
-
-            // Se non c'è nell'URL, controlla la memoria locale
-            if (!wallet) {
-                wallet = localStorage.getItem('tysm_wallet');
-            }
+            // 1. Recupera identità (Login)
+            const myIdentity = localStorage.getItem('tysm_wallet');
             
-            if (wallet && wallet.startsWith('0x')) {
-                const wInput = document.getElementById('walletInput');
-                wInput.value = wallet;
-                
-                const badge = document.getElementById('walletBadge');
-                badge.innerText = `🟢 ${wallet.slice(0,6)}...`;
+            // 2. Recupera Target (URL o Default)
+            const urlParams = new URLSearchParams(window.location.search);
+            let targetWallet = urlParams.get('wallet');
+
+            // --- GESTIONE HEADER (Identità) ---
+            if (myIdentity) {
+                const badge = document.getElementById('identityBadge');
+                badge.innerText = `Connected: ${myIdentity.slice(0,6)}...`;
                 badge.style.display = "block";
             }
+
+            // --- GESTIONE INPUT (Target) ---
+            const wInput = document.getElementById('walletInput');
+            
+            if (targetWallet) {
+                // Se c'è un target nell'URL, usalo
+                wInput.value = targetWallet;
+            } else if (myIdentity) {
+                // Se non c'è target ma sono loggato, analizzo me stesso di default
+                wInput.value = myIdentity;
+            }
+        });
+
+        // --- TASTO CHANGE (Svuota solo il campo Input) ---
+        document.getElementById('btnChangeTarget').addEventListener('click', () => {
+            const wInput = document.getElementById('walletInput');
+            wInput.value = ""; // Svuota campo
+            wInput.focus(); // Mette cursore per scrivere
+            
+            // Rimuove parametro URL per pulizia (ma NON tocca localStorage)
+            const url = new URL(window.location);
+            url.searchParams.delete('wallet');
+            window.history.pushState({}, '', url);
         });
 
         document.getElementById('btnFast').addEventListener('click', () => runAnalysis(100)); 
@@ -203,7 +222,6 @@
             const tokenCA = document.getElementById('tokenInput').value.trim().toLowerCase();
             const status = document.getElementById('status');
             
-            // UI Reset
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('txTable').style.display = 'none';
             document.getElementById('txList').innerHTML = "";
@@ -214,7 +232,6 @@
                 status.innerText = "Initializing...";
                 status.style.color = "#0052FF";
 
-                // 0. PRE-FETCH MAIN SYMBOL
                 let mainSymbol = "TOKEN";
                 try {
                     const metaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
@@ -225,7 +242,6 @@
                     if(m.result?.symbol) mainSymbol = m.result.symbol.replace('$','').trim().toUpperCase();
                 } catch(e) {}
 
-                // 1. FETCH TRANSACTIONS
                 status.innerText = `Fetching last ${limitMode} transactions...`;
                 const rawTxs = await fetchUnifiedTransfers(wallet, tokenCA, limitMode);
 
@@ -233,23 +249,18 @@
 
                 status.innerText = `Analyzing ${rawTxs.length} receipts...`;
                 
-                // 2. ANALYZE RECEIPTS
                 let totals = { buy: 0, sell: 0, receive: 0, send: 0, stake: 0, unstake: 0 };
                 const tbody = document.getElementById('txList');
                 
                 const batchSize = 5;
                 for (let i = 0; i < rawTxs.length; i += batchSize) {
                     const batch = rawTxs.slice(i, i + batchSize);
-                    
                     const pct = Math.round((i / rawTxs.length) * 100);
                     if (rawTxs.length > 200) status.innerText = `Deep Analyzing (${mainSymbol})... ${pct}%`;
 
                     await Promise.all(batch.map(async (tx) => {
                         const val = parseFloat(tx.value);
-                        
                         const isTargetIn = tx.to && tx.to.toLowerCase() === wallet;
-                        
-                        // --- ADVANCED CATEGORY LOGIC ---
                         const category = await determineCategory(tx.hash, wallet, tokenCA, isTargetIn, mainSymbol);
 
                         if (category === 'BUY') totals.buy += val;
@@ -286,11 +297,8 @@
                     }));
                 }
 
-                if (rawTxs.length > 100) {
-                    tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="2" style="text-align:center;color:#999">... and ${rawTxs.length - 100} more</td></tr>`);
-                }
+                if (rawTxs.length > 100) tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="2" style="text-align:center;color:#999">... and ${rawTxs.length - 100} more</td></tr>`);
 
-                // 3. GET PRICE
                 let currentPrice = 0;
                 try {
                     const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenCA}`);
@@ -301,7 +309,6 @@
                     }
                 } catch(e){}
 
-                // 4. UPDATE DASHBOARD
                 const updateCard = (id, qty) => {
                     const elQty = document.getElementById('qty'+id);
                     const elVal = document.getElementById('val'+id);
@@ -325,7 +332,6 @@
                 
                 status.innerText = "Complete ✅";
                 status.style.color = "#2ecc71";
-
             } catch (err) { console.error(err); errorStatus("Analysis Error: " + err.message); }
         }
 
@@ -333,10 +339,7 @@
             try {
                 const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        "id": 1, "jsonrpc": "2.0", "method": "eth_getTransactionReceipt", 
-                        "params": [txHash]
-                    })
+                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "params": [txHash] })
                 });
                 const data = await res.json();
                 const receipt = data.result;
@@ -344,14 +347,12 @@
 
                 const walletTopic = "0x000000000000000000000000" + wallet.replace("0x", "");
                 const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-
                 let otherTokenAddress = null;
                 let hasOtherOut = false; 
                 let hasOtherIn = false; 
 
                 for (const log of receipt.logs) {
                     if (log.topics[0] !== TRANSFER_TOPIC) continue;
-
                     const logContract = log.address.toLowerCase();
                     const isTargetToken = logContract === targetTokenCA;
                     const isFromMe = log.topics[1] && log.topics[1].toLowerCase() === walletTopic;
@@ -371,15 +372,9 @@
                     const otherSymbol = await getSymbol(otherTokenAddress);
                     const cleanMain = mainSymbol.toLowerCase();
                     const cleanOther = otherSymbol.toLowerCase().replace('$','');
-
                     const isVariant = cleanOther.includes(cleanMain) && (
-                        cleanOther.startsWith('st') || 
-                        cleanOther.startsWith('x') || 
-                        cleanOther.startsWith('v') || 
-                        cleanOther.startsWith('es') ||
-                        cleanOther.startsWith('s') ||
-                        cleanOther.startsWith('stk') ||
-                        cleanOther.startsWith('w') 
+                        cleanOther.startsWith('st') || cleanOther.startsWith('x') || cleanOther.startsWith('v') || 
+                        cleanOther.startsWith('es') || cleanOther.startsWith('s') || cleanOther.startsWith('stk') || cleanOther.startsWith('w') 
                     );
 
                     if (isVariant) {
@@ -387,10 +382,8 @@
                         if (isTargetIn && hasOtherOut) return 'UNSTAKE';
                     }
                 }
-
                 if (isTargetIn) return hasOtherOut ? 'BUY' : 'RECEIVE';
                 else return hasOtherIn ? 'SELL' : 'SEND';
-
             } catch (e) { return isTargetIn ? 'RECEIVE' : 'SEND'; }
         }
 
@@ -409,71 +402,34 @@
         }
 
         async function fetchUnifiedTransfers(walletAddr, tokenAddr, limit) {
-            const status = document.getElementById('status');
-            
             const fetchDirectionLoop = async (direction) => {
                 let accumulated = [];
                 let pageKey = null;
-                
                 do {
-                    const params = { 
-                        "fromBlock": "0x0", "toBlock": "latest", "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, 
-                        "contractAddresses": [tokenAddr], "order": "desc", "maxCount": "0x3e8" 
-                    };
-
-                    if (direction === 'to') params.toAddress = walletAddr;
-                    else params.fromAddress = walletAddr;
-                    
+                    const params = { "fromBlock": "0x0", "toBlock": "latest", "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, "contractAddresses": [tokenAddr], "order": "desc", "maxCount": "0x3e8" };
+                    if (direction === 'to') params.toAddress = walletAddr; else params.fromAddress = walletAddr;
                     if (pageKey) params.pageKey = pageKey;
-
                     const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
                         method: "POST", headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] })
                     });
-                    
                     const d = await res.json();
                     if (!d.result) break;
-                    
-                    const newTxs = d.result.transfers || [];
-                    accumulated = accumulated.concat(newTxs);
+                    accumulated = accumulated.concat(d.result.transfers || []);
                     pageKey = d.result.pageKey;
-
-                    if(accumulated.length % 500 === 0) {
-                        status.innerText = `Found ${accumulated.length} ${direction === 'to' ? 'IN' : 'OUT'} txs...`;
-                    }
                     if (accumulated.length >= limit) break;
-
                 } while (pageKey);
-
                 return accumulated;
             };
-
-            const [inTxs, outTxs] = await Promise.all([
-                fetchDirectionLoop('to'),
-                fetchDirectionLoop('from')
-            ]);
-
+            const [inTxs, outTxs] = await Promise.all([ fetchDirectionLoop('to'), fetchDirectionLoop('from') ]);
             const allTxs = [...inTxs, ...outTxs];
             allTxs.sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16));
             return allTxs.slice(0, limit);
         }
 
-        function errorStatus(msg) {
-            const s = document.getElementById('status');
-            s.innerText = "❌ " + msg; s.style.color = "#ff4757";
-        }
-
-        function formatShort(num) {
-            if (num === 0) return "0";
-            if (num < 0.01) return num.toExponential(2);
-            if (num > 1000000) return (num / 1000000).toFixed(2) + "M";
-            if (num > 1000) return (num / 1000).toFixed(2) + "K";
-            return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
-        }
-
-        function formatNum(num) {
-            return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        }
+        function errorStatus(msg) { const s = document.getElementById('status'); s.innerText = "❌ " + msg; s.style.color = "#ff4757"; }
+        function formatShort(num) { if (num === 0) return "0"; if (num < 0.01) return num.toExponential(2); if (num > 1000000) return (num / 1000000).toFixed(2) + "M"; if (num > 1000) return (num / 1000).toFixed(2) + "K"; return num.toLocaleString('en-US', { maximumFractionDigits: 2 }); }
+        function formatNum(num) { return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
     </script>
 </body>
 </html>
