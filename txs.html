@@ -11,8 +11,6 @@
         run();
     </script>
     
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-
     <style>
         :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --green: #2ecc71; --red: #ff4757; --orange: #ff9f43; --purple: #9c27b0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 15px; margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
@@ -35,7 +33,7 @@
         
         .btn-fast { background-color: var(--primary); box-shadow: 0 4px 12px rgba(0,82,255,0.2); }
         .btn-full { background-color: #34495e; box-shadow: 0 4px 12px rgba(52,73,94,0.2); }
-        .btn-excel { background-color: #217346; margin-top: 15px; width: 100%; display: none; box-shadow: 0 4px 12px rgba(33,115,70,0.2); }
+        /* REMOVED: .btn-excel style */
 
         /* DASHBOARD GRID */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; margin-bottom: 10px; display: none; }
@@ -97,8 +95,6 @@
         
         <div id="status"></div>
 
-        <button id="btnExcel" class="btn-excel">📥 Download Report (.xlsx)</button>
-
         <div id="dashboard" class="dashboard-grid">
             <div class="stat-card">
                 <span class="stat-label c-green">Total BUY</span>
@@ -140,11 +136,11 @@
 
     <script>
         const API_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
-        let globalExportData = []; // Store data for Excel
+        // REMOVED: globalExportData
 
         document.getElementById('btnFast').addEventListener('click', () => runAnalysis('fast'));
         document.getElementById('btnFull').addEventListener('click', () => runAnalysis('full'));
-        document.getElementById('btnExcel').addEventListener('click', exportToExcel);
+        // REMOVED: btnExcel event listener
 
         async function runAnalysis(mode) {
             const wallet = document.getElementById('walletInput').value.trim().toLowerCase();
@@ -154,9 +150,9 @@
             // UI Reset
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('txTable').style.display = 'none';
-            document.getElementById('btnExcel').style.display = 'none';
+            // REMOVED: btnExcel display reset
             document.getElementById('txList').innerHTML = "";
-            globalExportData = []; // Clear old data
+            // REMOVED: globalExportData clear
 
             if (!wallet.startsWith('0x') || !tokenCA.startsWith('0x')) return errorStatus("Invalid Address");
 
@@ -206,19 +202,11 @@
                         else if (category === 'RECEIVE') totals.receive += val;
                         else if (category === 'SEND') totals.send += val;
 
-                        // Save for Excel
-                        const dateObj = new Date(tx.metadata.blockTimestamp);
-                        globalExportData.push({
-                            Date: dateObj.toLocaleDateString(),
-                            Time: dateObj.toLocaleTimeString(),
-                            Type: category,
-                            Amount: val,
-                            Symbol: tokenSymbol,
-                            Hash: tx.hash
-                        });
+                        // REMOVED: Data push to globalExportData
 
                         // UI: Show only first 50 in table to save memory, but calculate ALL
                         if (i < 50) {
+                            const dateObj = new Date(tx.metadata.blockTimestamp);
                             let badgeClass = "";
                             if(category === 'BUY') badgeClass = 'bg-buy';
                             if(category === 'SELL') badgeClass = 'bg-sell';
@@ -243,7 +231,8 @@
                 }
 
                 if (rawTxs.length > 50) {
-                    tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="2" style="text-align:center;color:#999">... and ${rawTxs.length - 50} more (See Excel)</td></tr>`);
+                    // CHANGED: Text since Excel is gone
+                    tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="2" style="text-align:center;color:#999">... and ${rawTxs.length - 50} more (Hidden for speed)</td></tr>`);
                 }
 
                 // 3. GET PRICE
@@ -274,7 +263,7 @@
 
                 document.getElementById('dashboard').style.display = 'grid';
                 document.getElementById('txTable').style.display = 'table';
-                document.getElementById('btnExcel').style.display = 'block'; // Show download button
+                // REMOVED: btnExcel display block
                 
                 status.innerText = "Complete ✅";
                 status.style.color = "#2ecc71";
@@ -282,21 +271,7 @@
             } catch (err) { console.error(err); errorStatus("Analysis Error. Try again."); }
         }
 
-        // --- EXCEL EXPORT FUNCTION ---
-        function exportToExcel() {
-            if (globalExportData.length === 0) return alert("No data to export");
-            
-            // Create Worksheet
-            const ws = XLSX.utils.json_to_sheet(globalExportData);
-            
-            // Create Workbook
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Transactions");
-
-            // Save File
-            const wallet = document.getElementById('walletInput').value.slice(0,6);
-            XLSX.writeFile(wb, `TENC_Report_${wallet}.xlsx`);
-        }
+        // REMOVED: exportToExcel Function
 
         // --- CORE LOGIC: DID I PAY? ---
         async function determineCategory(txHash, wallet, targetTokenCA, isTargetIn) {
