@@ -7,7 +7,12 @@
     
     <meta property="og:image" content="https://nftcheckerminiapp.vercel.app/icon.png" />
     <meta name="fc:miniapp" content='{"version": "1", "imageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "button": { "title": "🚀 Open Hub", "action": { "type": "launch_miniapp", "name": "TYSM Hub", "url": "https://nftcheckerminiapp.vercel.app", "splashImageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "splashBackgroundColor": "#0052FF" } } }' />
-    <meta name="fc:frame" content='{"version":"1","imageUrl":"https://nftcheckerminiapp.vercel.app/icon.png","button":{"title":"🚀 Open Hub","action":{"type":"launch_frame","name":"TYSM Hub","url":"https://nftcheckerminiapp.vercel.app","splashImageUrl":"https://nftcheckerminiapp.vercel.app/icon.png","splashBackgroundColor":"#0052FF"}}}' />
+    
+    <script type="module">
+        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+        const run = async () => { await sdk.actions.ready(); };
+        run();
+    </script>
 
     <style>
         :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; }
@@ -16,9 +21,12 @@
         .logo { width: 80px; height: 80px; background: white; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); object-fit: contain; }
         h1 { margin: 0; font-size: 24px; letter-spacing: -0.5px; }
         p { color: #666; margin-top: 5px; }
+        
         .btn-connect { background-color: #1a1a1a; color: white; padding: 12px 24px; font-size: 1rem; font-weight: 600; border-radius: 12px; cursor: pointer; border: none; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s, background-color 0.2s; }
         .btn-connect:active { transform: scale(0.98); }
         .btn-connect:hover { background-color: #333; }
+        .btn-connect.connected { background-color: #2ecc71; cursor: default; }
+
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
         .menu-card { background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 16px; text-decoration: none; color: var(--text); box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 15px; border: 2px solid transparent; }
         .menu-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,82,255,0.15); border-color: var(--primary); }
@@ -41,7 +49,7 @@
     </button>
 
     <div class="menu-grid">
-        <a href="scanner.html" id="linkScanner" class="menu-card">
+        <a href="scanner.html" class="menu-card">
             <div class="icon">💎</div>
             <div>
                 <span class="title">TYSM NFTs</span>
@@ -49,7 +57,7 @@
             </div>
         </a>
 
-        <a href="txs.html" id="linkTxs" class="menu-card">
+        <a href="txs.html" class="menu-card">
             <div class="icon">🧾</div>
             <div>
                 <span class="title">Check your TXs</span>
@@ -65,31 +73,29 @@
         const run = async () => { await sdk.actions.ready(); };
         run();
 
-        // --- FUNZIONE DI AGGIORNAMENTO UI ---
-        function updateUI(address) {
+        // 1. Funzione per aggiornare la UI se connesso
+        function setConnectedState(address) {
             const btn = document.getElementById('btnConnect');
             btn.innerHTML = `✅ ${address.slice(0,6)}...${address.slice(-4)}`;
-            btn.style.backgroundColor = "#2ecc71";
-            
-            // Aggiorna i link con il parametro wallet
-            document.getElementById('linkScanner').href = `scanner.html?wallet=${address}`;
-            document.getElementById('linkTxs').href = `txs.html?wallet=${address}`;
-            
-            // Salva in memoria per le altre pagine
+            btn.classList.add('connected');
+            // Salviamo in memoria
             localStorage.setItem('tysm_wallet', address);
         }
 
-        // --- CONTROLLO MEMORIA ALL'AVVIO ---
+        // 2. Controllo Auto-Login all'avvio
         window.addEventListener('DOMContentLoaded', () => {
             const savedWallet = localStorage.getItem('tysm_wallet');
             if(savedWallet) {
-                updateUI(savedWallet);
+                setConnectedState(savedWallet);
             }
         });
 
-        // --- LOGICA LOGIN ---
+        // 3. Login Manuale
         async function connectWallet() {
             const btn = document.getElementById('btnConnect');
+            // Se già connesso, non fare nulla (o potremmo mettere logout)
+            if(btn.classList.contains('connected')) return;
+
             try {
                 btn.innerHTML = "Connecting...";
                 const provider = await sdk.wallet.getEthereumProvider();
@@ -97,11 +103,11 @@
                 const accounts = await provider.request({ method: 'eth_requestAccounts' });
                 
                 if(accounts.length > 0) {
-                    updateUI(accounts[0]);
+                    setConnectedState(accounts[0]);
                 }
             } catch (error) {
                 console.error("Errore login:", error);
-                btn.innerHTML = "❌ Error. Try Again";
+                btn.innerHTML = "❌ Error";
                 setTimeout(() => { btn.innerHTML = "Connect Wallet (Base)"; }, 2000);
             }
         }
