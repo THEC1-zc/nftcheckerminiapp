@@ -6,94 +6,21 @@
     <title>TYSM Ecosystem Hub</title>
     
     <meta property="og:image" content="https://nftcheckerminiapp.vercel.app/icon.png" />
-    <meta name="fc:miniapp" content='{
-        "version": "1",
-        "imageUrl": "https://nftcheckerminiapp.vercel.app/icon.png",
-        "button": {
-            "title": "🚀 Open Hub",
-            "action": {
-                "type": "launch_miniapp",
-                "name": "TYSM Hub",
-                "url": "https://nftcheckerminiapp.vercel.app",
-                "splashImageUrl": "https://nftcheckerminiapp.vercel.app/icon.png",
-                "splashBackgroundColor": "#0052FF"
-            }
-        }
-    }' />
+    <meta name="fc:miniapp" content='{"version": "1", "imageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "button": { "title": "🚀 Open Hub", "action": { "type": "launch_miniapp", "name": "TYSM Hub", "url": "https://nftcheckerminiapp.vercel.app", "splashImageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "splashBackgroundColor": "#0052FF" } } }' />
     <meta name="fc:frame" content='{"version":"1","imageUrl":"https://nftcheckerminiapp.vercel.app/icon.png","button":{"title":"🚀 Open Hub","action":{"type":"launch_frame","name":"TYSM Hub","url":"https://nftcheckerminiapp.vercel.app","splashImageUrl":"https://nftcheckerminiapp.vercel.app/icon.png","splashBackgroundColor":"#0052FF"}}}' />
 
     <style>
         :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; }
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            
-            /* Background Configuration */
-            background-color: var(--bg);
-            background-image: url('backh.png'); 
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-
-            color: var(--text); 
-            padding: 40px 20px; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100vh;
-        }
-        
-        .header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-            background: rgba(255,255,255,0.8); 
-            padding: 20px;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
-        }
-        
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); background-image: url('backh.png'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; color: var(--text); padding: 40px 20px; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .header { text-align: center; margin-bottom: 30px; background: rgba(255,255,255,0.8); padding: 20px; border-radius: 20px; backdrop-filter: blur(5px); }
         .logo { width: 80px; height: 80px; background: white; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); object-fit: contain; }
         h1 { margin: 0; font-size: 24px; letter-spacing: -0.5px; }
         p { color: #666; margin-top: 5px; }
-
-        /* Connect Button Style */
-        .btn-connect {
-            background-color: #1a1a1a;
-            color: white;
-            padding: 12px 24px;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 12px;
-            cursor: pointer;
-            border: none;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transition: transform 0.2s, background-color 0.2s;
-        }
+        .btn-connect { background-color: #1a1a1a; color: white; padding: 12px 24px; font-size: 1rem; font-weight: 600; border-radius: 12px; cursor: pointer; border: none; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s, background-color 0.2s; }
         .btn-connect:active { transform: scale(0.98); }
         .btn-connect:hover { background-color: #333; }
-
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
-        
-        .menu-card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 16px;
-            text-decoration: none;
-            color: var(--text);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border: 2px solid transparent;
-        }
-        
+        .menu-card { background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 16px; text-decoration: none; color: var(--text); box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 15px; border: 2px solid transparent; }
         .menu-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,82,255,0.15); border-color: var(--primary); }
         .icon { font-size: 28px; background: #eff4ff; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
         .title { font-weight: 700; font-size: 18px; display: block; }
@@ -133,61 +60,53 @@
 
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+        const BASE_CHAIN_ID = '0x2105'; 
 
-        const BASE_CHAIN_ID = '0x2105'; // 8453 hex
-
-        // Inizializza SDK
-        const run = async () => { 
-            await sdk.actions.ready(); 
-        };
+        const run = async () => { await sdk.actions.ready(); };
         run();
 
-        // Funzione di connessione (Logica React tradotta in Vanilla JS)
+        // --- FUNZIONE DI AGGIORNAMENTO UI ---
+        function updateUI(address) {
+            const btn = document.getElementById('btnConnect');
+            btn.innerHTML = `✅ ${address.slice(0,6)}...${address.slice(-4)}`;
+            btn.style.backgroundColor = "#2ecc71";
+            
+            // Aggiorna i link con il parametro wallet
+            document.getElementById('linkScanner').href = `scanner.html?wallet=${address}`;
+            document.getElementById('linkTxs').href = `txs.html?wallet=${address}`;
+            
+            // Salva in memoria per le altre pagine
+            localStorage.setItem('tysm_wallet', address);
+        }
+
+        // --- CONTROLLO MEMORIA ALL'AVVIO ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedWallet = localStorage.getItem('tysm_wallet');
+            if(savedWallet) {
+                updateUI(savedWallet);
+            }
+        });
+
+        // --- LOGICA LOGIN ---
         async function connectWallet() {
             const btn = document.getElementById('btnConnect');
-            
             try {
                 btn.innerHTML = "Connecting...";
-
-                // 1. Ottieni provider dall'SDK Farcaster
                 const provider = await sdk.wallet.getEthereumProvider();
-
-                // 2. Forza switch su rete Base
-                await provider.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: BASE_CHAIN_ID }]
-                });
-
-                // 3. Richiedi account
-                const accounts = await provider.request({ 
-                    method: 'eth_requestAccounts' 
-                });
+                await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_CHAIN_ID }] });
+                const accounts = await provider.request({ method: 'eth_requestAccounts' });
                 
-                const address = accounts[0];
-                
-                // 4. Aggiorna UI
-                btn.innerHTML = `✅ ${address.slice(0,6)}...${address.slice(-4)}`;
-                btn.style.backgroundColor = "#2ecc71";
-                
-                // Disabilita click futuri
-                btn.replaceWith(btn.cloneNode(true)); // Rimuove listener in modo pulito
-
-                // 5. Aggiorna i Link per passare il wallet alle altre pagine
-                document.getElementById('linkScanner').href = `scanner.html?wallet=${address}`;
-                document.getElementById('linkTxs').href = `txs.html?wallet=${address}`;
-                
+                if(accounts.length > 0) {
+                    updateUI(accounts[0]);
+                }
             } catch (error) {
-                console.error("Errore wallet login: ", error);
+                console.error("Errore login:", error);
                 btn.innerHTML = "❌ Error. Try Again";
-                setTimeout(() => {
-                    btn.innerHTML = "Connect Wallet (Base)";
-                }, 2000);
+                setTimeout(() => { btn.innerHTML = "Connect Wallet (Base)"; }, 2000);
             }
         }
 
-        // Collega la funzione al bottone (dentro il modulo)
         document.getElementById('btnConnect').addEventListener('click', connectWallet);
     </script>
-
 </body>
 </html>
