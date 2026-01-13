@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Value Analyzer</title>
+    <title>Smart Value Analyzer</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -29,12 +29,10 @@
         /* DASHBOARD GRID FIXED */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; margin-bottom: 10px; display: none; }
         
-        .stat-card { background: #f8f9fa; padding: 10px; border-radius: 10px; border: 1px solid #eee; display: flex; flex-direction: column; justify-content: center; min-width: 0; /* Fix flex overflow */ }
+        .stat-card { background: #f8f9fa; padding: 10px; border-radius: 10px; border: 1px solid #eee; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
         .stat-card.main { grid-column: span 2; background: #eff4ff; border-color: #dbeafe; padding: 15px; }
 
         .stat-label { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; opacity: 0.7; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        /* Gestione numeri lunghi */
         .stat-qty { font-size: 0.95rem; font-weight: 800; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .stat-val { font-size: 0.75rem; font-weight: 500; margin-top: 2px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -50,7 +48,6 @@
         th { text-align: left; color: #999; font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid #eee; }
         td { padding: 10px 0; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
         
-        /* Colonne tabella */
         .col-type { width: 40%; }
         .col-amount { width: 60%; text-align: right; }
 
@@ -72,8 +69,8 @@
     </div>
 
     <div class="container">
-        <h2 style="text-align:center; margin-top:0;">Deep History Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Full History + DexScreener Pricing</p>
+        <h2 style="text-align:center; margin-top:0;">Smart Swap Detector</h2>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Separates Swaps (DEX) from Transfers/Claims</p>
         
         <div class="input-group">
             <label>Your Wallet</label>
@@ -88,22 +85,22 @@
 
         <div id="dashboard" class="dashboard-grid">
             <div class="stat-card">
-                <span class="stat-label c-green">Total BUY</span>
+                <span class="stat-label c-green">Total BUY (Swaps)</span>
                 <span class="stat-qty" id="qtyBuy">0</span>
                 <span class="stat-val" id="valBuy">$0.00</span>
             </div>
             <div class="stat-card">
-                <span class="stat-label c-red">Total SELL</span>
+                <span class="stat-label c-red">Total SELL (Swaps)</span>
                 <span class="stat-qty" id="qtySell">0</span>
                 <span class="stat-val" id="valSell">$0.00</span>
             </div>
             <div class="stat-card">
-                <span class="stat-label c-purple">Total RECEIVE</span>
+                <span class="stat-label c-purple">Received / Claimed</span>
                 <span class="stat-qty" id="qtyReceive">0</span>
                 <span class="stat-val" id="valReceive">$0.00</span>
             </div>
             <div class="stat-card">
-                <span class="stat-label c-orange">Total SEND</span>
+                <span class="stat-label c-orange">Sent / Staked</span>
                 <span class="stat-qty" id="qtySend">0</span>
                 <span class="stat-val" id="valSend">$0.00</span>
             </div>
@@ -127,6 +124,10 @@
 
     <script>
         const API_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
+        
+        // CA di WETH e USDC su Base (usati per identificare le Pool)
+        const WETH_BASE = "0x4200000000000000000000000000000000000006";
+        const USDC_BASE = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
 
         document.getElementById('btnAnalyze').addEventListener('click', analyzeTxs);
 
@@ -135,7 +136,7 @@
             const tokenCA = document.getElementById('tokenInput').value.trim().toLowerCase();
             const status = document.getElementById('status');
             
-            // UI Reset
+            // Reset UI
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('txTable').style.display = 'none';
             document.getElementById('txList').innerHTML = "";
@@ -145,20 +146,20 @@
             if (!wallet.startsWith('0x') || !tokenCA.startsWith('0x')) return errorStatus("Invalid Address");
 
             try {
-                status.innerText = "Downloading FULL history (this may take a moment)...";
+                status.innerText = "Downloading FULL history...";
 
-                // 1. SCARICA TUTTO CON PAGINAZIONE (FIX PRINCIPALE)
+                // 1. SCARICA TUTTO
                 const incoming = await fetchAllTransfers(wallet, tokenCA, "to");
                 const outgoing = await fetchAllTransfers(wallet, tokenCA, "from");
 
-                // Unisci i dati
+                // Unisci
                 incoming.forEach(tx => tx.direction = 'IN');
                 outgoing.forEach(tx => tx.direction = 'OUT');
                 const allTxs = [...incoming, ...outgoing].sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16));
 
                 if (allTxs.length === 0) return errorStatus("No transactions found.");
 
-                status.innerText = `Analyzing ${allTxs.length} txs & Checking DexScreener...`;
+                status.innerText = `Analyzing ${allTxs.length} txs to detect Pools...`;
 
                 // 2. TROVA INDIRIZZI UNICI (LE CONTROPARTI)
                 const uniqueAddresses = new Set();
@@ -167,50 +168,58 @@
                     uniqueAddresses.add(counterParty);
                 });
 
-                // 3. IDENTIFICA SMART CONTRACTS
-                const contractSet = new Set();
+                // 3. IDENTIFICA LIQUIDITY POOLS (La logica "Sherlock Holmes")
+                // Se un contratto ha WETH o USDC, è quasi sicuramente una Pool (quindi è uno Swap)
+                const poolSet = new Set();
                 const addrArray = Array.from(uniqueAddresses);
-                const codeChecks = await Promise.all(addrArray.map(async (addr) => {
-                    const isC = await isContract(addr);
-                    return { addr, isContract: isC };
-                }));
-                codeChecks.forEach(res => { if (res.isContract) contractSet.add(res.addr); });
+                
+                // Batch processing (a blocchi di 5 per non intasare)
+                const chunkSize = 5;
+                for (let i = 0; i < addrArray.length; i += chunkSize) {
+                    const chunk = addrArray.slice(i, i + chunkSize);
+                    await Promise.all(chunk.map(async (addr) => {
+                        const isC = await isContract(addr);
+                        if (isC) {
+                            // Se è un contratto, controlliamo se ha liquidità (WETH/USDC)
+                            const isPool = await checkLiquidity(addr);
+                            if (isPool) poolSet.add(addr);
+                        }
+                    }));
+                }
 
                 // 4. CLASSIFICAZIONE
                 let totals = { buy: 0, sell: 0, receive: 0, send: 0 };
                 let tokenSymbol = "TOKEN";
                 const tbody = document.getElementById('txList');
-
-                // Limitiamo la visualizzazione in tabella alle prime 100 tx per non bloccare il telefono
                 const visibleTxs = allTxs.slice(0, 100); 
 
                 allTxs.forEach(tx => {
                     const val = parseFloat(tx.value);
                     if (tx.asset) tokenSymbol = tx.asset;
                     const counterParty = tx.direction === 'IN' ? tx.from : tx.to;
-                    const isContractInteraction = contractSet.has(counterParty);
+                    const isPool = poolSet.has(counterParty); // È una Pool DEX?
 
                     if (tx.direction === 'IN') {
-                        if (isContractInteraction) totals.buy += val; 
-                        else totals.receive += val; 
+                        if (isPool) totals.buy += val;       // Da Pool -> Buy
+                        else totals.receive += val;          // Da Wallet/Distributore -> Receive
                     } else {
-                        if (isContractInteraction) totals.sell += val; 
-                        else totals.send += val; 
+                        if (isPool) totals.sell += val;      // A Pool -> Sell
+                        else totals.send += val;             // A Wallet/Staking -> Send
                     }
                 });
 
-                // Rendering tabella (Solo le prime 100)
+                // Render Table
                 visibleTxs.forEach(tx => {
                     const val = parseFloat(tx.value);
                     const counterParty = tx.direction === 'IN' ? tx.from : tx.to;
-                    const isContractInteraction = contractSet.has(counterParty);
+                    const isPool = poolSet.has(counterParty);
                     let typeLabel = "", badgeClass = "";
 
                     if (tx.direction === 'IN') {
-                        if (isContractInteraction) { typeLabel = "BUY"; badgeClass = "bg-buy"; }
+                        if (isPool) { typeLabel = "BUY"; badgeClass = "bg-buy"; }
                         else { typeLabel = "RECEIVE"; badgeClass = "bg-receive"; }
                     } else {
-                        if (isContractInteraction) { typeLabel = "SELL"; badgeClass = "bg-sell"; }
+                        if (isPool) { typeLabel = "SELL"; badgeClass = "bg-sell"; }
                         else { typeLabel = "SEND"; badgeClass = "bg-send"; }
                     }
 
@@ -223,27 +232,24 @@
                             </td>
                             <td class="col-amount">
                                 <strong>${formatNum(val)}</strong>
-                                <span class="tx-sub">${isContractInteraction ? 'DEX' : 'Wallet'}</span>
+                                <span class="tx-sub">${isPool ? 'DEX Swap' : 'Transfer/Claim'}</span>
                             </td>
                         </tr>
                     `;
                 });
 
-                if (allTxs.length > 100) {
-                     tbody.innerHTML += `<tr><td colspan="2" style="text-align:center; color:#999; padding:10px;">... and ${allTxs.length - 100} older transactions</td></tr>`;
-                }
+                if (allTxs.length > 100) tbody.innerHTML += `<tr><td colspan="2" style="text-align:center; color:#999; padding:10px;">... + ${allTxs.length - 100} more</td></tr>`;
 
-                // 5. PREZZO ATTUALE (DEXSCREENER INVECE DI COINGECKO)
+                // 5. PREZZO (DexScreener)
                 let currentPrice = 0;
                 try {
                     const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenCA}`);
                     const dexData = await dexRes.json();
                     if (dexData.pairs && dexData.pairs.length > 0) {
-                        // Prendi il prezzo della pool più liquida su Base
                         const pair = dexData.pairs.find(p => p.chainId === 'base') || dexData.pairs[0];
                         currentPrice = parseFloat(pair.priceUsd);
                     }
-                } catch(e){ console.log("DexScreener err", e); }
+                } catch(e){}
 
                 // 6. UPDATE DASHBOARD
                 const updateCard = (id, qty) => {
@@ -262,7 +268,7 @@
 
                 document.getElementById('dashboard').style.display = 'grid';
                 document.getElementById('txTable').style.display = 'table';
-                status.innerText = "Analysis Complete ✅";
+                status.innerText = "Complete ✅";
                 status.style.color = "#2ecc71";
 
             } catch (err) { console.error(err); errorStatus("Analysis failed. Try again."); }
@@ -275,7 +281,6 @@
             s.innerText = "❌ " + msg; s.style.color = "#ff4757";
         }
 
-        // Formattazione Intelligente (es. 1.2M invece di 1200000)
         function formatShort(num) {
             if (num === 0) return "0";
             if (num < 0.01) return num.toExponential(2);
@@ -284,26 +289,18 @@
             return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
         }
 
-        function formatNum(num, decimals = 2) {
-            return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: decimals });
+        function formatNum(num) {
+            return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
         }
 
-        // NUOVA FUNZIONE: Fetch con Paginazione Automatica
         async function fetchAllTransfers(walletAddr, tokenAddr, direction) {
             let allTransfers = [];
             let pageKey = null;
             let loops = 0;
-            const MAX_LOOPS = 50; // Limite di sicurezza (50k transazioni)
+            const MAX_LOOPS = 50; 
 
             do {
-                const params = { 
-                    "fromBlock": "0x0", 
-                    "toBlock": "latest", 
-                    "category": ["erc20"], 
-                    "withMetadata": true, 
-                    "excludeZeroValue": true, 
-                    "contractAddresses": [tokenAddr] 
-                };
+                const params = { "fromBlock": "0x0", "toBlock": "latest", "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, "contractAddresses": [tokenAddr] };
                 if (direction === "to") params.toAddress = walletAddr; else params.fromAddress = walletAddr;
                 if (pageKey) params.pageKey = pageKey;
 
@@ -312,16 +309,12 @@
                     body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] })
                 });
                 const data = await response.json();
-                
                 if (data.result && data.result.transfers) {
                     allTransfers = allTransfers.concat(data.result.transfers);
                     pageKey = data.result.pageKey;
-                } else {
-                    pageKey = null;
-                }
+                } else pageKey = null;
                 loops++;
             } while (pageKey && loops < MAX_LOOPS);
-
             return allTransfers;
         }
 
@@ -333,6 +326,28 @@
                 });
                 const data = await response.json();
                 return data.result && data.result !== "0x";
+            } catch (e) { return false; }
+        }
+
+        // NUOVA FUNZIONE: Controlla se l'indirizzo ha WETH o USDC (Indice di essere una Pool)
+        async function checkLiquidity(address) {
+            try {
+                // Controlliamo WETH
+                const resWeth = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", 
+                        "params": [address, [WETH_BASE, USDC_BASE]]
+                    })
+                });
+                const data = await resWeth.json();
+                if (data.result && data.result.tokenBalances) {
+                    for (let bal of data.result.tokenBalances) {
+                        // Se ha più di 0.001 unità (in hex), consideralo una pool
+                        if (BigInt(bal.tokenBalance) > BigInt(1000000000000000)) return true; 
+                    }
+                }
+                return false;
             } catch (e) { return false; }
         }
     </script>
