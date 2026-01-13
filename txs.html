@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Analyzer 3.7 (Deep Scan)</title>
+    <title>Master Analyzer (Background)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -13,7 +13,25 @@
 
     <style>
         :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --green: #2ecc71; --red: #ff4757; --orange: #ff9f43; --purple: #9c27b0; --dark: #34495e; --pink: #d63384; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 15px; margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            /* BACKGROUND CONFIGURATION */
+            background-color: var(--bg); /* Fallback color */
+            background-image: url('back.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            
+            color: var(--text); 
+            padding: 15px; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            overflow-x: hidden; 
+        }
         
         .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; }
         .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
@@ -40,7 +58,7 @@
         
         /* Special Cards */
         .stat-card.main { grid-column: span 2; background: #eff4ff; border-color: #dbeafe; padding: 15px; }
-        .stat-card.stacked { grid-column: span 2; background: #fdf2f8; border-color: #fce7f3; padding: 15px; margin-bottom: 5px; }
+        /* .stat-card.stacked { grid-column: span 2; background: #fdf2f8; border-color: #fce7f3; padding: 15px; margin-bottom: 5px; } */ /* HIDDEN */
 
         .stat-label { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; opacity: 0.7; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .stat-qty { font-size: 0.95rem; font-weight: 800; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -120,12 +138,6 @@
                 <span class="stat-val" id="valSend">$0.00</span>
             </div>
             
-            <div class="stat-card stacked">
-                <span class="stat-label c-pink">STAKED (st/stk)</span>
-                <span class="stat-qty c-pink" id="qtyStacked">0</span>
-                <span class="stat-val" id="valStacked" style="font-weight:700;">Scanning...</span>
-            </div>
-
             <div class="stat-card main">
                 <span class="stat-label c-blue">Current Net Balance</span>
                 <span class="stat-qty c-blue" id="qtyNet">0</span>
@@ -160,8 +172,8 @@
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('txTable').style.display = 'none';
             document.getElementById('txList').innerHTML = "";
-            document.getElementById('qtyStacked').innerText = "0";
-            document.getElementById('valStacked').innerText = "-";
+            // document.getElementById('qtyStacked').innerText = "0"; // Suspended
+            // document.getElementById('valStacked').innerText = "-"; // Suspended
 
             if (!wallet.startsWith('0x') || !tokenCA.startsWith('0x')) return errorStatus("Invalid Address");
 
@@ -172,8 +184,8 @@
                 
                 const rawTxs = await fetchUnifiedTransfers(wallet, tokenCA, limitMode);
 
-                // --- CHECK STAKED BALANCE IN PARALLEL ---
-                checkStakedBalance(wallet, tokenCA);
+                // --- STACKED LOGIC SUSPENDED ---
+                // checkStakedBalance(wallet, tokenCA);
 
                 if (rawTxs.length === 0) return errorStatus("No transactions found.");
 
@@ -265,120 +277,6 @@
                 status.style.color = "#2ecc71";
 
             } catch (err) { console.error(err); errorStatus("Analysis Error: " + err.message); }
-        }
-
-        // --- DEEP STAKED SEARCH (Pagination + Extended Prefixes) ---
-        async function checkStakedBalance(wallet, mainTokenCA) {
-            try {
-                // 1. Get Official Symbol
-                const metaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenMetadata",
-                        "params": [mainTokenCA]
-                    })
-                });
-                const metaData = await metaRes.json();
-                let mainSymbol = metaData.result?.symbol || "";
-
-                if (!mainSymbol) return;
-
-                const cleanMain = mainSymbol.replace('$', '').trim().toLowerCase();
-                const displayTicker = cleanMain.toUpperCase(); 
-
-                document.getElementById('valStacked').innerText = `Scanning st/stk${displayTicker}...`;
-                console.log(`[STAKED] Looking for variants of: ${cleanMain}`);
-
-                // 2. Fetch ALL Token Balances (with Pagination)
-                let allTokens = [];
-                let pageKey = null;
-                let safetyLoop = 0;
-
-                do {
-                    safetyLoop++;
-                    const balParams = { "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", "params": [wallet] };
-                    if (pageKey) balParams.params.push({ pageKey: pageKey });
-
-                    const balRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                        method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(balParams)
-                    });
-                    const balData = await balRes.json();
-                    
-                    if (balData.result?.tokenBalances) {
-                        allTokens = allTokens.concat(balData.result.tokenBalances);
-                    }
-                    
-                    pageKey = balData.result?.pageKey;
-                    // Limit deep scan to 5 pages (approx 500 tokens) to prevent rate limits
-                    if (safetyLoop > 5) break; 
-
-                } while (pageKey);
-
-                console.log(`[STAKED] Total tokens found in wallet: ${allTokens.length}`);
-
-                let foundBalance = 0;
-                let foundSymbol = "";
-
-                // 3. Scan tokens with ROBUST FUZZY MATCH logic
-                for (const t of allTokens) {
-                    // Skip zero balance or the main token itself
-                    if (t.tokenBalance === "0x0000000000000000000000000000000000000000000000000000000000000000") continue;
-                    if (t.contractAddress.toLowerCase() === mainTokenCA.toLowerCase()) continue;
-
-                    try {
-                        const tMetaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                            method: "POST", headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenMetadata",
-                                "params": [t.contractAddress]
-                            })
-                        });
-                        const tMeta = await tMetaRes.json();
-                        let sym = tMeta.result?.symbol || "";
-                        
-                        const cleanCand = sym.replace('$', '').trim().toLowerCase();
-                        
-                        // Debug log for checking what we see (visible in F12)
-                        if (cleanCand.includes(cleanMain)) console.log(`[STAKED] Candidate found: ${cleanCand}`);
-
-                        // LOGIC: Contains ticker AND starts with common defi prefixes
-                        if (cleanCand.includes(cleanMain)) {
-                            
-                            const isStaked = cleanCand.startsWith('st') || 
-                                             cleanCand.startsWith('x') || 
-                                             cleanCand.startsWith('v') || 
-                                             cleanCand.startsWith('w') || 
-                                             cleanCand.startsWith('es') || // Escrowed
-                                             cleanCand.startsWith('s') ||  // Simple Staked
-                                             cleanCand.startsWith('g') ||  // Governance
-                                             cleanCand.startsWith('rl');   // Relocked
-
-                            if (isStaked) {
-                                const decimals = tMeta.result.decimals || 18;
-                                const raw = parseInt(t.tokenBalance, 16);
-                                foundBalance = raw / Math.pow(10, decimals);
-                                foundSymbol = sym;
-                                console.log(`[STAKED] MATCH! ${sym}`);
-                                break; // Stop at first match
-                            }
-                        }
-                    } catch (err) {
-                        // Ignore individual token fetch errors to keep loop alive
-                        continue;
-                    }
-                }
-
-                // 4. Update UI Result
-                if (foundSymbol) {
-                    document.getElementById('qtyStacked').innerText = formatShort(foundBalance) + " " + foundSymbol;
-                    document.getElementById('valStacked').innerText = "Found in Wallet";
-                } else {
-                    document.getElementById('qtyStacked').innerText = "0";
-                    document.getElementById('valStacked').innerText = `No st/stk${displayTicker} found`;
-                }
-
-            } catch(e) { console.error("Staked check failed", e); }
         }
 
         // --- CORE LOGIC: DID I PAY? ---
