@@ -10,7 +10,7 @@
         const run = async () => { await sdk.actions.ready(); };
         run();
     </script>
-    
+
     <style>
         :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --green: #2ecc71; --red: #ff4757; --orange: #ff9f43; --purple: #9c27b0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 15px; margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
@@ -33,7 +33,6 @@
         
         .btn-fast { background-color: var(--primary); box-shadow: 0 4px 12px rgba(0,82,255,0.2); }
         .btn-full { background-color: #34495e; box-shadow: 0 4px 12px rgba(52,73,94,0.2); }
-        /* REMOVED: .btn-excel style */
 
         /* DASHBOARD GRID */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; margin-bottom: 10px; display: none; }
@@ -136,11 +135,9 @@
 
     <script>
         const API_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
-        // REMOVED: globalExportData
 
         document.getElementById('btnFast').addEventListener('click', () => runAnalysis('fast'));
         document.getElementById('btnFull').addEventListener('click', () => runAnalysis('full'));
-        // REMOVED: btnExcel event listener
 
         async function runAnalysis(mode) {
             const wallet = document.getElementById('walletInput').value.trim().toLowerCase();
@@ -150,9 +147,7 @@
             // UI Reset
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('txTable').style.display = 'none';
-            // REMOVED: btnExcel display reset
             document.getElementById('txList').innerHTML = "";
-            // REMOVED: globalExportData clear
 
             if (!wallet.startsWith('0x') || !tokenCA.startsWith('0x')) return errorStatus("Invalid Address");
 
@@ -162,11 +157,12 @@
                 if (mode === 'fast') {
                     status.innerText = "Fetching recent activity...";
                     status.style.color = "#0052FF";
-                    rawTxs = await fetchTransfers(wallet, tokenCA, 50); // Limit 50
+                    rawTxs = await fetchTransfers(wallet, tokenCA, 50); 
                 } else {
-                    status.innerText = "Downloading ALL history (Please wait)...";
-                    status.style.color = "#e67e22"; // Orange for warning
-                    rawTxs = await fetchTransfers(wallet, tokenCA, 10000); // Unlimited (up to 10k safety)
+                    status.innerText = "Downloading ALL history (This takes time)...";
+                    status.style.color = "#e67e22"; 
+                    // Use a large number to trigger full fetch mode logic
+                    rawTxs = await fetchTransfers(wallet, tokenCA, 999999); 
                 }
 
                 if (rawTxs.length === 0) return errorStatus("No transactions found.");
@@ -178,14 +174,13 @@
                 let tokenSymbol = "TOKEN";
                 const tbody = document.getElementById('txList');
                 
-                // Process in batches to update UI progress
+                // Process in batches
                 const batchSize = 5;
                 for (let i = 0; i < rawTxs.length; i += batchSize) {
                     const batch = rawTxs.slice(i, i + batchSize);
                     
-                    // Update Status Percentage
                     const pct = Math.round((i / rawTxs.length) * 100);
-                    if (mode === 'full') status.innerText = `Analyzing deep logic... ${pct}%`;
+                    if (mode === 'full') status.innerText = `Analyzing Deep Logic... ${pct}%`;
 
                     await Promise.all(batch.map(async (tx) => {
                         const val = parseFloat(tx.value);
@@ -202,9 +197,7 @@
                         else if (category === 'RECEIVE') totals.receive += val;
                         else if (category === 'SEND') totals.send += val;
 
-                        // REMOVED: Data push to globalExportData
-
-                        // UI: Show only first 50 in table to save memory, but calculate ALL
+                        // UI: Show only first 50 in table to save memory
                         if (i < 50) {
                             const dateObj = new Date(tx.metadata.blockTimestamp);
                             let badgeClass = "";
@@ -231,8 +224,7 @@
                 }
 
                 if (rawTxs.length > 50) {
-                    // CHANGED: Text since Excel is gone
-                    tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="2" style="text-align:center;color:#999">... and ${rawTxs.length - 50} more (Hidden for speed)</td></tr>`);
+                    tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="2" style="text-align:center;color:#999">... and ${rawTxs.length - 50} more (calculated but hidden)</td></tr>`);
                 }
 
                 // 3. GET PRICE
@@ -263,15 +255,12 @@
 
                 document.getElementById('dashboard').style.display = 'grid';
                 document.getElementById('txTable').style.display = 'table';
-                // REMOVED: btnExcel display block
                 
                 status.innerText = "Complete ✅";
                 status.style.color = "#2ecc71";
 
             } catch (err) { console.error(err); errorStatus("Analysis Error. Try again."); }
         }
-
-        // REMOVED: exportToExcel Function
 
         // --- CORE LOGIC: DID I PAY? ---
         async function determineCategory(txHash, wallet, targetTokenCA, isTargetIn) {
@@ -316,6 +305,108 @@
             } catch (e) { return isTargetIn ? 'RECEIVE' : 'SEND'; }
         }
 
+        // --- FETCHING LOGIC (ROBUST PAGINATION) ---
+        async function fetchTransfers(walletAddr, tokenAddr, limit) {
+            // Fast mode logic
+            if (limit <= 100) {
+                return await fetchFastMode(walletAddr, tokenAddr, limit);
+            }
+            // Full history logic
+            return await fetchAllHistory(walletAddr, tokenAddr);
+        }
+
+        async function fetchFastMode(wallet, token, limit) {
+            const params = { 
+                "fromBlock": "0x0", "toBlock": "latest", 
+                "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, 
+                "contractAddresses": [token],
+                "maxCount": "0x" + limit.toString(16),
+                "order": "desc" 
+            };
+            
+            const [inTxs, outTxs] = await Promise.all([
+                fetchAlchemyDirection(wallet, token, params, 'to'),
+                fetchAlchemyDirection(wallet, token, params, 'from')
+            ]);
+
+            return [...inTxs, ...outTxs]
+                .sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16))
+                .slice(0, limit);
+        }
+
+        async function fetchAllHistory(wallet, token) {
+            const status = document.getElementById('status');
+            let totalFetched = 0;
+
+            const baseParams = { 
+                "fromBlock": "0x0", "toBlock": "latest", 
+                "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, 
+                "contractAddresses": [token]
+            };
+
+            const fetchAllPages = async (direction) => {
+                let allTx = [];
+                let pageKey = null;
+                let loopCount = 0;
+                
+                do {
+                    loopCount++;
+                    if (loopCount % 2 === 0) {
+                        status.innerText = `Fetching history... (${totalFetched} found)`;
+                    }
+
+                    const params = { ...baseParams };
+                    if (pageKey) params.pageKey = pageKey;
+                    
+                    // Construct payload manually to handle pagination
+                    const payload = { ...params };
+                    if (direction === 'to') payload.toAddress = wallet;
+                    else payload.fromAddress = wallet;
+
+                    const apiRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [payload] })
+                    });
+                    
+                    const data = await apiRes.json();
+                    if (!data.result) break;
+
+                    const txs = data.result.transfers || [];
+                    allTx = allTx.concat(txs);
+                    totalFetched += txs.length;
+                    
+                    pageKey = data.result.pageKey; 
+
+                } while (pageKey);
+
+                return allTx;
+            };
+
+            status.innerText = "Downloading Inbound & Outbound streams...";
+            
+            const [inTxs, outTxs] = await Promise.all([
+                fetchAllPages('to'),
+                fetchAllPages('from')
+            ]);
+
+            status.innerText = `Found ${inTxs.length + outTxs.length} txs. Sorting...`;
+
+            return [...inTxs, ...outTxs].sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16));
+        }
+
+        async function fetchAlchemyDirection(wallet, token, params, direction) {
+            const p = { ...params };
+            if (direction === 'to') p.toAddress = wallet;
+            else p.fromAddress = wallet;
+
+            const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [p] })
+            });
+            const d = await res.json();
+            return d.result ? d.result.transfers : [];
+        }
+
         // --- HELPERS ---
         function errorStatus(msg) {
             const s = document.getElementById('status');
@@ -332,68 +423,6 @@
 
         function formatNum(num) {
             return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        }
-
-        async function fetchTransfers(walletAddr, tokenAddr, limit) {
-            let allTransfers = [];
-            let pageKey = null;
-            let loops = 0;
-            const MAX_LOOPS = 50; 
-
-            // Convert limit to hex or keep processing pages
-            do {
-                const params = { 
-                    "fromBlock": "0x0", "toBlock": "latest", 
-                    "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, 
-                    "contractAddresses": [tokenAddr]
-                };
-                
-                // Fetch IN
-                params.toAddress = walletAddr;
-                if (pageKey) params.pageKey = pageKey;
-
-                // Simple fetch logic: get IN and OUT separately is safer for pagination
-                // Here we simplify: we fetch recent IN and recent OUT, merge and sort
-                // Note: For TRUE full history, we would need to paginate both streams completely. 
-                // This implementation does a robust "Best Effort" for Full Mode.
-                
-                // ... (Logic simplified for this snippet size: We fetch chunks)
-                // To keep code small, we use the method of "Fetch last X events"
-                // For "Full", we iterate until done.
-                
-                return await fetchBidiTransfers(walletAddr, tokenAddr, limit);
-
-            } while (false);
-        }
-
-        async function fetchBidiTransfers(wallet, token, limit) {
-             const params = { 
-                "fromBlock": "0x0", "toBlock": "latest", 
-                "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, 
-                "contractAddresses": [token],
-                "maxCount": "0x" + limit.toString(16)
-            };
-            
-            // IN
-            params.toAddress = wallet;
-            const resIn = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] })
-            });
-            const dIn = await resIn.json();
-            const txsIn = dIn.result ? dIn.result.transfers : [];
-
-            // OUT
-            delete params.toAddress;
-            params.fromAddress = wallet;
-            const resOut = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] })
-            });
-            const dOut = await resOut.json();
-            const txsOut = dOut.result ? dOut.result.transfers : [];
-
-            return [...txsIn, ...txsOut].sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16)).slice(0, limit);
         }
     </script>
 </body>
