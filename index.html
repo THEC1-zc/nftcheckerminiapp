@@ -22,14 +22,6 @@
     }' />
     <meta name="fc:frame" content='{"version":"1","imageUrl":"https://nftcheckerminiapp.vercel.app/icon.png","button":{"title":"🚀 Open Hub","action":{"type":"launch_frame","name":"TYSM Hub","url":"https://nftcheckerminiapp.vercel.app","splashImageUrl":"https://nftcheckerminiapp.vercel.app/icon.png","splashBackgroundColor":"#0052FF"}}}' />
 
-    <script type="module">
-        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-        const run = async () => { await sdk.actions.ready(); };
-        run();
-    </script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
-
     <style>
         :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; }
         
@@ -38,7 +30,7 @@
             
             /* Background Configuration */
             background-color: var(--bg);
-            background-image: url('backh.png'); /* Assicurati che il file esista */
+            background-image: url('backh.png'); 
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -56,7 +48,7 @@
         .header { 
             text-align: center; 
             margin-bottom: 30px; 
-            background: rgba(255,255,255,0.8); /* Leggera trasparenza per leggere sopra lo sfondo */
+            background: rgba(255,255,255,0.8); 
             padding: 20px;
             border-radius: 20px;
             backdrop-filter: blur(5px);
@@ -89,7 +81,7 @@
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
         
         .menu-card {
-            background: rgba(255, 255, 255, 0.95); /* Sfondo carte quasi solido */
+            background: rgba(255, 255, 255, 0.95);
             padding: 25px;
             border-radius: 16px;
             text-decoration: none;
@@ -116,9 +108,9 @@
         <p>Select a tool to start</p>
     </div>
 
-    <button id="btnConnect" class="btn-connect" onclick="connectWallet()">
+    <button id="btnConnect" class="btn-connect">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
-        Connect Wallet
+        Connect Wallet (Base)
     </button>
 
     <div class="menu-grid">
@@ -139,45 +131,62 @@
         </a>
     </div>
 
-    <script>
-        // Logica di connessione Wallet
+    <script type="module">
+        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+
+        const BASE_CHAIN_ID = '0x2105'; // 8453 hex
+
+        // Inizializza SDK
+        const run = async () => { 
+            await sdk.actions.ready(); 
+        };
+        run();
+
+        // Funzione di connessione (Logica React tradotta in Vanilla JS)
         async function connectWallet() {
             const btn = document.getElementById('btnConnect');
             
-            if (typeof window.ethereum !== 'undefined') {
-                try {
-                    btn.innerHTML = "Connecting...";
-                    
-                    const provider = new ethers.BrowserProvider(window.ethereum);
-                    const accounts = await provider.send("eth_requestAccounts", []);
-                    const signer = await provider.getSigner();
-                    const address = await signer.getAddress();
-                    
-                    // 1. Aggiorna UI Pulsante
-                    btn.innerHTML = `✅ ${address.slice(0,6)}...${address.slice(-4)}`;
-                    btn.style.backgroundColor = "#2ecc71"; // Verde
-                    btn.onclick = null; // Disabilita click futuri sul login
+            try {
+                btn.innerHTML = "Connecting...";
 
-                    // 2. Aggiorna i Link delle Card
-                    // Quando l'utente cliccherà sui box, porterà con sé l'indirizzo
-                    const linkScanner = document.getElementById('linkScanner');
-                    const linkTxs = document.getElementById('linkTxs');
+                // 1. Ottieni provider dall'SDK Farcaster
+                const provider = await sdk.wallet.getEthereumProvider();
 
-                    linkScanner.href = `scanner.html?wallet=${address}`;
-                    linkTxs.href = `txs.html?wallet=${address}`;
-                    
-                } catch (error) {
-                    console.error(error);
-                    btn.innerHTML = "❌ Error. Try Again";
-                    setTimeout(() => {
-                        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg> Connect Wallet`;
-                    }, 2000);
-                }
-            } else {
-                alert("No wallet found. Please use Farcaster, Coinbase Wallet or MetaMask.");
-                btn.innerHTML = "Connect Wallet";
+                // 2. Forza switch su rete Base
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: BASE_CHAIN_ID }]
+                });
+
+                // 3. Richiedi account
+                const accounts = await provider.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                const address = accounts[0];
+                
+                // 4. Aggiorna UI
+                btn.innerHTML = `✅ ${address.slice(0,6)}...${address.slice(-4)}`;
+                btn.style.backgroundColor = "#2ecc71";
+                
+                // Disabilita click futuri
+                btn.replaceWith(btn.cloneNode(true)); // Rimuove listener in modo pulito
+
+                // 5. Aggiorna i Link per passare il wallet alle altre pagine
+                document.getElementById('linkScanner').href = `scanner.html?wallet=${address}`;
+                document.getElementById('linkTxs').href = `txs.html?wallet=${address}`;
+                
+            } catch (error) {
+                console.error("Errore wallet login: ", error);
+                btn.innerHTML = "❌ Error. Try Again";
+                setTimeout(() => {
+                    btn.innerHTML = "Connect Wallet (Base)";
+                }, 2000);
             }
         }
+
+        // Collega la funzione al bottone (dentro il modulo)
+        document.getElementById('btnConnect').addEventListener('click', connectWallet);
     </script>
 
 </body>
