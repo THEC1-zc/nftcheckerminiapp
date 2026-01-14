@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 10.8 (Smart Fallback)</title>
+    <title>WAST Analyzer 10.9 (Waterfall)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -103,14 +103,6 @@
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .page-info { font-size: 0.8rem; color: #666; font-weight: 600; }
 
-        #exportArea { margin-top: 15px; text-align: center; min-height: 40px; }
-        .download-link { 
-            display: inline-block; background-color: #27ae60; color: white; padding: 12px 25px; 
-            border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem; 
-            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); animation: popIn 0.3s ease;
-        }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
         #status { text-align: center; margin: 15px 0; font-weight: 600; font-size: 0.85rem; min-height: 20px; padding: 0 10px; }
         #deepStatus { font-size: 0.75rem; color: var(--primary); text-align: center; margin-bottom: 10px; display:none; }
 
@@ -126,7 +118,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Smart Fallback</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Waterfall Time Machine</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -143,14 +135,12 @@
             <button class="btn-fast" id="btnFast">⚡ Last 500</button>
             <button class="btn-full" id="btnFull">🐢 Deep (5k)</button>
             <button id="btnHistory" class="btn-hist">🔮 Time Machine</button>
-            <button id="btnCopy" class="btn-copy">📋 Copy for Excel (ITA)</button>
+            <button id="btnCopy" class="btn-copy">📋 Copy for Excel (*)</button>
         </div>
         <div class="btn-group">
             <button id="btnTest" class="btn-test">🧪 TEST (5 Txs)</button>
         </div>
         
-        <div id="exportArea"></div>
-
         <div id="status"></div>
         <div id="deepStatus"></div>
 
@@ -209,8 +199,8 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="wip-tag">🚧 v10.8 SMART FALLBACK 🚧</div>
-        <div class="version-tag">v10.8</div>
+        <div class="wip-tag">🚧 v10.9 WATERFALL FIX 🚧</div>
+        <div class="version-tag">v10.9</div>
     </div>
 
     <script>
@@ -224,7 +214,7 @@
         
         let currentPage = 1;
         const rowsPerPage = 50;
-        const BATCH_SIZE = 15; // Conservative
+        const BATCH_SIZE = 15; 
 
         const MAJOR_TOKENS = {
             "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": { sym: "USDC", dec: 6 },
@@ -426,7 +416,6 @@
             const wallet = document.getElementById('walletInput').value.trim().toLowerCase();
             currentTokenCA = isCustomTokenMode ? document.getElementById('tokenInput').value.trim().toLowerCase() : document.getElementById('tokenSelect').value.trim().toLowerCase();
             
-            // RESET
             document.getElementById('dashboard').style.display='none';
             document.getElementById('txTable').style.display='none';
             document.getElementById('tokenHeader').style.display='none';
@@ -434,7 +423,6 @@
             document.getElementById('btnCopy').style.display='none';
             document.getElementById('paginationContainer').style.display='none';
             document.getElementById('deepStatus').style.display='none';
-            document.getElementById('exportArea').innerHTML = ''; 
             document.getElementById('btnHistory').innerText = "🔮 Time Machine"; 
             document.getElementById('btnHistory').disabled = false;
             document.getElementById('txList').innerHTML = "";
@@ -503,14 +491,14 @@
             refineDataInBackground(wallet, currentTokenCA);
         }
 
-        // --- SMART FALLBACK LOGIC ---
         async function refineDataInBackground(wallet, tokenCA) {
             const deepStatus = document.getElementById('deepStatus');
+            const batchSize = BATCH_SIZE; 
             let totals = { buy:0, sell:0, recv:0, send:0 };
 
-            for (let i = 0; i < globalEvents.length; i += BATCH_SIZE) {
-                const batch = globalEvents.slice(i, i + BATCH_SIZE);
-                deepStatus.innerText = `Refining Data: ${Math.min(i + BATCH_SIZE, globalEvents.length)} / ${globalEvents.length}...`;
+            for (let i = 0; i < globalEvents.length; i += batchSize) {
+                const batch = globalEvents.slice(i, i + batchSize);
+                deepStatus.innerText = `Refining Data: ${Math.min(i + batchSize, globalEvents.length)} / ${globalEvents.length}...`;
 
                 const requestBody = batch.map((evt, idx) => ({
                     jsonrpc: "2.0",
@@ -519,47 +507,63 @@
                     params: [evt.hash]
                 }));
 
-                let batchSuccess = false;
-                let responses = null;
-
                 try {
-                    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
-                        method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(requestBody)
-                    });
-                    if (res.ok) {
-                        responses = await res.json();
-                        batchSuccess = true;
-                    }
-                } catch(e) { console.warn("Batch failed, switching to single fetch..."); }
-
-                // PROCESS RESPONSES OR FALLBACK
-                if (batchSuccess && responses) {
-                    processReceipts(responses, i, wallet, tokenCA, totals);
-                } else {
-                    // FALLBACK: Fetch one by one
-                    for (let j = 0; j < batch.length; j++) {
-                        const evt = batch[j];
-                        const globalIdx = i + j;
+                    // Retry Logic
+                    let responses = null;
+                    let retries = 2;
+                    while(retries > 0 && !responses) {
                         try {
                             const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                                 method: "POST", headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                    jsonrpc: "2.0", id: 1, method: "eth_getTransactionReceipt", params: [evt.hash]
-                                })
+                                body: JSON.stringify(requestBody)
                             });
-                            const r = await res.json();
-                            processReceipts([r], i + j, wallet, tokenCA, totals, true); 
-                        } catch(e) {}
-                        await new Promise(r => setTimeout(r, 50)); // Tiny delay between singles
+                            if(res.ok) responses = await res.json();
+                            else throw new Error("API Limit");
+                        } catch(e) {
+                            retries--;
+                            await new Promise(r => setTimeout(r, 1000)); 
+                        }
                     }
-                }
+
+                    if(responses) {
+                        responses.forEach(r => {
+                            if (!r.result) return;
+                            const evtIndex = i + r.id; 
+                            if (!globalEvents[evtIndex]) return;
+
+                            const logs = r.result.logs;
+                            const evt = globalEvents[evtIndex];
+                            const myWallet = wallet.toLowerCase().replace("0x", "");
+                            const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+
+                            let newType = evt.isIncoming ? 'RECEIVE' : 'SEND'; 
+
+                            if (evt.isIncoming) {
+                                for(const log of logs) {
+                                    if(log.topics[0] !== TRANSFER) continue;
+                                    const contract = log.address.toLowerCase();
+                                    const fromMe = log.topics[1] && log.topics[1].toLowerCase().includes(myWallet);
+                                    if (fromMe && contract !== tokenCA) { newType = 'BUY'; break; }
+                                }
+                            } else {
+                                for(const log of logs) {
+                                    if(log.topics[0] !== TRANSFER) continue;
+                                    const contract = log.address.toLowerCase();
+                                    const toMe = log.topics[2] && log.topics[2].toLowerCase().includes(myWallet);
+                                    if (toMe && contract !== tokenCA) { newType = 'SELL'; break; }
+                                }
+                            }
+                            globalEvents[evtIndex].type = newType;
+                        });
+                    }
+                } catch(e) { console.error("Batch fail", e); }
                 
-                await new Promise(r => setTimeout(r, 100)); // Pace batches
-                updateTotals(); // Refresh UI
+                await new Promise(r => setTimeout(r, 100)); 
+                updateTotals(); 
             }
 
-            finalizePending(); 
+            finalizePending(); // Fallback Logic
+            
             deepStatus.innerText = "Data Fully Refined ✅";
             document.getElementById('status').innerText = "Complete ✅";
             renderTable(); 
@@ -568,40 +572,6 @@
                 document.getElementById('btnHistory').style.display='flex';
                 document.getElementById('btnCopy').style.display='flex';
             }
-        }
-
-        function processReceipts(responses, offsetIndex, wallet, tokenCA, totals, isSingle=false) {
-            responses.forEach(r => {
-                if (!r.result) return;
-                
-                // If single fetch, ID is always 1, use offset directly. If batch, ID is relative.
-                const evtIndex = isSingle ? offsetIndex : (offsetIndex + r.id);
-                if (!globalEvents[evtIndex]) return;
-
-                const logs = r.result.logs;
-                const evt = globalEvents[evtIndex];
-                const myWallet = wallet.toLowerCase().replace("0x", "");
-                const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-
-                let newType = evt.isIncoming ? 'RECEIVE' : 'SEND'; 
-
-                if (evt.isIncoming) {
-                    for(const log of logs) {
-                        if(log.topics[0] !== TRANSFER) continue;
-                        const contract = log.address.toLowerCase();
-                        const fromMe = log.topics[1] && log.topics[1].toLowerCase().includes(myWallet);
-                        if (fromMe && contract !== tokenCA) { newType = 'BUY'; break; }
-                    }
-                } else {
-                    for(const log of logs) {
-                        if(log.topics[0] !== TRANSFER) continue;
-                        const contract = log.address.toLowerCase();
-                        const toMe = log.topics[2] && log.topics[2].toLowerCase().includes(myWallet);
-                        if (toMe && contract !== tokenCA) { newType = 'SELL'; break; }
-                    }
-                }
-                globalEvents[evtIndex].type = newType;
-            });
         }
 
         function finalizePending() {
@@ -630,7 +600,9 @@
             document.getElementById('sellCurr').innerText = `$${(totals.sell * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
             
             document.getElementById('recvTokens').innerText = totals.recv.toLocaleString(undefined, {maximumFractionDigits:2});
+            document.getElementById('recvHist').innerText = "---";
             document.getElementById('sendTokens').innerText = totals.send.toLocaleString(undefined, {maximumFractionDigits:2});
+            document.getElementById('sendHist').innerText = "---";
         }
 
         function renderTable() {
@@ -699,6 +671,7 @@
             document.getElementById('btnNext').disabled = (currentPage >= totalPages);
         }
 
+        // --- WATERFALL TIME MACHINE LOGIC ---
         async function fetchHistoricalPrices() {
             const btn = document.getElementById('btnHistory');
             const status = document.getElementById('status');
@@ -711,13 +684,44 @@
             for(const evt of globalEvents) {
                 try {
                     status.innerText = `Fetching ${processed+1}/${globalEvents.length}...`;
-                    const url = `https://coins.llama.fi/prices/historical/${evt.ts}/base:${currentTokenCA.toLowerCase()}`;
-                    const res = await fetch(url);
-                    const data = await res.json();
-                    const key = `base:${currentTokenCA.toLowerCase()}`;
                     
-                    if(data.coins && data.coins[key]) {
-                        const histPrice = data.coins[key].price;
+                    let histPrice = null;
+                    
+                    // 1. DEFI LLAMA (Primary)
+                    try {
+                        const res = await fetch(`https://coins.llama.fi/prices/historical/${evt.ts}/base:${currentTokenCA.toLowerCase()}`);
+                        const data = await res.json();
+                        const key = `base:${currentTokenCA.toLowerCase()}`;
+                        if(data.coins && data.coins[key]) histPrice = data.coins[key].price;
+                    } catch(e){}
+
+                    // 2. MOBULA (Fallback)
+                    if(histPrice === null) {
+                        try {
+                            const mRes = await fetch(`https://api.mobula.io/api/1/market/history?asset=${currentTokenCA}&blockchain=base&from=${evt.ts - 3600}&to=${evt.ts + 3600}`);
+                            const mData = await mRes.json();
+                            if(mData.data && mData.data.price_history && mData.data.price_history.length > 0) {
+                                // Find closest
+                                const target = evt.ts * 1000;
+                                let best = mData.data.price_history[0];
+                                let minDiff = Math.abs(target - best[0]);
+                                
+                                for(let p of mData.data.price_history) {
+                                    let diff = Math.abs(target - p[0]);
+                                    if(diff < minDiff) { minDiff = diff; best = p; }
+                                }
+                                histPrice = best[1];
+                            }
+                        } catch(e){}
+                    }
+
+                    // 3. RECENT FALLBACK (<24h)
+                    if(histPrice === null && (Date.now()/1000 - evt.ts) < 86400) {
+                        histPrice = currentPricePerToken;
+                    }
+
+                    // APPLY & UPDATE UI
+                    if(histPrice !== null) {
                         const totalValue = evt.amount * histPrice;
                         
                         if(evt.type === 'BUY') tBuy += totalValue;
@@ -727,62 +731,36 @@
                         
                         evt.histVal = totalValue; 
                         evt.histPrice = histPrice;
+                        
+                        // Live Update Totals
+                        document.getElementById('buyHist').innerText = `$${tBuy.toLocaleString(undefined, {maximumFractionDigits:2})}`;
+                        document.getElementById('sellHist').innerText = `$${tSell.toLocaleString(undefined, {maximumFractionDigits:2})}`;
+                        document.getElementById('recvHist').innerText = `$${tRecv.toLocaleString(undefined, {maximumFractionDigits:2})}`;
+                        document.getElementById('sendHist').innerText = `$${tSend.toLocaleString(undefined, {maximumFractionDigits:2})}`;
                     } else {
-                        evt.histChecked = true; 
+                        evt.histChecked = true;
                     }
-                    processed++;
-                    
-                    if(processed % 5 === 0) renderTable();
 
-                    await new Promise(r => setTimeout(r, 350)); 
+                    processed++;
+                    if(processed % 5 === 0) renderTable(); // Live Row Update
+                    await new Promise(r => setTimeout(r, 200)); 
                 } catch(e) { console.log(e); evt.histChecked=true; }
             }
             
-            renderTable();
-
-            document.getElementById('buyHist').innerText = `$${tBuy.toLocaleString(undefined, {maximumFractionDigits:2})}`;
-            document.getElementById('sellHist').innerText = `$${tSell.toLocaleString(undefined, {maximumFractionDigits:2})}`;
-            document.getElementById('recvHist').innerText = `$${tRecv.toLocaleString(undefined, {maximumFractionDigits:2})}`;
-            document.getElementById('sendHist').innerText = `$${tSend.toLocaleString(undefined, {maximumFractionDigits:2})}`;
-            
+            renderTable(); // Final refresh
             status.innerText = "History Updated 📜";
             btn.innerHTML = "✅ Time Machine";
         }
 
         function copyToClipboard() {
-            const toIt = (n) => n.toFixed(2).replace('.', ',');
-            const fmtIt = (n) => n.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2}).replace(/\./g, ''); // No thousands dot
-
             let csvContent = "";
-            csvContent += "WAST ANALYSIS REPORT\n";
-            csvContent += `Generated;${new Date().toLocaleString()}\n`;
-            csvContent += `Target Wallet;${document.getElementById('walletInput').value}\n`;
-            csvContent += `Token;${currentTokenSymbol} (${currentTokenCA})\n\n`;
+            csvContent += `Data * Tipo * Token * Quantità * Valore Storico * Valore Attuale * Hash\n`;
             
-            const getVal = (id) => document.getElementById(id).innerText.replace('$','').replace('---','0').replace(/,/g,'').replace(/\./g,'').replace(/\s/g,'');
-            
-            // Re-calculate totals for accuracy
-            let sBuy=0, sSell=0, sRecv=0, sSend=0;
-            let hBuy=0, hSell=0, hRecv=0, hSend=0;
-            let cBuy=0, cSell=0;
-
-            globalEvents.forEach(e => {
-                if(e.type==='BUY') { sBuy+=e.amount; if(e.histVal) hBuy+=e.histVal; cBuy+=e.currVal; }
-                if(e.type==='SELL') { sSell+=e.amount; if(e.histVal) hSell+=e.histVal; cSell+=e.currVal; }
-                if(e.type==='RECEIVE') { sRecv+=e.amount; if(e.histVal) hRecv+=e.histVal; }
-                if(e.type==='SEND') { sSend+=e.amount; if(e.histVal) hSend+=e.histVal; }
-            });
-
-            csvContent += `BUY;${toIt(sBuy)};${toIt(hBuy)};${toIt(cBuy)}\n`;
-            csvContent += `SELL;${toIt(sSell)};${toIt(hSell)};${toIt(cSell)}\n`;
-            csvContent += `RECEIVE;${toIt(sRecv)};${toIt(hRecv)};-\n`;
-            csvContent += `SEND;${toIt(sSend)};${toIt(hSend)};-\n\n`;
-
-            csvContent += "TRANSACTIONS\nDate;Type;Tokens;Hist Value;Curr Value;Hash\n";
             globalEvents.forEach(evt => {
-                const hVal = evt.histVal ? toIt(evt.histVal) : "0,00";
-                const cVal = evt.currVal ? toIt(evt.currVal) : "0,00";
-                csvContent += `${evt.date};${evt.type};${toIt(evt.amount)};${hVal};${cVal};${evt.hash}\n`;
+                const hVal = evt.histVal ? evt.histVal.toFixed(2).replace('.', ',') : "0,00";
+                const cVal = evt.currVal ? evt.currVal.toFixed(2).replace('.', ',') : "0,00";
+                const qty = evt.amount.toFixed(4).replace('.', ',');
+                csvContent += `${evt.date} * ${evt.type} * ${currentTokenSymbol} * ${qty} * ${hVal} * ${cVal} * ${evt.hash}\n`;
             });
 
             navigator.clipboard.writeText(csvContent).then(() => {
@@ -791,13 +769,6 @@
                 btn.innerText = "✅ COPIED!";
                 setTimeout(() => btn.innerText = orig, 2000);
             });
-            
-            // Secondary Link
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const area = document.getElementById('exportArea');
-            area.innerHTML = `<a href="${url}" download="WAST_${currentTokenSymbol}.csv" target="_blank" class="download-link">📄 Download Report (Open External)</a>`;
-            setTimeout(() => { area.innerHTML = ""; URL.revokeObjectURL(url); }, 40000);
         }
 
         async function fetchUnifiedTransfers(wallet, token, limit, statusElement) {
