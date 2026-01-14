@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 4.0</title>
+    <title>WAST Analyzer 6.0</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -89,13 +89,8 @@
         .page-info { font-size: 0.8rem; color: #666; font-weight: 600; }
 
         .version-tag { 
-            text-align: center; 
-            font-size: 0.7rem; 
-            color: #0052FF; 
-            margin-top: 25px; 
-            font-weight: 800;
-            font-family: monospace;
-            opacity: 0.8;
+            text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 25px; 
+            font-weight: 800; font-family: monospace; opacity: 0.8;
         }
     </style>
 </head>
@@ -210,11 +205,10 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="version-tag">v4.0</div>
+        <div class="version-tag">v6.0</div>
     </div>
 
     <script>
-        // CONFIG
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
         const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjliMTZhMzZkLWY0Y2MtNGRhNS1hY2EyLThjOWNhYzcyNzc1MiIsIm9yZ0lkIjoiNDkwMzU1IiwidXNlcklkIjoiNTA0NTEzIiwidHlwZUlkIjoiODUwM2NmZjEtMGRiZS00N2Q4LTkxMzQtNzM5NjQ2ZDMwZWI2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NjgzODQ0NTcsImV4cCI6NDkyNDE0NDQ1N30.CHgE9uV5k_uW-44iveLhvre5kPPfuZ8Gnh4ifGOz2Uw'; 
 
@@ -222,6 +216,23 @@
         let currentPage = 1;
         const rowsPerPage = 25;
         let isCustomTokenMode = false;
+
+        // --- METHOD ID SIGNATURES ---
+        // Known Swap Methods (Uniswap, Aerodrome, 1inch)
+        const SWAP_METHODS = [
+            '0x38ed1739', '0x18cbafe5', '0x7ff36ab5', '0x5f575529', 
+            '0x415565b0', '0x8803dbee', '0xc04b8d59'
+        ];
+        // Known Staking Methods (Deposit, Stake, Mint, Enter)
+        const STAKE_METHODS = [
+            '0xa694fc3a', '0xb6b55f25', '0xe2bbb158', '0x40c10f19', 
+            '0xa9059cbb', // standard transfer can be stake if sent to contract
+            '0x3a4b66f1'
+        ];
+        // Known Unstake Methods (Withdraw, Leave, Exit)
+        const UNSTAKE_METHODS = [
+            '0x2e1a7d4d', '0x2e17de78', '0x441a3e70'
+        ];
 
         // --- INIT ---
         window.addEventListener('DOMContentLoaded', () => {
@@ -287,7 +298,7 @@
             document.getElementById('tokenInput').value = e.target.value;
         });
 
-        // --- MORALIS LOAD ---
+        // --- MORALIS LOADER ---
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
@@ -300,8 +311,7 @@
                 const url = `https://deep-index.moralis.io/api/v2.2/wallets/${walletAddr}/tokens?chain=base&exclude_spam=true&exclude_unpriced=false`;
                 
                 const response = await fetch(url, {
-                    method: 'GET',
-                    headers: { 'accept': 'application/json', 'X-API-Key': MORALIS_API_KEY }
+                    method: 'GET', headers: { 'accept': 'application/json', 'X-API-Key': MORALIS_API_KEY }
                 });
 
                 const data = await response.json();
@@ -319,9 +329,7 @@
                 data.result.forEach(token => {
                     token.usd_value = token.usd_value ? parseFloat(token.usd_value) : 0;
                     token.balance_formatted = parseFloat(token.balance_formatted).toLocaleString(undefined, {maximumFractionDigits: 4});
-                    
-                    if (token.usd_value > 0.01) valued.push(token);
-                    else others.push(token);
+                    if (token.usd_value > 0.01) valued.push(token); else others.push(token);
                 });
 
                 valued.sort((a, b) => b.usd_value - a.usd_value);
@@ -330,12 +338,10 @@
                 select.innerHTML = '<option value="" disabled selected>Select a token...</option>';
 
                 if (valued.length > 0) {
-                    const grp = document.createElement('optgroup');
-                    grp.label = "💲 VALUED ASSETS";
+                    const grp = document.createElement('optgroup'); grp.label = "💲 VALUED ASSETS";
                     valued.forEach(t => {
                         const valStr = t.usd_value.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
-                        const opt = document.createElement('option');
-                        opt.value = t.token_address;
+                        const opt = document.createElement('option'); opt.value = t.token_address;
                         opt.innerText = `${t.symbol} - ${valStr} (${t.balance_formatted})`;
                         grp.appendChild(opt);
                     });
@@ -343,11 +349,9 @@
                 }
 
                 if (others.length > 0) {
-                    const grp = document.createElement('optgroup');
-                    grp.label = "❓ UNPRICED / DUST";
+                    const grp = document.createElement('optgroup'); grp.label = "❓ UNPRICED / DUST";
                     others.forEach(t => {
-                        const opt = document.createElement('option');
-                        opt.value = t.token_address;
+                        const opt = document.createElement('option'); opt.value = t.token_address;
                         opt.innerText = `${t.symbol} (${t.balance_formatted})`;
                         grp.appendChild(opt);
                     });
@@ -375,7 +379,6 @@
 
             const status = document.getElementById('status');
             
-            // RESET
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('filterContainer').style.display = 'none';
             document.getElementById('txTable').style.display = 'none';
@@ -390,7 +393,6 @@
                 status.innerText = "Initializing...";
                 status.style.color = "#0052FF";
 
-                // FETCH SYMBOL
                 let mainSymbol = "TOKEN";
                 try {
                     const metaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
@@ -410,7 +412,6 @@
                 
                 let totals = { buy: 0, sell: 0, receive: 0, send: 0, stake: 0, unstake: 0 };
                 
-                // DEEP ANALYSIS BATCH
                 const batchSize = 5;
                 for (let i = 0; i < rawTxs.length; i += batchSize) {
                     const batch = rawTxs.slice(i, i + batchSize);
@@ -419,7 +420,8 @@
 
                     await Promise.all(batch.map(async (tx) => {
                         const val = parseFloat(tx.value);
-                        const category = await determineCategory(tx, wallet, tokenCA); // NEW LOGIC
+                        // SMART DECODER CALL
+                        const category = await determineCategory(tx, wallet, tokenCA); 
 
                         if (category === 'BUY') totals.buy += val;
                         else if (category === 'SELL') totals.sell += val;
@@ -441,7 +443,6 @@
 
                 globalTransactions.sort((a,b) => b.rawDate - a.rawDate);
 
-                // GET PRICE
                 let currentPrice = 0;
                 try {
                     const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenCA}`);
@@ -452,7 +453,6 @@
                     }
                 } catch(e){}
 
-                // UPDATE UI
                 const updateCard = (id, qty) => {
                     document.getElementById('qty'+id).innerText = formatShort(qty);
                     document.getElementById('val'+id).innerText = currentPrice > 0 ? `$${formatShort(qty * currentPrice)}` : "-";
@@ -536,114 +536,29 @@
             document.getElementById('btnNext').disabled = (currentPage === totalPages);
         }
 
-        // --- NEW CATEGORIZATION LOGIC ---
+        // --- SMART DECODER CATEGORY LOGIC ---
         async function determineCategory(tx, wallet, targetTokenCA) {
             try {
-                // Get Full Receipt
-                const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
+                // 1. Get Transaction Data (Input Data for Method ID)
+                const txRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getTransactionByHash", "params": [tx.hash] })
+                });
+                const txData = await txRes.json();
+                const inputData = txData.result?.input || "0x";
+                const methodId = inputData.slice(0, 10); // First 4 bytes (0x + 8 chars)
+
+                // 2. Get Receipt for Logs
+                const receiptRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "params": [tx.hash] })
                 });
-                const data = await res.json();
-                const receipt = data.result;
-                
-                if (!receipt || !receipt.logs) return 'SEND'; // Fallback if no logs
+                const receiptData = await receiptRes.json();
+                const receipt = receiptData.result;
+
+                if (!receipt) return 'SEND';
 
                 const myWallet = wallet.toLowerCase();
                 const targetCA = targetTokenCA.toLowerCase();
                 const walletTopic = "0x000000000000000000000000" + myWallet.replace("0x", "");
-                const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-
-                // Analyze what happened in this tx
-                let didISendTarget = false;
-                let didIReceiveTarget = false;
-                let didISendOther = false;
-                let didIReceiveOther = false;
-                let otherTokenSymbol = "";
-
-                // Check basic direction of TARGET token first (from the AssetTransfer object)
-                if (tx.from.toLowerCase() === myWallet) didISendTarget = true;
-                if (tx.to && tx.to.toLowerCase() === myWallet) didIReceiveTarget = true;
-
-                // Check logs for OTHER tokens
-                for (const log of receipt.logs) {
-                    if (log.topics[0] !== TRANSFER) continue; // Only transfers
-                    
-                    const contract = log.address.toLowerCase();
-                    const fromMe = log.topics[1] && log.topics[1].toLowerCase() === walletTopic;
-                    const toMe = log.topics[2] && log.topics[2].toLowerCase() === walletTopic;
-
-                    if (contract === targetCA) continue; // Skip target token logs
-
-                    if (fromMe) didISendOther = true;
-                    if (toMe) {
-                        didIReceiveOther = true;
-                        // Try to guess if it's a "Staked" variant? 
-                        // Implementation detail: we could fetch symbol here but it's slow.
-                        // For v4.0 we use pure direction logic.
-                    }
-                }
-
-                // CATEGORIZATION MATRIX
-                if (didISendTarget) {
-                    if (didIReceiveOther) return 'SELL'; // Sent Target, Got Something (USDC/ETH/Staked)
-                    return 'SEND'; // Sent Target, Got Nothing
-                }
-                
-                if (didIReceiveTarget) {
-                    if (didISendOther) return 'BUY'; // Got Target, Sent Something (USDC/ETH)
-                    
-                    // Check if ETH was paid (Gas is paid by sender, but did I attach Value?)
-                    // Alchemy AssetTransfer doesn't show value attached easily without full tx.
-                    // For now, if I didn't send tokens but got target, it's Receive or Buy with ETH.
-                    // Assuming RECEIVE is safer unless we prove ETH value.
-                    return 'RECEIVE'; 
-                }
-
-                return 'SEND'; // Fallback
-
-            } catch (e) { return 'SEND'; }
-        }
-
-        async function fetchUnifiedTransfers(walletAddr, tokenAddr, limit) {
-            const fetchDirectionLoop = async (direction) => {
-                let accumulated = [];
-                let pageKey = null;
-                do {
-                    const params = { 
-                        "fromBlock": "0x0", 
-                        "toBlock": "latest", 
-                        "category": ["erc20"], 
-                        "withMetadata": true, 
-                        "excludeZeroValue": true, 
-                        "contractAddresses": [tokenAddr], 
-                        "order": "desc", 
-                        "maxCount": "0x3e8" 
-                    };
-                    if (direction === 'to') params.toAddress = walletAddr; else params.fromAddress = walletAddr;
-                    if (pageKey) params.pageKey = pageKey;
-                    
-                    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
-                        method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] })
-                    });
-                    const d = await res.json();
-                    if (!d.result) break;
-                    accumulated = accumulated.concat(d.result.transfers || []);
-                    pageKey = d.result.pageKey;
-                    if (accumulated.length >= limit) break;
-                } while (pageKey);
-                return accumulated;
-            };
-            
-            const [inTxs, outTxs] = await Promise.all([ fetchDirectionLoop('to'), fetchDirectionLoop('from') ]);
-            const allTxs = [...inTxs, ...outTxs];
-            allTxs.sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16));
-            return allTxs.slice(0, limit);
-        }
-
-        function formatShort(num) { if (num === 0) return "0"; if (num < 0.01) return num.toExponential(2); if (num > 1000000) return (num / 1000000).toFixed(2) + "M"; if (num > 1000) return (num / 1000).toFixed(2) + "K"; return num.toLocaleString('en-US', { maximumFractionDigits: 2 }); }
-        function formatNum(num) { return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
-    </script>
-</body>
-</html>
+                const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa
