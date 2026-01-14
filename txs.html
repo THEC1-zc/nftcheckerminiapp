@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 8.2 (Deep Indexing)</title>
+    <title>WAST Analyzer 8.3 (Clean & Unique)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -96,7 +96,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Deep Indexing & PnL</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Free Stack + Unique</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -147,8 +147,8 @@
             <tbody id="txList"></tbody>
         </table>
 
-        <div class="wip-tag">🚧 FREE STACK: DEEP INDEXING 🚧</div>
-        <div class="version-tag">v8.2</div>
+        <div class="wip-tag">🚧 FREE STACK: UNIQUE 🚧</div>
+        <div class="version-tag">v8.3</div>
     </div>
 
     <script>
@@ -159,7 +159,6 @@
         let currentPricePerToken = 0;
         let isCustomTokenMode = false;
 
-        // CRITICAL: Hardcoded Metadata for major tokens to prevent "UNK"
         const MAJOR_TOKENS = {
             "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": { sym: "USDC", dec: 6 },
             "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a": { sym: "USDT", dec: 6 },
@@ -171,7 +170,6 @@
         const ETH_PSEUDO = "0x0000000000000000000000000000000000000000"; 
         const WETH_ADDR = "0x4200000000000000000000000000000000000006";
 
-        // INIT
         window.addEventListener('DOMContentLoaded', () => {
             const myIdentity = localStorage.getItem('tysm_wallet');
             if(myIdentity) document.getElementById('walletInput').value = myIdentity;
@@ -179,7 +177,6 @@
             if(wInput.value) loadUserTokens(wInput.value);
         });
 
-        // EVENTS
         document.getElementById('walletInput').addEventListener('change', (e) => {
             if(e.target.value.trim().startsWith('0x')) loadUserTokens(e.target.value.trim());
         });
@@ -196,15 +193,15 @@
             document.getElementById('tokenInput').value = e.target.value;
         });
 
-        // --- ROBUST LOADER: BALANCES + METADATA + PRICES ---
+        // --- UNIQUE LOADER ---
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
             select.style.display = 'none'; loading.style.display = 'block'; select.innerHTML = '';
 
             try {
-                // 1. Get ALL Balances (Pagination)
-                let allTokens = [];
+                // 1. Fetch RAW (Pagination)
+                let rawTokens = [];
                 let pageKey = null;
                 let loopCount = 0;
 
@@ -218,34 +215,41 @@
                         body: JSON.stringify(params)
                     });
                     const data = await res.json();
-                    if(data.result?.tokenBalances) allTokens = allTokens.concat(data.result.tokenBalances);
+                    if(data.result?.tokenBalances) rawTokens = rawTokens.concat(data.result.tokenBalances);
                     pageKey = data.result?.pageKey;
                     loopCount++;
                 } while (pageKey);
 
-                // Filter zero balances
-                let tokens = allTokens.filter(t => t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000");
-
-                // 2. Add Native ETH (Explicit)
+                // 2. FILTER ZERO & DEDUPLICATE
+                const uniqueMap = new Map();
+                
+                // Add ETH if exists
                 const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] })
                 });
                 const ethData = await ethRes.json();
                 if(ethData.result && ethData.result !== "0x0") {
-                    tokens.push({ contractAddress: ETH_PSEUDO, tokenBalance: ethData.result });
+                    uniqueMap.set(ETH_PSEUDO, { contractAddress: ETH_PSEUDO, tokenBalance: ethData.result });
                 }
 
+                // Add ERC20s (Only keep first occurence, ignore dupes)
+                for(const t of rawTokens) {
+                    if(t.tokenBalance === "0x0000000000000000000000000000000000000000000000000000000000000000") continue;
+                    const lowerCA = t.contractAddress.toLowerCase();
+                    if(!uniqueMap.has(lowerCA)) {
+                        uniqueMap.set(lowerCA, t);
+                    }
+                }
+
+                const tokens = Array.from(uniqueMap.values());
                 if (tokens.length === 0) { select.innerHTML = '<option disabled>No tokens found</option>'; return; }
 
-                // 3. FETCH METADATA (Batching) - Solves "UNK"
+                // 3. METADATA (Batch)
                 loading.innerText = `Indexing ${tokens.length} tokens...`;
-                
-                // Prepare buckets
                 const enrichedTokens = [];
                 const metaQueue = [];
 
-                // Fill from hardcoded first
                 tokens.forEach(t => {
                     const lcAddr = t.contractAddress.toLowerCase();
                     if (MAJOR_TOKENS[lcAddr]) {
@@ -257,7 +261,6 @@
                     }
                 });
 
-                // Batch fetch remaining metadata
                 if (metaQueue.length > 0) {
                     const chunked = [];
                     for (let i=0; i<metaQueue.length; i+=15) chunked.push(metaQueue.slice(i, i+15));
@@ -266,7 +269,6 @@
                         const batchBody = chunk.map((t, i) => ({
                             id: i, jsonrpc: "2.0", method: "alchemy_getTokenMetadata", params: [t.contractAddress]
                         }));
-                        
                         try {
                             const mRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                                 method: "POST", headers: { "Content-Type": "application/json" },
@@ -288,7 +290,7 @@
                     }
                 }
 
-                // 4. FETCH PRICES (DexScreener)
+                // 4. PRICES
                 loading.innerText = "Checking prices...";
                 const pricedTokens = [];
                 const chunks = [];
@@ -310,7 +312,7 @@
                             
                             pricedTokens.push({
                                 ca: t.contractAddress,
-                                symbol: t.symbol, // Use Alchemy/Hardcoded symbol
+                                symbol: t.symbol,
                                 bal: bal,
                                 usd: bal * price,
                                 price: price
@@ -320,13 +322,14 @@
                     await new Promise(r=>setTimeout(r, 100));
                 }
 
-                // 5. Sort & Render
+                // 5. SORT & DISPLAY
                 pricedTokens.sort((a,b) => b.usd - a.usd);
                 
                 const valued = pricedTokens.filter(t => t.usd > 0.05);
                 const others = pricedTokens.filter(t => t.usd <= 0.05);
 
                 select.innerHTML = '<option value="" disabled selected>Select a token...</option>';
+                
                 if(valued.length>0) {
                     const grp = document.createElement('optgroup'); grp.label="💲 VALUED ASSETS";
                     valued.forEach(t => { 
@@ -337,6 +340,7 @@
                     });
                     select.appendChild(grp);
                 }
+                
                 if(others.length>0) {
                     const grp = document.createElement('optgroup'); grp.label="❓ OTHERS";
                     others.forEach(t => { 
@@ -352,12 +356,10 @@
             finally { loading.style.display='none'; select.style.display='block'; }
         }
 
-        // BUTTONS
         document.getElementById('btnFast').addEventListener('click', () => runAnalysis(500)); 
         document.getElementById('btnFull').addEventListener('click', () => runAnalysis(5000)); 
         document.getElementById('btnHistory').addEventListener('click', fetchHistoricalPrices);
 
-        // MAIN ANALYSIS
         async function runAnalysis(limit) {
             const wallet = document.getElementById('walletInput').value.trim().toLowerCase();
             currentTokenCA = isCustomTokenMode ? document.getElementById('tokenInput').value.trim().toLowerCase() : document.getElementById('tokenSelect').value.trim().toLowerCase();
@@ -375,7 +377,6 @@
 
             status.innerText = "Initializing...";
             
-            // 1. Get Current Price (DexScreener)
             try {
                 const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${currentTokenCA}`);
                 const dexData = await dexRes.json();
@@ -384,14 +385,12 @@
                 }
             } catch(e){ currentPricePerToken = 0; }
 
-            // 2. Fetch Deep History
             const rawTxs = await fetchUnifiedTransfers(wallet, currentTokenCA, limit, status);
             status.innerText = `Analyzing ${rawTxs.length} transactions...`;
 
             let buyTokens = 0, sellTokens = 0, recvTokens = 0, sendTokens = 0;
             const tbody = document.getElementById('txList');
 
-            // 3. Process Transactions
             for(const tx of rawTxs) {
                 const myWallet = wallet.toLowerCase();
                 let category = 'IGNORE';
@@ -445,7 +444,6 @@
                 }
             }
 
-            // Update Summary (Initial)
             document.getElementById('buyTokens').innerText = buyTokens.toLocaleString(undefined, {maximumFractionDigits:2});
             document.getElementById('buyCurr').innerText = `$${(buyTokens * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
             document.getElementById('buyHist').innerText = "---";
@@ -470,7 +468,6 @@
             status.innerText = "Analysis Complete ✅";
         }
 
-        // --- TIME MACHINE (DEFI LLAMA) ---
         async function fetchHistoricalPrices() {
             const btn = document.getElementById('btnHistory');
             const status = document.getElementById('status');
@@ -518,7 +515,6 @@
             btn.innerHTML = "✅ Time Machine";
         }
 
-        // --- LOGIC ---
         async function analyzeBuy(tx, wallet, targetTokenCA) {
             try {
                 const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
