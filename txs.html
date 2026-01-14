@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 11.3 (Waterfall Light)</title>
+    <title>WAST Analyzer 11.4 (Dropdown Fix)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -33,7 +33,6 @@
         
         .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
         .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
-        .tip-btn { text-decoration: none; color: white; font-weight: 700; background: #FF9800; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 0.8rem; cursor: pointer; border: none; }
         .wast-mini { font-weight: 900; font-size: 1rem; letter-spacing: 2px; color: var(--primary); margin-left: 10px; }
         
         .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; position: relative; }
@@ -53,7 +52,7 @@
         .btn-fast { background-color: var(--primary); }
         .btn-full { background-color: var(--dark); }
         .btn-hist { background-color: var(--purple); display: none; } 
-        .btn-moralis { background-color: var(--teal); display: none; } /* Manual Only */
+        .btn-moralis { background-color: var(--teal); display: none; } 
         .btn-copy { background-color: #27ae60; display: none; }
         .btn-test { background-color: #ff4757; width: 100%; margin-top: 5px; display: none; }
 
@@ -111,13 +110,6 @@
         .page-info { font-size: 0.8rem; color: #666; font-weight: 600; }
 
         #exportArea { margin-top: 15px; text-align: center; min-height: 40px; }
-        .download-link { 
-            display: inline-block; background-color: #27ae60; color: white; padding: 12px 25px; 
-            border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem; 
-            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); animation: popIn 0.3s ease;
-        }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
         #status { text-align: center; margin: 15px 0; font-weight: 600; font-size: 0.85rem; min-height: 20px; padding: 0 10px; }
         #deepStatus { font-size: 0.75rem; color: var(--primary); text-align: center; margin-bottom: 10px; display:none; }
 
@@ -129,12 +121,11 @@
 
     <div class="nav-header">
         <a href="index.html" class="back-btn">⬅ Home <span class="wast-mini">WAST</span></a>
-        <button id="btnTip" class="tip-btn">☕ Tip</button>
     </div>
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: v11.3 Waterfall Light</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: v11.4 Dropdown Fixed</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -182,7 +173,6 @@
                 <div class="stat-line"><span>Hist $:</span> <strong id="sellHist" class="val-hist">---</strong></div>
                 <div class="stat-line"><span>Curr $:</span> <strong id="sellCurr" class="val-curr">$0.00</strong></div>
             </div>
-            
             <div class="stat-card">
                 <div class="stat-title t-stake">STREAM STAKE (SUPERFLUID)</div>
                 <div class="stat-line"><span>Tokens:</span> <strong id="stakeTokens">0</strong></div>
@@ -195,7 +185,6 @@
                 <div class="stat-line"><span>Hist $:</span> <strong id="unstakeHist" class="val-hist">---</strong></div>
                 <div class="stat-line"><span>Curr $:</span> <strong id="unstakeCurr" class="val-curr">$0.00</strong></div>
             </div>
-
             <div class="stat-card">
                 <div class="stat-title t-in">RECEIVE (P2P / AIRDROP)</div>
                 <div class="stat-line"><span>Tokens:</span> <strong id="recvTokens">0</strong></div>
@@ -234,8 +223,8 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="wip-tag">🚧 v11.3 WATERFALL LIGHT 🚧</div>
-        <div class="version-tag">v11.3</div>
+        <div class="wip-tag">🚧 v11.4 DROPDOWN FIX 🚧</div>
+        <div class="version-tag">v11.4</div>
     </div>
 
     <script>
@@ -262,8 +251,10 @@
             "0x0000000000000000000000000000000000000000"  // ETH
         ];
 
+        const USDC_BASE = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
         const ETH_PSEUDO = "0x0000000000000000000000000000000000000000"; 
-        
+        const WETH_ADDR = "0x4200000000000000000000000000000000000006";
+
         window.addEventListener('DOMContentLoaded', () => {
             const myIdentity = localStorage.getItem('tysm_wallet');
             if(myIdentity) document.getElementById('walletInput').value = myIdentity;
@@ -289,9 +280,8 @@
         document.getElementById('txFilter').addEventListener('change', () => { currentPage=1; renderTable(); });
         document.getElementById('btnPrev').addEventListener('click', () => { if(currentPage>1) {currentPage--; renderTable();} });
         document.getElementById('btnNext').addEventListener('click', () => { currentPage++; renderTable(); });
-        document.getElementById('btnTip').addEventListener('click', () => alert("Send 1 USDC to creator.eth (Coming soon!)"));
 
-        // --- SORTED DROPDOWN ---
+        // --- SORTED DROPDOWN (Punto 6) ---
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
@@ -313,6 +303,14 @@
                 } while (pageKey);
 
                 let tokens = allTokens.filter(t => t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000");
+                
+                // ETH ADD
+                const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] }) });
+                const ethData = await ethRes.json();
+                if(ethData.result && ethData.result !== "0x0") {
+                    tokens.push({ contractAddress: ETH_PSEUDO, tokenBalance: ethData.result });
+                }
+
                 const uniqueMap = new Map();
                 for(const t of tokens) uniqueMap.set(t.contractAddress.toLowerCase(), t);
                 tokens = Array.from(uniqueMap.values());
@@ -323,16 +321,22 @@
                 for (let i=0; i<tokens.length; i+=30) chunks.push(tokens.slice(i, i+30));
 
                 for(const chunk of chunks) {
-                    const queryAddrs = chunk.map(t => t.contractAddress).join(',');
+                    const queryAddrs = chunk.map(t => t.contractAddress === ETH_PSEUDO ? WETH_ADDR : t.contractAddress).join(',');
                     try {
                         const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${queryAddrs}`);
                         const dexData = await dexRes.json();
                         chunk.forEach(t => {
-                            const pair = dexData.pairs ? dexData.pairs.find(p => p.baseToken.address.toLowerCase() === t.contractAddress.toLowerCase()) : null;
+                            const lcAddr = t.contractAddress.toLowerCase();
+                            const pair = dexData.pairs ? dexData.pairs.find(p => p.baseToken.address.toLowerCase() === (lcAddr === ETH_PSEUDO ? WETH_ADDR : lcAddr)) : null;
                             const decimals = 18; 
                             const bal = Number(BigInt(t.tokenBalance)) / (10**decimals);
-                            const price = pair ? parseFloat(pair.priceUsd) : 0;
-                            const sym = pair ? pair.baseToken.symbol : t.contractAddress.slice(0,6);
+                            
+                            let price = pair ? parseFloat(pair.priceUsd) : 0;
+                            // FORCE FIX FOR USDC & ETH
+                            if(lcAddr === USDC_BASE) price = 1.0;
+                            if(price === 0 && (lcAddr === ETH_PSEUDO || lcAddr === WETH_ADDR)) price = 2500; // rough fallback to ensure visibility if API fail
+
+                            const sym = pair ? pair.baseToken.symbol : (lcAddr === ETH_PSEUDO ? "ETH" : t.contractAddress.slice(0,6));
                             pricedTokens.push({ ca: t.contractAddress, symbol: sym, bal: bal, usd: bal * price });
                         });
                     } catch(e) {}
@@ -625,7 +629,6 @@
             document.getElementById('btnNext').disabled = (currentPage >= totalPages);
         }
 
-        // --- WATERFALL LIGHT TIME MACHINE ---
         async function fetchHistoricalPrices() {
             const btn = document.getElementById('btnHistory');
             const status = document.getElementById('status');
@@ -654,21 +657,11 @@
                         try {
                             const mRes = await fetch(`https://api.mobula.io/api/1/market/history?asset=${currentTokenCA}&blockchain=base&from=${evt.ts - 3600}&to=${evt.ts + 3600}`);
                             const mData = await mRes.json();
-                            if(mData.data && mData.data.price_history && mData.data.price_history.length > 0) {
-                                // closest
-                                const target = evt.ts * 1000;
-                                let best = mData.data.price_history[0];
-                                let minDiff = Math.abs(target - best[0]);
-                                for(let p of mData.data.price_history) {
-                                    let diff = Math.abs(target - p[0]);
-                                    if(diff < minDiff) { minDiff = diff; best = p; }
-                                }
-                                histPrice = best[1];
-                            }
+                            if(mData.data && mData.data.price_history && mData.data.price_history.length > 0) histPrice = mData.data.price_history[0][1];
                         } catch(e){}
                     }
 
-                    // 3. RECENT FALLBACK (<24h)
+                    // 3. RECENT FALLBACK
                     if(histPrice === null && (Date.now()/1000 - evt.ts) < 86400) {
                         histPrice = currentPricePerToken;
                         evt.isRecentFallback = true;
@@ -702,7 +695,6 @@
             btn.innerHTML = "✅ Time Machine";
         }
 
-        // --- MANUAL MORALIS ---
         async function fetchMoralisPrices() {
             if(!MORALIS_KEY) return alert("No Key");
             const btn = document.getElementById('btnMoralis');
@@ -735,14 +727,40 @@
         }
 
         function copyToClipboard() {
+            const toIt = (n) => n.toFixed(2).replace('.', ',');
+            const fmtIt = (n) => n.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2}).replace(/\./g, '');
+
             let csvContent = "";
-            csvContent += `Data * Tipo * Token * Quantità * Valore Storico * Valore Attuale * Hash\n`;
-            globalEvents.forEach(evt => {
-                const hVal = evt.histVal ? evt.histVal.toFixed(2).replace('.', ',') : "0,00";
-                const cVal = evt.currVal ? evt.currVal.toFixed(2).replace('.', ',') : "0,00";
-                const qty = evt.amount.toFixed(4).replace('.', ',');
-                csvContent += `${evt.date} * ${evt.type} * ${currentTokenSymbol} * ${qty} * ${hVal} * ${cVal} * ${evt.hash}\n`;
+            csvContent += "WAST ANALYSIS REPORT\n";
+            csvContent += `Generated;${new Date().toLocaleString()}\n`;
+            csvContent += `Target Wallet;${document.getElementById('walletInput').value}\n`;
+            csvContent += `Token;${currentTokenSymbol} (${currentTokenCA})\n\n`;
+            
+            const getTxt = (id) => document.getElementById(id).innerText.replace('$','').replace('---','0').replace(/,/g,'').replace(/\./g,'').replace(/\s/g,'');
+            
+            let sBuy=0, sSell=0, sRecv=0, sSend=0;
+            let hBuy=0, hSell=0, hRecv=0, hSend=0;
+            let cBuy=0, cSell=0;
+
+            globalEvents.forEach(e => {
+                if(e.type==='BUY') { sBuy+=e.amount; if(e.histVal) hBuy+=e.histVal; cBuy+=e.currVal; }
+                if(e.type==='SELL') { sSell+=e.amount; if(e.histVal) hSell+=e.histVal; cSell+=e.currVal; }
+                if(e.type==='RECEIVE') { sRecv+=e.amount; if(e.histVal) hRecv+=e.histVal; }
+                if(e.type==='SEND') { sSend+=e.amount; if(e.histVal) hSend+=e.histVal; }
             });
+
+            csvContent += `BUY;${toIt(sBuy)};${toIt(hBuy)};${toIt(cBuy)}\n`;
+            csvContent += `SELL;${toIt(sSell)};${toIt(hSell)};${toIt(cSell)}\n`;
+            csvContent += `RECEIVE;${toIt(sRecv)};${toIt(hRecv)};-\n`;
+            csvContent += `SEND;${toIt(sSend)};${toIt(hSend)};-\n\n`;
+
+            csvContent += "TRANSACTIONS\nDate;Type;Tokens;Hist Value;Curr Value;Hash\n";
+            globalEvents.forEach(evt => {
+                const hVal = evt.histVal ? toIt(evt.histVal) : "0,00";
+                const cVal = evt.currVal ? toIt(evt.currVal) : "0,00";
+                csvContent += `${evt.date};${evt.type};${toIt(evt.amount)};${hVal};${cVal};${evt.hash}\n`;
+            });
+
             navigator.clipboard.writeText(csvContent).then(() => {
                 const btn = document.getElementById('btnCopy');
                 const orig = btn.innerText;
