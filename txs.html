@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 6.1 (No Duplicates)</title>
+    <title>WAST Analyzer 6.2 (Stable Sort)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -118,7 +118,7 @@
                 <select id="tokenSelect">
                     <option value="" disabled selected>Waiting for wallet...</option>
                 </select>
-                <div id="loadingTokens" class="loading-text">Scanning full wallet & filtering dust...</div>
+                <div id="loadingTokens" class="loading-text">Scanning full wallet...</div>
             </div>
 
             <div id="inputContainer" style="display:none;">
@@ -207,7 +207,6 @@
         let isCustomTokenMode = false;
         const WETH_ADDR = "0x4200000000000000000000000000000000000006";
 
-        // GLOBAL VARS
         let globalTransactions = [];
         let currentPage = 1;
         const rowsPerPage = 25;
@@ -267,7 +266,7 @@
             }
         });
 
-        // --- IMPROVED TOKEN LOADER ---
+        // --- STABLE TOKEN LOADER (Sequential for Safety) ---
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
@@ -277,18 +276,15 @@
             select.innerHTML = '';
 
             try {
-                // 1. Fetch RAW Balances (Loop for Pagination)
+                // 1. Fetch RAW Balances
                 let tokens = [];
                 let pageKey = null;
                 let loopCount = 0;
 
                 do {
-                    if(loopCount > 10) break; // Safety limit
+                    if(loopCount > 15) break; 
                     const params = { 
-                        "id": 1, 
-                        "jsonrpc": "2.0", 
-                        "method": "alchemy_getTokenBalances", 
-                        "params": [walletAddr] 
+                        "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", "params": [walletAddr] 
                     };
                     if(pageKey) params.params[0].pageKey = pageKey;
 
@@ -302,7 +298,7 @@
                     loopCount++;
                 } while (pageKey);
 
-                // 2. DEDUPLICATION (Fixes "Multiples" issue)
+                // Filter 0 and Deduplicate
                 const uniqueMap = new Map();
                 for(const t of tokens) {
                     if(t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000") {
@@ -311,7 +307,7 @@
                 }
                 tokens = Array.from(uniqueMap.values());
 
-                // 3. Add Native ETH
+                // 2. Add Native ETH
                 const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] })
@@ -328,18 +324,22 @@
                     return;
                 }
 
-                loading.innerText = `Scanning ${tokens.length} tokens for value...`;
-
-                // 4. Batch Check Prices (Filter out SPAM)
+                // 3. SEQUENTIAL BATCH CHECK (No Rate Limit drops)
                 const chunks = [];
                 for (let i = 0; i < tokens.length; i += 30) chunks.push(tokens.slice(i, i + 30));
 
                 let pricedTokens = [];
-                await Promise.all(chunks.map(async (chunk) => {
+                let checkedCount = 0;
+
+                for (const chunk of chunks) {
+                    checkedCount += chunk.length;
+                    loading.innerText = `Checking prices for ${checkedCount}/${tokens.length} tokens...`;
+                    
                     const addresses = chunk.map(t => t.contractAddress).join(',');
                     try {
                         const priceRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addresses}`);
                         const priceData = await priceRes.json();
+                        
                         if(priceData.pairs) {
                             chunk.forEach(t => {
                                 const pair = priceData.pairs.find(p => p.baseToken.address.toLowerCase() === t.contractAddress.toLowerCase());
@@ -350,12 +350,14 @@
                                 }
                             });
                         }
+                        // Slight delay to be nice to API
+                        await new Promise(r => setTimeout(r, 150));
                     } catch(e) {}
-                }));
+                }
 
-                loading.innerText = `Analyzing value of ${pricedTokens.length} valid tokens...`;
+                loading.innerText = `Calculating value...`;
 
-                // 5. Fetch Decimals for Priced Tokens
+                // 4. Fetch Decimals
                 await Promise.all(pricedTokens.map(async (t) => {
                     if(t.isNative) { t.decimals = 18; t.symbol = "ETH"; return; }
                     try {
@@ -369,7 +371,7 @@
                     } catch(e) { t.decimals = 18; }
                 }));
 
-                // 6. Calculate Value & Filter < $0.02
+                // 5. Value Filter > 0.02
                 let validTokens = [];
                 pricedTokens.forEach(t => {
                     const rawBal = parseInt(t.tokenBalance, 16);
@@ -381,10 +383,9 @@
                 validTokens.sort((a, b) => b.totalValue - a.totalValue);
 
                 select.innerHTML = '<option value="" disabled selected>Select a token...</option>';
-                if(validTokens.length === 0) select.innerHTML = '<option disabled>No valuable tokens (> $0.02)</option>';
+                if(validTokens.length === 0) select.innerHTML = '<option disabled>No tokens > $0.02 found</option>';
 
                 validTokens.forEach(t => {
-                    // NEW: Show CA snippet in option
                     const shortCA = `${t.contractAddress.slice(0,4)}...${t.contractAddress.slice(-4)}`;
                     const label = `${t.symbol} (${shortCA}) - $${t.totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits:2})}`;
                     const opt = document.createElement('option');
@@ -417,7 +418,6 @@
 
             const status = document.getElementById('status');
             
-            // RESET
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('filterContainer').style.display = 'none';
             document.getElementById('txTable').style.display = 'none';
