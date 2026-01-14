@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 2.1</title>
+    <title>WAST Analyzer 3.1</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -210,33 +210,18 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="version-tag">v2.1</div>
+        <div class="version-tag">v3.1</div>
     </div>
 
     <script>
-        const API_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
-        const symbolCache = {}; 
-        let isCustomTokenMode = false;
-        
-        // --- EXPANDED KNOWN DECIMALS FOR BASE ---
-        const KNOWN_DECIMALS = {
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 6, // USDC
-            "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a": 6, // USDT
-            "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": 6, // EURC
-            "0x4200000000000000000000000000000000000006": 18, // WETH
-            "0x2ae3f1ec7f1f5012cfdd600a18d5eb45039a14d6": 18, // cbETH
-            "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca": 6, // USDbC
-            "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb": 18, // CLANKER
-            "0xa69f80524381275a7ffdb3ae01c54150644c8792": 18, // SUPERFLUID
-            "0x40468be13c4388d2ab68a09f56973fa95db5bca0": 18, // PIZZA
-            "0x0000000000000000000000000000000000000000": 18  // Native ETH
-        };
-        const ETH_PSEUDO = "0x0000000000000000000000000000000000000000"; 
-        const WETH_ADDR = "0x4200000000000000000000000000000000000006";
+        // CONFIG
+        const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
+        const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjliMTZhMzZkLWY0Y2MtNGRhNS1hY2EyLThjOWNhYzcyNzc1MiIsIm9yZ0lkIjoiNDkwMzU1IiwidXNlcklkIjoiNTA0NTEzIiwidHlwZUlkIjoiODUwM2NmZjEtMGRiZS00N2Q4LTkxMzQtNzM5NjQ2ZDMwZWI2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NjgzODQ0NTcsImV4cCI6NDkyNDE0NDQ1N30.CHgE9uV5k_uW-44iveLhvre5kPPfuZ8Gnh4ifGOz2Uw'; 
 
         let globalTransactions = [];
         let currentPage = 1;
         const rowsPerPage = 25;
+        let isCustomTokenMode = false;
 
         // --- INIT ---
         window.addEventListener('DOMContentLoaded', () => {
@@ -263,9 +248,7 @@
         // --- EVENTS ---
         document.getElementById('walletInput').addEventListener('change', (e) => {
             const val = e.target.value.trim().toLowerCase();
-            if(val.startsWith('0x') && val.length === 42) {
-                loadUserTokens(val);
-            }
+            if(val.startsWith('0x') && val.length === 42) loadUserTokens(val);
         });
 
         document.getElementById('txFilter').addEventListener('change', () => { currentPage = 1; renderTable(); });
@@ -304,7 +287,7 @@
             document.getElementById('tokenInput').value = e.target.value;
         });
 
-        // --- DEEP TOKEN LOADER ---
+        // --- MORALIS LOAD ---
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
@@ -314,194 +297,73 @@
             select.innerHTML = '';
 
             try {
-                // 1. Fetch RAW Balances (High Limit 50 pages)
-                let tokens = [];
-                let pageKey = null;
-                let loopCount = 0;
-
-                do {
-                    if(loopCount > 50) break; // Increased to 50
-                    const params = { 
-                        "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", 
-                        "params": [walletAddr] 
-                    };
-                    if(pageKey) params.params[0].pageKey = pageKey;
-
-                    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                        method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(params)
-                    });
-                    const data = await res.json();
-                    if (data.result?.tokenBalances) tokens = tokens.concat(data.result.tokenBalances);
-                    pageKey = data.result?.pageKey;
-                    loopCount++;
-                } while (pageKey);
-
-                const uniqueMap = new Map();
-                for(const t of tokens) {
-                    if(t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000") {
-                        uniqueMap.set(t.contractAddress.toLowerCase(), {
-                            ca: t.contractAddress.toLowerCase(),
-                            raw: t.tokenBalance,
-                            decimals: 18, 
-                            symbol: "UNK",
-                            price: 0,
-                            isNative: false
-                        });
-                    }
-                }
-
-                const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] })
+                const url = `https://deep-index.moralis.io/api/v2.2/wallets/${walletAddr}/tokens?chain=base&exclude_spam=true&exclude_unpriced=false`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'accept': 'application/json', 'X-API-Key': MORALIS_API_KEY }
                 });
-                const ethData = await ethRes.json();
-                if(ethData.result && ethData.result !== "0x0") {
-                    uniqueMap.set(ETH_PSEUDO, {
-                        ca: ETH_PSEUDO,
-                        raw: ethData.result,
-                        decimals: 18,
-                        symbol: "ETH",
-                        price: 0,
-                        isNative: true
-                    });
-                }
 
-                const allTokens = Array.from(uniqueMap.values());
-                if (allTokens.length === 0) {
+                const data = await response.json();
+                
+                if (!data.result || data.result.length === 0) {
                     select.innerHTML = '<option disabled>No tokens found</option>';
                     loading.style.display = 'none';
                     select.style.display = 'block';
                     return;
                 }
 
-                // 2. META FETCH (BATCH 15) + SLEEP
-                const unknownTokens = allTokens.filter(t => !KNOWN_DECIMALS[t.ca]);
-                if (unknownTokens.length > 0) {
-                    loading.innerText = `Fetching metadata for ${unknownTokens.length} tokens...`;
-                    const metaChunks = [];
-                    for (let i = 0; i < unknownTokens.length; i += 15) metaChunks.push(unknownTokens.slice(i, i + 15));
+                const valued = [];
+                const others = [];
 
-                    for (const chunk of metaChunks) {
-                        const batchBody = chunk.map((t, idx) => ({
-                            id: idx,
-                            jsonrpc: "2.0",
-                            method: "alchemy_getTokenMetadata",
-                            params: [t.ca]
-                        }));
-
-                        try {
-                            const batchRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                                method: "POST", headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify(batchBody)
-                            });
-                            const batchData = await batchRes.json();
-                            batchData.forEach((resp, idx) => {
-                                if(resp.result && chunk[idx]) {
-                                    const t = chunk[idx];
-                                    if(resp.result.decimals !== null) t.decimals = resp.result.decimals;
-                                    if(resp.result.symbol) t.symbol = resp.result.symbol;
-                                }
-                            });
-                        } catch(e) {}
-                        await new Promise(r => setTimeout(r, 200)); // Rate Limit Sleep
-                    }
-                }
-
-                allTokens.forEach(t => {
-                    if (KNOWN_DECIMALS[t.ca]) t.decimals = KNOWN_DECIMALS[t.ca];
-                });
-
-                // 3. PRICE CHECK
-                loading.innerText = `Checking prices...`;
-                const priceChunks = [];
-                for (let i = 0; i < allTokens.length; i += 20) priceChunks.push(allTokens.slice(i, i + 20));
-
-                for (const chunk of priceChunks) {
-                    const addresses = chunk.map(t => t.isNative ? WETH_ADDR : t.ca).join(',');
-                    try {
-                        const priceRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addresses}`);
-                        const priceData = await priceRes.json();
-                        
-                        if(priceData.pairs) {
-                            chunk.forEach(t => {
-                                const lookup = t.isNative ? WETH_ADDR : t.ca;
-                                const pair = priceData.pairs.find(p => p.baseToken.address.toLowerCase() === lookup);
-                                if(pair && parseFloat(pair.priceUsd) > 0) {
-                                    t.price = parseFloat(pair.priceUsd);
-                                    if(t.symbol === "UNK") t.symbol = pair.baseToken.symbol;
-                                }
-                            });
-                        }
-                    } catch(e) {}
-                    await new Promise(r => setTimeout(r, 200)); // Rate Limit Sleep
-                }
-
-                // 4. CALC & SPLIT
-                const pricedTokens = [];
-                const zeroTokens = [];
-
-                allTokens.forEach(t => {
-                    const balFloat = parseFloat(BigInt(t.raw)) / Math.pow(10, t.decimals);
-                    t.usdValue = balFloat * t.price;
+                data.result.forEach(token => {
+                    token.usd_value = token.usd_value ? parseFloat(token.usd_value) : 0;
+                    token.balance_formatted = parseFloat(token.balance_formatted).toLocaleString(undefined, {maximumFractionDigits: 4});
                     
-                    if (t.usdValue > 0) pricedTokens.push(t);
-                    else zeroTokens.push(t);
+                    if (token.usd_value > 0.01) valued.push(token);
+                    else others.push(token);
                 });
 
-                // Sort Priced by USD
-                pricedTokens.sort((a, b) => b.usdValue - a.usdValue);
-                // Sort Zero by Raw Balance
-                zeroTokens.sort((a, b) => {
-                    const diff = BigInt(b.raw) - BigInt(a.raw);
-                    return diff > 0n ? -1 : (diff < 0n ? 1 : 0); // Descending
-                });
+                valued.sort((a, b) => b.usd_value - a.usd_value);
+                others.sort((a, b) => parseFloat(b.balance) - parseFloat(a.balance)); 
 
                 select.innerHTML = '<option value="" disabled selected>Select a token...</option>';
 
-                // Group 1: VALUED
-                if (pricedTokens.length > 0) {
+                if (valued.length > 0) {
                     const grp = document.createElement('optgroup');
                     grp.label = "💲 VALUED ASSETS";
-                    
-                    pricedTokens.forEach(t => {
-                        const valStr = t.usdValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits:2});
+                    valued.forEach(t => {
+                        const valStr = t.usd_value.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
                         const opt = document.createElement('option');
-                        opt.value = t.isNative ? WETH_ADDR : t.ca;
-                        opt.innerText = `${t.symbol} - $${valStr}`;
+                        opt.value = t.token_address;
+                        opt.innerText = `${t.symbol} - ${valStr} (${t.balance_formatted})`;
                         grp.appendChild(opt);
                     });
                     select.appendChild(grp);
                 }
 
-                // Group 2: OTHERS
-                if (zeroTokens.length > 0) {
+                if (others.length > 0) {
                     const grp = document.createElement('optgroup');
-                    grp.label = "❓ UNPRICED / OTHERS";
-                    
-                    zeroTokens.forEach(t => {
-                        const shortCA = `${t.ca.slice(0,4)}...${t.ca.slice(-4)}`;
+                    grp.label = "❓ UNPRICED / DUST";
+                    others.forEach(t => {
                         const opt = document.createElement('option');
-                        opt.value = t.isNative ? WETH_ADDR : t.ca;
-                        opt.innerText = `${t.symbol} (${shortCA})`;
+                        opt.value = t.token_address;
+                        opt.innerText = `${t.symbol} (${t.balance_formatted})`;
                         grp.appendChild(opt);
                     });
                     select.appendChild(grp);
-                }
-
-                if (pricedTokens.length === 0 && zeroTokens.length === 0) {
-                    select.innerHTML = '<option disabled>No tokens found</option>';
                 }
 
             } catch (error) {
-                console.error(error);
-                select.innerHTML = '<option disabled>Error loading tokens</option>';
+                console.error("Moralis Error:", error);
+                select.innerHTML = '<option disabled>Error loading portfolio</option>';
             } finally {
                 loading.style.display = 'none';
                 select.style.display = 'block';
             }
         }
 
+        // --- ALCHEMY ANALYSIS ENGINE ---
         document.getElementById('btnFast').addEventListener('click', () => runAnalysis(100)); 
         document.getElementById('btnFull').addEventListener('click', () => runAnalysis(5000)); 
 
@@ -529,7 +391,7 @@
 
                 let mainSymbol = "TOKEN";
                 try {
-                    const metaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                    const metaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                         method: "POST", headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenMetadata", "params": [tokenCA] })
                     });
@@ -672,7 +534,7 @@
 
         async function determineCategory(txHash, wallet, targetTokenCA, isTargetIn, mainSymbol) {
             try {
-                const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "params": [txHash] })
                 });
@@ -725,7 +587,7 @@
         async function getSymbol(contractAddress) {
             if (symbolCache[contractAddress]) return symbolCache[contractAddress];
             try {
-                const metaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                const metaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenMetadata", "params": [contractAddress] })
                 });
@@ -744,7 +606,7 @@
                     const params = { "fromBlock": "0x0", "toBlock": "latest", "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, "contractAddresses": [tokenAddr], "order": "desc", "maxCount": "0x3e8" };
                     if (direction === 'to') params.toAddress = walletAddr; else params.fromAddress = walletAddr;
                     if (pageKey) params.pageKey = pageKey;
-                    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                         method: "POST", headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] })
                     });
