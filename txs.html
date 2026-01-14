@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 11.9 (Hotfix)</title>
+    <title>WAST Analyzer 12.0 (Stable)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -109,7 +109,6 @@
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .page-info { font-size: 0.8rem; color: #666; font-weight: 600; }
 
-        #exportArea { margin-top: 15px; text-align: center; min-height: 40px; }
         #status { text-align: center; margin: 15px 0; font-weight: 600; font-size: 0.85rem; min-height: 20px; padding: 0 10px; }
         #deepStatus { font-size: 0.75rem; color: var(--primary); text-align: center; margin-bottom: 10px; display:none; }
 
@@ -125,7 +124,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: v11.9 Buttons Fix</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: v12.0 Stable</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -223,8 +222,8 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="wip-tag">🚧 v11.9 HOTFIX 🚧</div>
-        <div class="version-tag">v11.9</div>
+        <div class="wip-tag">🚧 v12.0 STABLE 🚧</div>
+        <div class="version-tag">v12.0</div>
     </div>
 
     <script>
@@ -242,6 +241,7 @@
         const rowsPerPage = 50;
         const BATCH_SIZE = 15; 
 
+        // LIQUID ASSETS
         const LIQUID_ASSETS = [
             "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", 
             "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a", 
