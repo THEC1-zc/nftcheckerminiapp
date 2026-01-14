@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 7.0 (Precision Core)</title>
+    <title>WAST Analyzer v1.0</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -36,7 +36,7 @@
         .wast-mini { font-weight: 900; font-size: 1rem; letter-spacing: 2px; color: var(--primary); margin-left: 10px; }
         .identity-badge { font-size: 0.75rem; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 20px; color: var(--primary); font-weight: 700; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid rgba(0,82,255,0.1); }
 
-        .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; }
+        .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; position: relative; }
         
         .input-group { margin-bottom: 15px; }
         label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.75rem; margin-bottom: 6px; color: #666; text-transform: uppercase; }
@@ -87,6 +87,16 @@
         .page-btn { background: #fff; border: 1px solid #ddd; padding: 5px 15px; border-radius: 8px; cursor: pointer; color: #333; font-weight: 600; font-size: 0.8rem; }
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .page-info { font-size: 0.8rem; color: #666; font-weight: 600; }
+
+        /* VERSION TAG */
+        .version-tag { 
+            text-align: center; 
+            font-size: 0.6rem; 
+            color: #ccc; 
+            margin-top: 25px; 
+            font-family: monospace;
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
@@ -199,6 +209,8 @@
             <span id="pageIndicator" class="page-info">Page 1</span>
             <button id="btnNext" class="page-btn">Next</button>
         </div>
+
+        <div class="version-tag">v1.0</div>
     </div>
 
     <script>
@@ -209,12 +221,12 @@
         // --- HARDCODED DECIMALS FOR BASE (CRITICAL FIX) ---
         const KNOWN_DECIMALS = {
             "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 6, // USDC
-            "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a": 6, // USDT (Bridged)
+            "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a": 6, // USDT
             "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": 6, // EURC
             "0x4200000000000000000000000000000000000006": 18, // WETH
             "0x2ae3f1ec7f1f5012cfdd600a18d5eb45039a14d6": 18, // cbETH
             "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA": 6, // USDbC
-            "0x0000000000000000000000000000000000000000": 18  // Native ETH (Pseudo)
+            "0x0000000000000000000000000000000000000000": 18  // Native ETH
         };
         const ETH_PSEUDO = "0x0000000000000000000000000000000000000000"; 
         const WETH_ADDR = "0x4200000000000000000000000000000000000006";
@@ -321,7 +333,7 @@
                         uniqueMap.set(t.contractAddress.toLowerCase(), {
                             ca: t.contractAddress.toLowerCase(),
                             raw: t.tokenBalance,
-                            decimals: 18, // Default
+                            decimals: 18, 
                             symbol: "UNK",
                             price: 0,
                             isNative: false
@@ -329,7 +341,6 @@
                     }
                 }
 
-                // 2. Add Native ETH
                 const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] })
@@ -354,14 +365,10 @@
                     return;
                 }
 
-                // 3. BATCH METADATA FETCH (JSON-RPC)
-                // Filter tokens that are NOT in hardcoded list
+                // 2. BATCH META FETCH
                 const unknownTokens = allTokens.filter(t => !KNOWN_DECIMALS[t.ca]);
-                
                 if (unknownTokens.length > 0) {
                     loading.innerText = `Fetching metadata for ${unknownTokens.length} tokens...`;
-                    
-                    // Split into chunks of 15 for batch request
                     const metaChunks = [];
                     for (let i = 0; i < unknownTokens.length; i += 15) metaChunks.push(unknownTokens.slice(i, i + 15));
 
@@ -379,8 +386,6 @@
                                 body: JSON.stringify(batchBody)
                             });
                             const batchData = await batchRes.json();
-                            
-                            // Map results back
                             batchData.forEach((resp, idx) => {
                                 if(resp.result && chunk[idx]) {
                                     const t = chunk[idx];
@@ -388,16 +393,15 @@
                                     if(resp.result.symbol) t.symbol = resp.result.symbol;
                                 }
                             });
-                        } catch(e) { console.log("Meta batch fail", e); }
+                        } catch(e) {}
                     }
                 }
 
-                // Apply Hardcoded Decimals
                 allTokens.forEach(t => {
                     if (KNOWN_DECIMALS[t.ca]) t.decimals = KNOWN_DECIMALS[t.ca];
                 });
 
-                // 4. PRICE CHECK (Chunks of 20)
+                // 3. PRICE CHECK
                 loading.innerText = `Checking prices...`;
                 const priceChunks = [];
                 for (let i = 0; i < allTokens.length; i += 20) priceChunks.push(allTokens.slice(i, i + 20));
@@ -422,17 +426,13 @@
                     await new Promise(r => setTimeout(r, 50));
                 }
 
-                // 5. CALCULATE & SORT
+                // 4. CALC & SORT
                 const validTokens = [];
                 allTokens.forEach(t => {
-                    const rawVal = BigInt(t.raw); // Use BigInt for safety
-                    const divisor = BigInt(10) ** BigInt(t.decimals);
-                    // Convert to float for USD calc (lossy but fine for display)
-                    const balFloat = Number(rawVal) / Number(divisor);
+                    // Safe math
+                    const balFloat = parseFloat(BigInt(t.raw)) / Math.pow(10, t.decimals);
                     t.usdValue = balFloat * t.price;
                     
-                    // Filter or Show? Show everything > 0.02, OR show everything with valid price?
-                    // Let's show everything > 0.02
                     if (t.usdValue >= 0.02) validTokens.push(t);
                 });
 
@@ -444,7 +444,6 @@
                 validTokens.forEach(t => {
                     const valStr = t.usdValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits:2});
                     const opt = document.createElement('option');
-                    // If native, we must pass WETH address to analyzer because Analyzer expects ERC20 contract
                     opt.value = t.isNative ? WETH_ADDR : t.ca; 
                     opt.innerText = `${t.symbol} - $${valStr}`;
                     select.appendChild(opt);
