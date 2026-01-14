@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 6.5 (Deep Search)</title>
+    <title>WAST Analyzer 7.0 (Precision Core)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -49,7 +49,7 @@
         input, select { width: 100%; padding: 12px; border: 2px solid #e1e4e8; border-radius: 12px; font-size: 14px; outline: none; background: #fafafa; box-sizing: border-box; font-family: inherit; }
         input:focus, select:focus { border-color: var(--primary); background: #fff; }
         
-        .loading-text { font-size: 0.75rem; color: #666; font-weight: 600; margin-top: 8px; display: none; text-align: center; background: #f0f4ff; padding: 5px; border-radius: 5px; }
+        .loading-text { font-size: 0.8rem; color: #999; font-style: italic; margin-top: 5px; display: none; text-align: center; }
 
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         button { flex: 1; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: opacity 0.2s; color: white; }
@@ -118,7 +118,7 @@
                 <select id="tokenSelect">
                     <option value="" disabled selected>Waiting for wallet...</option>
                 </select>
-                <div id="loadingTokens" class="loading-text">Scanning full wallet & filtering dust...</div>
+                <div id="loadingTokens" class="loading-text">Scanning...</div>
             </div>
 
             <div id="inputContainer" style="display:none;">
@@ -206,9 +206,18 @@
         const symbolCache = {}; 
         let isCustomTokenMode = false;
         
-        // ADDRESSES
+        // --- HARDCODED DECIMALS FOR BASE (CRITICAL FIX) ---
+        const KNOWN_DECIMALS = {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 6, // USDC
+            "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a": 6, // USDT (Bridged)
+            "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": 6, // EURC
+            "0x4200000000000000000000000000000000000006": 18, // WETH
+            "0x2ae3f1ec7f1f5012cfdd600a18d5eb45039a14d6": 18, // cbETH
+            "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA": 6, // USDbC
+            "0x0000000000000000000000000000000000000000": 18  // Native ETH (Pseudo)
+        };
+        const ETH_PSEUDO = "0x0000000000000000000000000000000000000000"; 
         const WETH_ADDR = "0x4200000000000000000000000000000000000006";
-        const ETH_PSEUDO = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"; 
 
         let globalTransactions = [];
         let currentPage = 1;
@@ -273,7 +282,7 @@
             document.getElementById('tokenInput').value = e.target.value;
         });
 
-        // --- DEEP TOKEN LOADER ---
+        // --- BATCH RPC TOKEN LOADER ---
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
@@ -289,7 +298,7 @@
                 let loopCount = 0;
 
                 do {
-                    if(loopCount > 20) break; // Increased safety limit
+                    if(loopCount > 15) break; 
                     const params = { 
                         "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", 
                         "params": [walletAddr] 
@@ -306,18 +315,16 @@
                     loopCount++;
                 } while (pageKey);
 
-                // Filter 0 Balances & Duplicates
-                const tokenMap = new Map();
+                const uniqueMap = new Map();
                 for(const t of tokens) {
                     if(t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000") {
-                        const ca = t.contractAddress.toLowerCase();
-                        tokenMap.set(ca, {
-                            contractAddress: ca,
-                            tokenBalance: t.tokenBalance,
-                            isNative: false,
-                            priceUsd: 0,
-                            decimals: 18, // Default fallback
-                            symbol: "UNK"
+                        uniqueMap.set(t.contractAddress.toLowerCase(), {
+                            ca: t.contractAddress.toLowerCase(),
+                            raw: t.tokenBalance,
+                            decimals: 18, // Default
+                            symbol: "UNK",
+                            price: 0,
+                            isNative: false
                         });
                     }
                 }
@@ -329,18 +336,17 @@
                 });
                 const ethData = await ethRes.json();
                 if(ethData.result && ethData.result !== "0x0") {
-                    tokenMap.set(ETH_PSEUDO, {
-                        contractAddress: ETH_PSEUDO,
-                        tokenBalance: ethData.result,
-                        isNative: true,
-                        priceUsd: 0,
+                    uniqueMap.set(ETH_PSEUDO, {
+                        ca: ETH_PSEUDO,
+                        raw: ethData.result,
                         decimals: 18,
-                        symbol: "ETH"
+                        symbol: "ETH",
+                        price: 0,
+                        isNative: true
                     });
                 }
 
-                const allTokens = Array.from(tokenMap.values());
-                
+                const allTokens = Array.from(uniqueMap.values());
                 if (allTokens.length === 0) {
                     select.innerHTML = '<option disabled>No tokens found</option>';
                     loading.style.display = 'none';
@@ -348,112 +354,99 @@
                     return;
                 }
 
-                // 3. SEQUENTIAL BATCH CHECK (Smaller batches of 15)
-                const batchSize = 15;
-                const chunks = [];
-                for (let i = 0; i < allTokens.length; i += batchSize) chunks.push(allTokens.slice(i, i + batchSize));
-
-                let pricedCount = 0;
-
-                for (let i = 0; i < chunks.length; i++) {
-                    const chunk = chunks[i];
-                    loading.innerText = `Scanning Prices: ${i * batchSize}/${allTokens.length}...`;
+                // 3. BATCH METADATA FETCH (JSON-RPC)
+                // Filter tokens that are NOT in hardcoded list
+                const unknownTokens = allTokens.filter(t => !KNOWN_DECIMALS[t.ca]);
+                
+                if (unknownTokens.length > 0) {
+                    loading.innerText = `Fetching metadata for ${unknownTokens.length} tokens...`;
                     
-                    // Map Fake ETH to WETH for price lookup
-                    const addresses = chunk.map(t => t.isNative ? WETH_ADDR : t.contractAddress).join(',');
-                    
+                    // Split into chunks of 15 for batch request
+                    const metaChunks = [];
+                    for (let i = 0; i < unknownTokens.length; i += 15) metaChunks.push(unknownTokens.slice(i, i + 15));
+
+                    for (const chunk of metaChunks) {
+                        const batchBody = chunk.map((t, idx) => ({
+                            id: idx,
+                            jsonrpc: "2.0",
+                            method: "alchemy_getTokenMetadata",
+                            params: [t.ca]
+                        }));
+
+                        try {
+                            const batchRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                                method: "POST", headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(batchBody)
+                            });
+                            const batchData = await batchRes.json();
+                            
+                            // Map results back
+                            batchData.forEach((resp, idx) => {
+                                if(resp.result && chunk[idx]) {
+                                    const t = chunk[idx];
+                                    if(resp.result.decimals !== null) t.decimals = resp.result.decimals;
+                                    if(resp.result.symbol) t.symbol = resp.result.symbol;
+                                }
+                            });
+                        } catch(e) { console.log("Meta batch fail", e); }
+                    }
+                }
+
+                // Apply Hardcoded Decimals
+                allTokens.forEach(t => {
+                    if (KNOWN_DECIMALS[t.ca]) t.decimals = KNOWN_DECIMALS[t.ca];
+                });
+
+                // 4. PRICE CHECK (Chunks of 20)
+                loading.innerText = `Checking prices...`;
+                const priceChunks = [];
+                for (let i = 0; i < allTokens.length; i += 20) priceChunks.push(allTokens.slice(i, i + 20));
+
+                for (const chunk of priceChunks) {
+                    const addresses = chunk.map(t => t.isNative ? WETH_ADDR : t.ca).join(',');
                     try {
                         const priceRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addresses}`);
                         const priceData = await priceRes.json();
                         
                         if(priceData.pairs) {
-                            // Process ALL pairs to find matches for tokens in this chunk
-                            priceData.pairs.forEach(pair => {
-                                const base = pair.baseToken.address.toLowerCase();
-                                // Check if we have this token in our map
-                                // ETH case: WETH is base, but we mapped ETH to WETH for query. 
-                                // We need to update ETH_PSEUDO entry if base is WETH
-                                
-                                // Direct Match
-                                if(tokenMap.has(base)) {
-                                    const t = tokenMap.get(base);
-                                    // Take highest liquidity or just overwrite (usually sorted by DexScreener)
-                                    // Only overwrite if price is > 0
-                                    if(parseFloat(pair.priceUsd) > 0 && t.priceUsd === 0) {
-                                        t.priceUsd = parseFloat(pair.priceUsd);
-                                        t.symbol = pair.baseToken.symbol;
-                                        pricedCount++;
-                                    }
-                                }
-                                
-                                // Special ETH Case
-                                if(base === WETH_ADDR && tokenMap.has(ETH_PSEUDO)) {
-                                    const t = tokenMap.get(ETH_PSEUDO);
-                                    if(parseFloat(pair.priceUsd) > 0 && t.priceUsd === 0) {
-                                        t.priceUsd = parseFloat(pair.priceUsd);
-                                        t.symbol = "ETH";
-                                        pricedCount++;
-                                    }
+                            chunk.forEach(t => {
+                                const lookup = t.isNative ? WETH_ADDR : t.ca;
+                                const pair = priceData.pairs.find(p => p.baseToken.address.toLowerCase() === lookup);
+                                if(pair && parseFloat(pair.priceUsd) > 0) {
+                                    t.price = parseFloat(pair.priceUsd);
+                                    if(t.symbol === "UNK") t.symbol = pair.baseToken.symbol;
                                 }
                             });
                         }
-                        await new Promise(r => setTimeout(r, 100)); 
                     } catch(e) {}
+                    await new Promise(r => setTimeout(r, 50));
                 }
 
-                // 4. Fetch Decimals ONLY for priced tokens (Optimization)
-                const tokensWithPrice = allTokens.filter(t => t.priceUsd > 0);
-                
-                loading.innerText = `Finalizing ${tokensWithPrice.length} tokens...`;
-
-                await Promise.all(tokensWithPrice.map(async (t) => {
-                    if(t.isNative) return; // Already known
-                    try {
-                        const metaRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                            method: "POST", headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenMetadata", "params": [t.contractAddress] })
-                        });
-                        const m = await metaRes.json();
-                        if(m.result) {
-                            t.decimals = m.result.decimals !== null ? m.result.decimals : 18;
-                            if(m.result.symbol) t.symbol = m.result.symbol;
-                        }
-                    } catch(e) {}
-                }));
-
-                // 5. Final Calculation & Filter
-                let validTokens = [];
-                tokensWithPrice.forEach(t => {
-                    const rawBal = parseInt(t.tokenBalance, 16); // Safe for typical balances
-                    t.realBalance = rawBal / Math.pow(10, t.decimals);
-                    t.totalValue = t.realBalance * t.priceUsd;
+                // 5. CALCULATE & SORT
+                const validTokens = [];
+                allTokens.forEach(t => {
+                    const rawVal = BigInt(t.raw); // Use BigInt for safety
+                    const divisor = BigInt(10) ** BigInt(t.decimals);
+                    // Convert to float for USD calc (lossy but fine for display)
+                    const balFloat = Number(rawVal) / Number(divisor);
+                    t.usdValue = balFloat * t.price;
                     
-                    if(t.totalValue >= 0.02) {
-                        validTokens.push(t);
-                    }
+                    // Filter or Show? Show everything > 0.02, OR show everything with valid price?
+                    // Let's show everything > 0.02
+                    if (t.usdValue >= 0.02) validTokens.push(t);
                 });
 
-                validTokens.sort((a, b) => b.totalValue - a.totalValue);
+                validTokens.sort((a, b) => b.usdValue - a.usdValue);
 
                 select.innerHTML = '<option value="" disabled selected>Select a token...</option>';
                 if(validTokens.length === 0) select.innerHTML = '<option disabled>No tokens > $0.02 found</option>';
 
                 validTokens.forEach(t => {
-                    // If ETH, keep using WETH addr or ETH_PSEUDO? 
-                    // Analyzer needs a contract address. ETH transfers are not ERC20.
-                    // If user selects ETH, we should handle it. 
-                    // For now, let's pass WETH address so analyzer tries to find WETH movements, 
-                    // OR better: pass ETH_PSEUDO and handle it in Analyzer?
-                    // Given the Analyzer logic `alchemy_getAssetTransfers` uses `category: ["erc20"]`, it won't find ETH transfers anyway unless we add "external".
-                    // Let's stick to ERC20 logic. If user selects ETH, give WETH address as proxy for now.
-                    
-                    const valueForOption = t.isNative ? WETH_ADDR : t.contractAddress;
-                    const shortCA = `${t.contractAddress.slice(0,4)}...${t.contractAddress.slice(-4)}`;
-                    const label = `${t.symbol} - $${t.totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits:2})}`;
-                    
+                    const valStr = t.usdValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits:2});
                     const opt = document.createElement('option');
-                    opt.value = valueForOption; 
-                    opt.innerText = label;
+                    // If native, we must pass WETH address to analyzer because Analyzer expects ERC20 contract
+                    opt.value = t.isNative ? WETH_ADDR : t.ca; 
+                    opt.innerText = `${t.symbol} - $${valStr}`;
                     select.appendChild(opt);
                 });
 
