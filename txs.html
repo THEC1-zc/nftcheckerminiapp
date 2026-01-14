@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 10.1 (Vertical Fix)</title>
+    <title>WAST Analyzer 10.2 (Export Link)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -60,7 +60,7 @@
         .token-info h3 { margin: 0; font-size: 1.4rem; font-weight: 900; color: #333; line-height: 1; }
         .token-info span { font-size: 0.85rem; color: #666; font-weight: 500; }
 
-        /* VERTICAL STACK FOR BOXES */
+        /* VERTICAL BOXES */
         .dashboard-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; display: none; }
         .stat-card { background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; }
         
@@ -98,6 +98,15 @@
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .page-info { font-size: 0.8rem; color: #666; font-weight: 600; }
 
+        /* EXPORT DOWNLOAD AREA */
+        #exportArea { margin-top: 15px; text-align: center; min-height: 40px; }
+        .download-link { 
+            display: inline-block; background-color: #27ae60; color: white; padding: 10px 20px; 
+            border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem; 
+            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); animation: popIn 0.3s ease;
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
         #status { text-align: center; margin: 15px 0; font-weight: 600; font-size: 0.85rem; min-height: 20px; padding: 0 10px; }
         #deepStatus { font-size: 0.75rem; color: var(--primary); text-align: center; margin-bottom: 10px; display:none; }
 
@@ -113,7 +122,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Vertical & Fixed</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Link Export & TM Fix</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -133,6 +142,8 @@
             <button id="btnExport" class="btn-export">📥 Export CSV</button>
         </div>
         
+        <div id="exportArea"></div>
+
         <div id="status"></div>
         <div id="deepStatus"></div>
 
@@ -191,8 +202,8 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="wip-tag">🚧 v10.1 VERTICAL FIX 🚧</div>
-        <div class="version-tag">v10.1</div>
+        <div class="wip-tag">🚧 v10.2 EXPORT & TM FIX 🚧</div>
+        <div class="version-tag">v10.2</div>
     </div>
 
     <script>
@@ -201,7 +212,7 @@
         let globalEvents = []; 
         let currentTokenCA = "";
         let currentTokenSymbol = "TOKEN";
-        let currentPricePerToken = 0; // IMPORTANT: Global Current Price
+        let currentPricePerToken = 0; 
         let isCustomTokenMode = false;
         
         let currentPage = 1;
@@ -406,6 +417,7 @@
             const wallet = document.getElementById('walletInput').value.trim().toLowerCase();
             currentTokenCA = isCustomTokenMode ? document.getElementById('tokenInput').value.trim().toLowerCase() : document.getElementById('tokenSelect').value.trim().toLowerCase();
             
+            // RESET
             document.getElementById('dashboard').style.display='none';
             document.getElementById('txTable').style.display='none';
             document.getElementById('tokenHeader').style.display='none';
@@ -413,6 +425,7 @@
             document.getElementById('btnExport').style.display='none';
             document.getElementById('paginationContainer').style.display='none';
             document.getElementById('deepStatus').style.display='none';
+            document.getElementById('exportArea').innerHTML = ''; // Clear prev link
             document.getElementById('btnHistory').innerText = "🔮 Time Machine"; 
             document.getElementById('btnHistory').disabled = false;
             document.getElementById('txList').innerHTML = "";
@@ -424,7 +437,7 @@
 
             status.innerText = "Initializing...";
             
-            // 1. GET PRICE (GLOBAL)
+            // 1. GET HEADER DATA (Sync Current Price)
             try {
                 const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${currentTokenCA}`);
                 const dexData = await dexRes.json();
@@ -445,7 +458,6 @@
 
             let buyT=0, sellT=0, recvT=0, sendT=0;
             
-            // 3. INITIAL DRAFT (FAST)
             globalEvents = rawTxs.map(tx => {
                 const myWallet = wallet.toLowerCase();
                 const isIncoming = tx.to && tx.to.toLowerCase() === myWallet;
@@ -454,26 +466,25 @@
                 const date = dateObj.toLocaleDateString();
                 const timestamp = Math.floor(dateObj.getTime() / 1000); 
 
-                // Tentative
                 const category = isIncoming ? 'IN (Pend)' : 'OUT (Pend)'; 
 
                 return {
                     hash: tx.hash,
                     block: tx.blockNum,
-                    ts: timestamp,
+                    ts: timestamp, 
                     amount: val,
                     date: date,
                     rowId: `tx-${tx.hash}`,
                     rawVal: val,
-                    currVal: val * currentPricePerToken, // Uses global
+                    currVal: val * currentPricePerToken, // Uses verified current price
                     histVal: null,
                     type: category,
                     isIncoming: isIncoming
                 };
             });
 
-            // SHOW UI (Zero values initially)
-            document.getElementById('dashboard').style.display='flex'; // Flex for vertical
+            // SHOW UI
+            document.getElementById('dashboard').style.display='flex';
             document.getElementById('filterContainer').style.display='block';
             document.getElementById('txTable').style.display='table';
             document.getElementById('paginationContainer').style.display='flex';
@@ -481,7 +492,7 @@
             
             renderTable();
 
-            // 4. START BATCH REFINING
+            // REFINEMENT
             refineDataInBackground(wallet, currentTokenCA);
         }
 
@@ -560,7 +571,7 @@
 
                 } catch(e) { console.error("Batch fail", e); }
                 
-                await new Promise(r => setTimeout(r, 80)); 
+                await new Promise(r => setTimeout(r, 100)); 
             }
 
             deepStatus.innerText = "Data Fully Refined ✅";
@@ -632,10 +643,10 @@
             for(const evt of globalEvents) {
                 try {
                     status.innerText = `Fetching ${processed+1}/${globalEvents.length}...`;
-                    const url = `https://coins.llama.fi/prices/historical/${evt.ts}/base:${currentTokenCA}`;
+                    const url = `https://coins.llama.fi/prices/historical/${evt.ts}/base:${currentTokenCA.toLowerCase()}`;
                     const res = await fetch(url);
                     const data = await res.json();
-                    const key = `base:${currentTokenCA}`;
+                    const key = `base:${currentTokenCA.toLowerCase()}`;
                     
                     if(data.coins && data.coins[key]) {
                         const histPrice = data.coins[key].price;
@@ -648,6 +659,7 @@
                         
                         evt.histVal = totalValue; 
 
+                        // Update Row Visual
                         const el = document.getElementById(`usd-${evt.hash}`);
                         if(el) {
                             el.innerText = `$${totalValue.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
@@ -656,7 +668,7 @@
                         }
                     }
                     processed++;
-                    await new Promise(r => setTimeout(r, 100)); 
+                    await new Promise(r => setTimeout(r, 200)); 
                 } catch(e) { console.log(e); }
             }
             
@@ -669,6 +681,7 @@
             btn.innerHTML = "✅ Time Machine";
         }
 
+        // --- NEW EXPORT LOGIC: LINK GENERATION ---
         function exportData() {
             let csvContent = "";
             csvContent += "WAST ANALYSIS REPORT\n";
@@ -690,17 +703,19 @@
                 csvContent += `${evt.date},${evt.type},${evt.amount},${val},${evt.hash}\n`;
             });
 
+            // Create Blob
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            if (link.download !== undefined) { 
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", `WAST_${currentTokenSymbol}_Report.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+            const url = URL.createObjectURL(blob);
+            
+            // Inject Link
+            const area = document.getElementById('exportArea');
+            area.innerHTML = `<a href="${url}" download="WAST_${currentTokenSymbol}.csv" class="download-link">📄 Scarica Report (Scade in 40s)</a>`;
+            
+            // Auto-Clean after 40s
+            setTimeout(() => {
+                area.innerHTML = "";
+                URL.revokeObjectURL(url);
+            }, 40000);
         }
 
         async function fetchUnifiedTransfers(wallet, token, limit, statusElement) {
