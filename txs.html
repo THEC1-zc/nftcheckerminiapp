@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 11.4 (Dropdown Fix)</title>
+    <title>WAST Analyzer 11.5 (Superfluid Events)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -125,7 +125,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: v11.4 Dropdown Fixed</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: v11.5 Superfluid Native</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -223,8 +223,8 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="wip-tag">🚧 v11.4 DROPDOWN FIX 🚧</div>
-        <div class="version-tag">v11.4</div>
+        <div class="wip-tag">🚧 v11.5 SUPERFLUID EVENTS 🚧</div>
+        <div class="version-tag">v11.5</div>
     </div>
 
     <script>
@@ -243,17 +243,21 @@
 
         // LIQUID ASSETS
         const LIQUID_ASSETS = [
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC
-            "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a", // USDT
-            "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", // EURC
-            "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca", // USDbC
-            "0x4200000000000000000000000000000000000006", // WETH
-            "0x0000000000000000000000000000000000000000"  // ETH
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", 
+            "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a", 
+            "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", 
+            "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca", 
+            "0x4200000000000000000000000000000000000006", 
+            "0x0000000000000000000000000000000000000000"
         ];
 
         const USDC_BASE = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
         const ETH_PSEUDO = "0x0000000000000000000000000000000000000000"; 
         const WETH_ADDR = "0x4200000000000000000000000000000000000006";
+
+        // SUPERFLUID EVENTS
+        const EVT_UPGRADE = "0x49755b9e9d962892997c0da9e7b243403a6094366c3c43494793db64f4347781";
+        const EVT_DOWNGRADE = "0x24a737475a242040b2f0c74906f36934c264a4066922df674603946006e23293";
 
         window.addEventListener('DOMContentLoaded', () => {
             const myIdentity = localStorage.getItem('tysm_wallet');
@@ -281,7 +285,6 @@
         document.getElementById('btnPrev').addEventListener('click', () => { if(currentPage>1) {currentPage--; renderTable();} });
         document.getElementById('btnNext').addEventListener('click', () => { currentPage++; renderTable(); });
 
-        // --- SORTED DROPDOWN (Punto 6) ---
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
@@ -303,13 +306,9 @@
                 } while (pageKey);
 
                 let tokens = allTokens.filter(t => t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000");
-                
-                // ETH ADD
                 const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] }) });
                 const ethData = await ethRes.json();
-                if(ethData.result && ethData.result !== "0x0") {
-                    tokens.push({ contractAddress: ETH_PSEUDO, tokenBalance: ethData.result });
-                }
+                if(ethData.result && ethData.result !== "0x0") tokens.push({ contractAddress: ETH_PSEUDO, tokenBalance: ethData.result });
 
                 const uniqueMap = new Map();
                 for(const t of tokens) uniqueMap.set(t.contractAddress.toLowerCase(), t);
@@ -330,12 +329,9 @@
                             const pair = dexData.pairs ? dexData.pairs.find(p => p.baseToken.address.toLowerCase() === (lcAddr === ETH_PSEUDO ? WETH_ADDR : lcAddr)) : null;
                             const decimals = 18; 
                             const bal = Number(BigInt(t.tokenBalance)) / (10**decimals);
-                            
                             let price = pair ? parseFloat(pair.priceUsd) : 0;
-                            // FORCE FIX FOR USDC & ETH
                             if(lcAddr === USDC_BASE) price = 1.0;
-                            if(price === 0 && (lcAddr === ETH_PSEUDO || lcAddr === WETH_ADDR)) price = 2500; // rough fallback to ensure visibility if API fail
-
+                            if(price === 0 && (lcAddr === ETH_PSEUDO || lcAddr === WETH_ADDR)) price = 2500; 
                             const sym = pair ? pair.baseToken.symbol : (lcAddr === ETH_PSEUDO ? "ETH" : t.contractAddress.slice(0,6));
                             pricedTokens.push({ ca: t.contractAddress, symbol: sym, bal: bal, usd: bal * price });
                         });
@@ -344,7 +340,6 @@
                 }
 
                 pricedTokens.sort((a,b) => b.usd - a.usd);
-                
                 const valued = pricedTokens.filter(t => t.usd > 0.01);
                 const others = pricedTokens.filter(t => t.usd <= 0.01);
 
@@ -426,7 +421,6 @@
                 const dateObj = new Date(tx.metadata.blockTimestamp);
                 const date = dateObj.toLocaleDateString();
                 const timestamp = Math.floor(dateObj.getTime() / 1000); 
-
                 const category = isIncoming ? 'IN (Pend)' : 'OUT (Pend)'; 
 
                 return {
@@ -483,29 +477,44 @@
                         let newType = evt.isIncoming ? 'RECEIVE' : 'SEND'; 
                         let isLiquidInt = false;
                         let isContractInt = false;
+                        let isSuperfluidStake = false;
+                        let isSuperfluidUnstake = false;
 
-                        if (evt.isIncoming) {
-                            for(const log of logs) {
-                                if(log.topics[0] !== TRANSFER) continue;
-                                const contract = log.address.toLowerCase();
-                                const fromMe = log.topics[1] && log.topics[1].toLowerCase().includes(myWallet);
-                                if (fromMe && contract !== tokenCA) {
-                                    if(LIQUID_ASSETS.includes(contract)) isLiquidInt = true;
-                                    isContractInt = true;
-                                }
-                            }
-                            if(isContractInt) newType = isLiquidInt ? 'BUY' : 'UNSTAKE'; 
+                        // Check for Superfluid/Streme Events first (Most Specific)
+                        for(const log of logs) {
+                            if(log.topics[0] === EVT_UPGRADE) isSuperfluidStake = true;
+                            if(log.topics[0] === EVT_DOWNGRADE) isSuperfluidUnstake = true;
+                        }
+
+                        if(isSuperfluidStake) {
+                            newType = 'STAKE';
+                        } else if (isSuperfluidUnstake) {
+                            newType = 'UNSTAKE';
                         } else {
-                            for(const log of logs) {
-                                if(log.topics[0] !== TRANSFER) continue;
-                                const contract = log.address.toLowerCase();
-                                const toMe = log.topics[2] && log.topics[2].toLowerCase().includes(myWallet);
-                                if (toMe && contract !== tokenCA) {
-                                    if(LIQUID_ASSETS.includes(contract)) isLiquidInt = true;
-                                    isContractInt = true;
+                            // Standard Heuristics
+                            if (evt.isIncoming) {
+                                for(const log of logs) {
+                                    if(log.topics[0] !== TRANSFER) continue;
+                                    const contract = log.address.toLowerCase();
+                                    const fromMe = log.topics[1] && log.topics[1].toLowerCase().includes(myWallet);
+                                    if (fromMe && contract !== tokenCA) {
+                                        if(LIQUID_ASSETS.includes(contract)) isLiquidInt = true;
+                                        isContractInt = true;
+                                    }
                                 }
+                                if(isContractInt && isLiquidInt) newType = 'BUY';
+                            } else {
+                                for(const log of logs) {
+                                    if(log.topics[0] !== TRANSFER) continue;
+                                    const contract = log.address.toLowerCase();
+                                    const toMe = log.topics[2] && log.topics[2].toLowerCase().includes(myWallet);
+                                    if (toMe && contract !== tokenCA) {
+                                        if(LIQUID_ASSETS.includes(contract)) isLiquidInt = true;
+                                        isContractInt = true;
+                                    }
+                                }
+                                if(isContractInt && isLiquidInt) newType = 'SELL';
                             }
-                            if(isContractInt) newType = isLiquidInt ? 'SELL' : 'STAKE'; 
                         }
                         globalEvents[evtIndex].type = newType;
                     });
@@ -644,7 +653,6 @@
                     let histPrice = null;
                     evt.isRecentFallback = false;
                     
-                    // 1. DEFI LLAMA
                     try {
                         const res = await fetch(`https://coins.llama.fi/prices/historical/${evt.ts}/base:${currentTokenCA.toLowerCase()}`);
                         const data = await res.json();
@@ -652,7 +660,6 @@
                         if(data.coins && data.coins[key]) histPrice = data.coins[key].price;
                     } catch(e){}
 
-                    // 2. MOBULA (Fallback)
                     if(histPrice === null) {
                         try {
                             const mRes = await fetch(`https://api.mobula.io/api/1/market/history?asset=${currentTokenCA}&blockchain=base&from=${evt.ts - 3600}&to=${evt.ts + 3600}`);
@@ -661,7 +668,6 @@
                         } catch(e){}
                     }
 
-                    // 3. RECENT FALLBACK
                     if(histPrice === null && (Date.now()/1000 - evt.ts) < 86400) {
                         histPrice = currentPricePerToken;
                         evt.isRecentFallback = true;
@@ -728,39 +734,14 @@
 
         function copyToClipboard() {
             const toIt = (n) => n.toFixed(2).replace('.', ',');
-            const fmtIt = (n) => n.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2}).replace(/\./g, '');
-
             let csvContent = "";
-            csvContent += "WAST ANALYSIS REPORT\n";
-            csvContent += `Generated;${new Date().toLocaleString()}\n`;
-            csvContent += `Target Wallet;${document.getElementById('walletInput').value}\n`;
-            csvContent += `Token;${currentTokenSymbol} (${currentTokenCA})\n\n`;
-            
-            const getTxt = (id) => document.getElementById(id).innerText.replace('$','').replace('---','0').replace(/,/g,'').replace(/\./g,'').replace(/\s/g,'');
-            
-            let sBuy=0, sSell=0, sRecv=0, sSend=0;
-            let hBuy=0, hSell=0, hRecv=0, hSend=0;
-            let cBuy=0, cSell=0;
-
-            globalEvents.forEach(e => {
-                if(e.type==='BUY') { sBuy+=e.amount; if(e.histVal) hBuy+=e.histVal; cBuy+=e.currVal; }
-                if(e.type==='SELL') { sSell+=e.amount; if(e.histVal) hSell+=e.histVal; cSell+=e.currVal; }
-                if(e.type==='RECEIVE') { sRecv+=e.amount; if(e.histVal) hRecv+=e.histVal; }
-                if(e.type==='SEND') { sSend+=e.amount; if(e.histVal) hSend+=e.histVal; }
-            });
-
-            csvContent += `BUY;${toIt(sBuy)};${toIt(hBuy)};${toIt(cBuy)}\n`;
-            csvContent += `SELL;${toIt(sSell)};${toIt(hSell)};${toIt(cSell)}\n`;
-            csvContent += `RECEIVE;${toIt(sRecv)};${toIt(hRecv)};-\n`;
-            csvContent += `SEND;${toIt(sSend)};${toIt(hSend)};-\n\n`;
-
-            csvContent += "TRANSACTIONS\nDate;Type;Tokens;Hist Value;Curr Value;Hash\n";
+            csvContent += `Data * Tipo * Token * Quantità * Valore Storico * Valore Attuale * Hash\n`;
             globalEvents.forEach(evt => {
-                const hVal = evt.histVal ? toIt(evt.histVal) : "0,00";
-                const cVal = evt.currVal ? toIt(evt.currVal) : "0,00";
-                csvContent += `${evt.date};${evt.type};${toIt(evt.amount)};${hVal};${cVal};${evt.hash}\n`;
+                const hVal = evt.histVal ? evt.histVal.toFixed(2).replace('.', ',') : "0,00";
+                const cVal = evt.currVal ? evt.currVal.toFixed(2).replace('.', ',') : "0,00";
+                const qty = evt.amount.toFixed(4).replace('.', ',');
+                csvContent += `${evt.date} * ${evt.type} * ${currentTokenSymbol} * ${qty} * ${hVal} * ${cVal} * ${evt.hash}\n`;
             });
-
             navigator.clipboard.writeText(csvContent).then(() => {
                 const btn = document.getElementById('btnCopy');
                 const orig = btn.innerText;
