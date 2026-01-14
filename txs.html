@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 10.2 (Export Link)</title>
+    <title>WAST Analyzer 10.3 (Var% & Link)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -60,7 +60,6 @@
         .token-info h3 { margin: 0; font-size: 1.4rem; font-weight: 900; color: #333; line-height: 1; }
         .token-info span { font-size: 0.85rem; color: #666; font-weight: 500; }
 
-        /* VERTICAL BOXES */
         .dashboard-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; display: none; }
         .stat-card { background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; }
         
@@ -80,8 +79,8 @@
 
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; table-layout: fixed; }
         th { text-align: left; color: #999; font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid #eee; }
-        td { padding: 10px 0; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-        .col-type { width: 40%; } .col-amount { width: 60%; text-align: right; }
+        td { padding: 12px 0; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        .col-type { width: 35%; } .col-amount { width: 65%; text-align: right; }
         
         .tag { font-size: 0.6rem; padding: 3px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-right: 4px; display: inline-block; }
         .bg-buy { background: #e6fffa; color: var(--green); border: 1px solid #b2f5ea; }
@@ -91,8 +90,12 @@
         .bg-pending { background: #eee; color: #999; border: 1px solid #ddd; }
         
         .tx-sub { font-size: 0.7rem; color: #bbb; display: block; margin-top: 2px; }
-        .tx-usd { font-size: 0.75rem; color: #999; font-weight: 500; display: block; margin-top: 2px; }
+        .tx-usd { font-size: 0.75rem; color: #999; font-weight: 500; display: block; margin-top: 3px; }
         
+        .var-tag { font-size: 0.7rem; font-weight: 700; margin-left: 5px; }
+        .var-pos { color: var(--green); }
+        .var-neg { color: var(--red); }
+
         .pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; display: none; }
         .page-btn { background: #fff; border: 1px solid #ddd; padding: 5px 15px; border-radius: 8px; cursor: pointer; color: #333; font-weight: 600; font-size: 0.8rem; }
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -101,7 +104,7 @@
         /* EXPORT DOWNLOAD AREA */
         #exportArea { margin-top: 15px; text-align: center; min-height: 40px; }
         .download-link { 
-            display: inline-block; background-color: #27ae60; color: white; padding: 10px 20px; 
+            display: inline-block; background-color: #27ae60; color: white; padding: 12px 25px; 
             border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem; 
             box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); animation: popIn 0.3s ease;
         }
@@ -122,7 +125,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Link Export & TM Fix</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Var% & Link Fix</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -202,8 +205,8 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="wip-tag">🚧 v10.2 EXPORT & TM FIX 🚧</div>
-        <div class="version-tag">v10.2</div>
+        <div class="wip-tag">🚧 v10.3 VAR% + LINK 🚧</div>
+        <div class="version-tag">v10.3</div>
     </div>
 
     <script>
@@ -476,8 +479,9 @@
                     date: date,
                     rowId: `tx-${tx.hash}`,
                     rawVal: val,
-                    currVal: val * currentPricePerToken, // Uses verified current price
+                    currVal: val * currentPricePerToken,
                     histVal: null,
+                    histPrice: null, // NEW: Store unit price for calc
                     type: category,
                     isIncoming: isIncoming
                 };
@@ -571,7 +575,7 @@
 
                 } catch(e) { console.error("Batch fail", e); }
                 
-                await new Promise(r => setTimeout(r, 100)); 
+                await new Promise(r => setTimeout(r, 80)); 
             }
 
             deepStatus.innerText = "Data Fully Refined ✅";
@@ -614,13 +618,23 @@
                 else if(evt.type==='RECEIVE') badge='bg-receive';
                 else if(evt.type==='SEND') badge='bg-send';
 
+                // Var% Logic
+                let histHtml = '';
+                if(evt.histVal !== null && evt.histPrice > 0) {
+                    const varPct = ((currentPricePerToken - evt.histPrice) / evt.histPrice) * 100;
+                    const varClass = varPct >= 0 ? 'var-pos' : 'var-neg';
+                    const sign = varPct >= 0 ? '+' : '';
+                    histHtml = `<div class="tx-usd" style="color:#9c27b0; font-weight:700;">Hist: $${evt.histVal.toLocaleString(undefined, {maximumFractionDigits:2})} <span class="var-tag ${varClass}">(${sign}${varPct.toFixed(1)}%)</span></div>`;
+                }
+
                 html += `<tr id="${evt.rowId}">
                     <td class="col-type">
                         <span class="tag ${badge}">${evt.type}</span> <span style="color:#999;font-size:0.7em">${evt.date}</span>
                     </td>
                     <td class="col-amount">
                         <strong>${evt.rawVal.toLocaleString(undefined, {maximumFractionDigits:0})}</strong>
-                        <span class="tx-usd" id="usd-${evt.hash}">Curr: $${evt.currVal.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
+                        <div class="tx-usd">Curr: $${evt.currVal.toLocaleString(undefined, {maximumFractionDigits:2})}</div>
+                        ${histHtml}
                     </td>
                 </tr>`;
             });
@@ -658,20 +672,20 @@
                         if(evt.type === 'SEND') tSend += totalValue;
                         
                         evt.histVal = totalValue; 
-
-                        // Update Row Visual
-                        const el = document.getElementById(`usd-${evt.hash}`);
-                        if(el) {
-                            el.innerText = `$${totalValue.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-                            el.style.color = "#9c27b0"; 
-                            el.style.fontWeight = "700";
-                        }
+                        evt.histPrice = histPrice; // Capture unit price for var calculation
                     }
                     processed++;
-                    await new Promise(r => setTimeout(r, 200)); 
+                    
+                    // RE-RENDER every 5 items to show progress live
+                    if(processed % 5 === 0) renderTable();
+
+                    await new Promise(r => setTimeout(r, 250)); // Slower pacing for Llama
                 } catch(e) { console.log(e); }
             }
             
+            // Final Render to ensure everything is updated
+            renderTable();
+
             document.getElementById('buyHist').innerText = `$${tBuy.toLocaleString(undefined, {maximumFractionDigits:2})}`;
             document.getElementById('sellHist').innerText = `$${tSell.toLocaleString(undefined, {maximumFractionDigits:2})}`;
             document.getElementById('recvHist').innerText = `$${tRecv.toLocaleString(undefined, {maximumFractionDigits:2})}`;
@@ -681,7 +695,6 @@
             btn.innerHTML = "✅ Time Machine";
         }
 
-        // --- NEW EXPORT LOGIC: LINK GENERATION ---
         function exportData() {
             let csvContent = "";
             csvContent += "WAST ANALYSIS REPORT\n";
@@ -709,7 +722,7 @@
             
             // Inject Link
             const area = document.getElementById('exportArea');
-            area.innerHTML = `<a href="${url}" download="WAST_${currentTokenSymbol}.csv" class="download-link">📄 Scarica Report (Scade in 40s)</a>`;
+            area.innerHTML = `<a href="${url}" download="WAST_${currentTokenSymbol}_Report.csv" target="_blank" class="download-link">📄 Download Report (Open External)</a>`;
             
             // Auto-Clean after 40s
             setTimeout(() => {
