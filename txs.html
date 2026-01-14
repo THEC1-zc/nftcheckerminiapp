@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 8.0 (Free Core)</title>
+    <title>WAST Analyzer 8.1 (Free Stack Fixed)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -96,7 +96,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Free Stack (Alchemy+DexS+Llama)</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Free Stack Fix (Pagination + ETH)</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -148,7 +148,7 @@
         </table>
 
         <div class="wip-tag">🚧 FREE STACK: UNLIMITED 🚧</div>
-        <div class="version-tag">v8.0</div>
+        <div class="version-tag">v8.1</div>
     </div>
 
     <script>
@@ -159,7 +159,7 @@
         let currentPricePerToken = 0;
         let isCustomTokenMode = false;
 
-        // KNOWN DECIMALS FOR BASE
+        // KNOWN DECIMALS (Critical for correctness without Metadata API)
         const KNOWN_DECIMALS = {
             "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 6, // USDC
             "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a": 6, // USDT
@@ -167,6 +167,8 @@
             "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca": 6, // USDbC
             "0x0000000000000000000000000000000000000000": 18 // ETH
         };
+        const ETH_PSEUDO = "0x0000000000000000000000000000000000000000"; 
+        const WETH_ADDR = "0x4200000000000000000000000000000000000006";
 
         // INIT
         window.addEventListener('DOMContentLoaded', () => {
@@ -193,51 +195,78 @@
             document.getElementById('tokenInput').value = e.target.value;
         });
 
-        // --- FREE STACK: ALCHEMY + DEXSCREENER ---
+        // --- FREE STACK: ALCHEMY PAGINATION + DEXSCREENER ---
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
             select.style.display = 'none'; loading.style.display = 'block'; select.innerHTML = '';
 
             try {
-                // 1. Get Balances (Alchemy)
-                const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", "params": [walletAddr] })
-                });
-                const data = await res.json();
-                const rawTokens = data.result?.tokenBalances || [];
-                
+                // 1. Get ALL Balances (Pagination Loop)
+                let allTokens = [];
+                let pageKey = null;
+                let loopCount = 0;
+
+                do {
+                    if(loopCount > 30) break; // Safety break
+                    const params = { "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", "params": [walletAddr] };
+                    if(pageKey) params.params[0].pageKey = pageKey;
+
+                    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(params)
+                    });
+                    const data = await res.json();
+                    if(data.result?.tokenBalances) allTokens = allTokens.concat(data.result.tokenBalances);
+                    pageKey = data.result?.pageKey;
+                    loopCount++;
+                } while (pageKey);
+
                 // Filter zero balances
-                const tokens = rawTokens.filter(t => t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000");
-                
+                let tokens = allTokens.filter(t => t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000");
+
+                // 2. Add Native ETH (Explicit Fetch)
+                const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] })
+                });
+                const ethData = await ethRes.json();
+                if(ethData.result && ethData.result !== "0x0") {
+                    tokens.push({
+                        contractAddress: ETH_PSEUDO,
+                        tokenBalance: ethData.result
+                    });
+                }
+
                 if (tokens.length === 0) { select.innerHTML = '<option disabled>No tokens found</option>'; return; }
 
-                // 2. Prepare Data (Metadata Batch)
-                // We'll skip complex metadata batching for now to keep it simple, rely on hardcoded or defaults,
-                // and fetch prices from DexScreener which gives symbols.
-                const addresses = tokens.map(t => t.contractAddress).join(',');
-                
-                // 3. Get Prices (DexScreener - Batch 30 at a time)
+                // 3. Batch Price Fetch (DexScreener)
                 const chunks = [];
-                for (let i=0; i<tokens.length; i+=30) chunks.push(tokens.slice(i, i+30));
+                for (let i=0; i<tokens.length; i+=25) chunks.push(tokens.slice(i, i+25));
                 
                 const pricedTokens = [];
-                
+                const seenAddresses = new Set();
+
                 for(const chunk of chunks) {
-                    const chunkAddrs = chunk.map(t => t.contractAddress).join(',');
+                    // Filter native ETH for dexscreener call (use WETH address)
+                    const queryAddrs = chunk.map(t => t.contractAddress === ETH_PSEUDO ? WETH_ADDR : t.contractAddress).join(',');
+                    
                     try {
-                        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${chunkAddrs}`);
+                        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${queryAddrs}`);
                         const dexData = await dexRes.json();
                         
                         chunk.forEach(t => {
-                            const pair = dexData.pairs ? dexData.pairs.find(p => p.baseToken.address.toLowerCase() === t.contractAddress.toLowerCase()) : null;
+                            if(seenAddresses.has(t.contractAddress)) return; // Prevent dupes
+                            
+                            const lookupAddr = t.contractAddress === ETH_PSEUDO ? WETH_ADDR : t.contractAddress;
+                            const pair = dexData.pairs ? dexData.pairs.find(p => p.baseToken.address.toLowerCase() === lookupAddr.toLowerCase()) : null;
+                            
                             const decimals = KNOWN_DECIMALS[t.contractAddress.toLowerCase()] || 18;
                             const raw = BigInt(t.tokenBalance);
                             const bal = Number(raw) / (10**decimals);
                             
                             const price = pair ? parseFloat(pair.priceUsd) : 0;
-                            const symbol = pair ? pair.baseToken.symbol : "UNK";
+                            const symbol = pair ? pair.baseToken.symbol : (t.contractAddress===ETH_PSEUDO ? "ETH" : "UNK");
                             
                             pricedTokens.push({
                                 ca: t.contractAddress,
@@ -246,22 +275,25 @@
                                 usd: bal * price,
                                 price: price
                             });
+                            seenAddresses.add(t.contractAddress);
                         });
                     } catch(e) {}
-                    await new Promise(r=>setTimeout(r, 100));
+                    await new Promise(r=>setTimeout(r, 100)); // Pace requests
                 }
 
-                // 4. Sort & Display
+                // 4. Sort & Render
                 pricedTokens.sort((a,b) => b.usd - a.usd);
                 
-                const valued = pricedTokens.filter(t => t.usd > 0.01);
-                const others = pricedTokens.filter(t => t.usd <= 0.01);
+                const valued = pricedTokens.filter(t => t.usd > 0.05);
+                const others = pricedTokens.filter(t => t.usd <= 0.05);
 
                 select.innerHTML = '<option value="" disabled selected>Select a token...</option>';
                 if(valued.length>0) {
                     const grp = document.createElement('optgroup'); grp.label="💲 VALUED ASSETS";
                     valued.forEach(t => { 
-                        const o = document.createElement('option'); o.value = t.ca; 
+                        // If native ETH selected, pass WETH addr to analyzer for logic compatibility
+                        const valToPass = t.ca === ETH_PSEUDO ? WETH_ADDR : t.ca;
+                        const o = document.createElement('option'); o.value = valToPass; 
                         o.innerText = `${t.symbol} - $${t.usd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
                         grp.appendChild(o);
                     });
@@ -270,8 +302,9 @@
                 if(others.length>0) {
                     const grp = document.createElement('optgroup'); grp.label="❓ OTHERS";
                     others.forEach(t => { 
-                        const o = document.createElement('option'); o.value = t.ca; 
-                        o.innerText = `${t.symbol} (${t.bal.toFixed(2)})`;
+                        const valToPass = t.ca === ETH_PSEUDO ? WETH_ADDR : t.ca;
+                        const o = document.createElement('option'); o.value = valToPass; 
+                        o.innerText = `${t.symbol} (${t.bal.toFixed(4)})`;
                         grp.appendChild(o);
                     });
                     select.appendChild(grp);
@@ -338,7 +371,6 @@
                     const val = parseFloat(tx.value);
                     const dateObj = new Date(tx.metadata.blockTimestamp);
                     const date = dateObj.toLocaleDateString();
-                    // Need Timestamp for DeFi Llama
                     const timestamp = Math.floor(dateObj.getTime() / 1000); 
                     
                     if(category === 'BUY') buyTokens += val;
@@ -349,7 +381,7 @@
                     globalEvents.push({
                         type: category,
                         hash: tx.hash,
-                        ts: timestamp, // Unix timestamp for Llama
+                        ts: timestamp, 
                         amount: val,
                         rowId: `tx-${tx.hash}`
                     });
@@ -413,13 +445,9 @@
             for(const evt of globalEvents) {
                 try {
                     status.innerText = `Fetching ${processed+1}/${globalEvents.length}...`;
-                    
-                    // DeFi Llama Endpoint
                     const url = `https://coins.llama.fi/prices/historical/${evt.ts}/base:${currentTokenCA}`;
                     const res = await fetch(url);
                     const data = await res.json();
-                    
-                    // Llama structure: { coins: { "base:0x...": { price: 1.23, ... } } }
                     const key = `base:${currentTokenCA}`;
                     
                     if(data.coins && data.coins[key]) {
@@ -439,8 +467,7 @@
                         }
                     }
                     processed++;
-                    // Llama is generous but polite delay is good
-                    await new Promise(r => setTimeout(r, 100)); 
+                    await new Promise(r => setTimeout(r, 150)); 
                 } catch(e) { console.log(e); }
             }
             
@@ -453,9 +480,7 @@
             btn.innerHTML = "✅ Time Machine";
         }
 
-        // --- LOGIC: FLOW & CONTRACT ---
-        const LIQUID_ASSETS = ["0x4200000000000000000000000000000000000006", "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca", "0x50c5725949a6f0c72e6c4a641f24049a917db0cb", "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a"];
-
+        // --- LOGIC ---
         async function analyzeBuy(tx, wallet, targetTokenCA) {
             try {
                 const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
