@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 11.6 (Strict Categories)</title>
+    <title>WAST Analyzer 11.7 (Gated Moralis)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -125,7 +125,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Strict Categories</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: v11.7 Gated Moralis</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -223,14 +223,15 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="wip-tag">🚧 v11.6 STRICT CAT 🚧</div>
-        <div class="version-tag">v11.6</div>
+        <div class="wip-tag">🚧 v11.7 GATED MORALIS 🚧</div>
+        <div class="version-tag">v11.7</div>
     </div>
 
     <script>
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
-        const MORALIS_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImMzYWFkNmIxLTUyYjMtNGNkZC1iZjBkLTE4MWM0ZDY1MTkzMiIsIm9yZ0lkIjoiNDkwNDE4IiwidXNlcklkIjoiNTA0NTc3IiwidHlwZUlkIjoiNTQwNjExMjgtMzY3Zi00MDQyLWE1NDItODdjMzlkODkxMDkzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3Njg0MTI5MjMsImV4cCI6NDkyNDE3MjkyM30.wKcFrQ_mjxCe_bu1ylkPBb_VvQlBnkTklNggqmom1UU';
-        
+        const MORALIS_KEY_INTEGRATED = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImMzYWFkNmIxLTUyYjMtNGNkZC1iZjBkLTE4MWM0ZDY1MTkzMiIsIm9yZ0lkIjoiNDkwNDE4IiwidXNlcklkIjoiNTA0NTc3IiwidHlwZUlkIjoiNTQwNjExMjgtMzY3Zi00MDQyLWE1NDItODdjMzlkODkxMDkzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3Njg0MTI5MjMsImV4cCI6NDkyNDE3MjkyM30.wKcFrQ_mjxCe_bu1ylkPBb_VvQlBnkTklNggqmom1UU';
+        const ADMIN_WALLET = '0xd29c790466675153A50DF7860B9EFDb689A21cDe'.toLowerCase();
+
         let globalEvents = []; 
         let currentTokenCA = "";
         let currentTokenSymbol = "TOKEN";
@@ -241,6 +242,7 @@
         const rowsPerPage = 50;
         const BATCH_SIZE = 15; 
 
+        // LIQUID ASSETS
         const LIQUID_ASSETS = [
             "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", 
             "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a", 
@@ -493,26 +495,17 @@
                             }
                         });
 
-                        // STRICT HIERARCHY
                         let newType = 'UNKNOWN';
-                        
-                        if (isSF_Upgrade) {
-                            newType = 'STAKE';
-                        } else if (isSF_Downgrade) {
-                            newType = 'UNSTAKE';
-                        } else if (evt.isIncoming) {
-                            if (sentLiquid) newType = 'BUY';
-                            else newType = 'RECEIVE';
-                        } else {
-                            if (receivedLiquid) newType = 'SELL';
-                            else newType = 'SEND';
-                        }
+                        if (isSF_Upgrade) { newType = 'STAKE'; }
+                        else if (isSF_Downgrade) { newType = 'UNSTAKE'; }
+                        else if (evt.isIncoming) { if (sentLiquid) newType = 'BUY'; else newType = 'RECEIVE'; }
+                        else { if (receivedLiquid) newType = 'SELL'; else newType = 'SEND'; }
 
                         globalEvents[evtIndex].type = newType;
                     });
                 } catch(e) { console.error("Batch fail", e); }
                 await new Promise(r => setTimeout(r, 100)); 
-                updateTotals(); 
+                recalcAllTotals(); 
             }
 
             finalizePending(); 
@@ -534,29 +527,33 @@
                     else evt.type = 'SEND';
                 }
             });
-            updateTotals();
+            recalcAllTotals();
         }
 
-        function updateTotals() {
-            let t = { buy:0, sell:0, stake:0, unstake:0, recv:0, send:0 };
+        function recalcAllTotals() {
+            let t = { buy:0, sell:0, stake:0, unstake:0, recv:0, send:0, 
+                      buyV:0, sellV:0, stakeV:0, unstakeV:0, recvV:0, sendV:0 };
+            
             globalEvents.forEach(evt => {
-                if(evt.type === 'BUY') t.buy += evt.amount;
-                else if(evt.type === 'SELL') t.sell += evt.amount;
-                else if(evt.type === 'STAKE') t.stake += evt.amount;
-                else if(evt.type === 'UNSTAKE') t.unstake += evt.amount;
-                else if(evt.type === 'RECEIVE') t.recv += evt.amount;
-                else if(evt.type === 'SEND') t.send += evt.amount;
+                const val = evt.histVal || 0; // Use historical value if found, else 0 for box totals
+                if(evt.type === 'BUY') { t.buy += evt.amount; t.buyV += val; }
+                else if(evt.type === 'SELL') { t.sell += evt.amount; t.sellV += val; }
+                else if(evt.type === 'STAKE') { t.stake += evt.amount; t.stakeV += val; }
+                else if(evt.type === 'UNSTAKE') { t.unstake += evt.amount; t.unstakeV += val; }
+                else if(evt.type === 'RECEIVE') { t.recv += evt.amount; t.recvV += val; }
+                else if(evt.type === 'SEND') { t.send += evt.amount; t.sendV += val; }
             });
 
             const fmt = (n) => n.toLocaleString(undefined, {maximumFractionDigits:2});
             const fmtU = (n) => `$${(n * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
+            const fmtH = (n) => `$${n.toLocaleString(undefined, {maximumFractionDigits:2})}`;
 
-            document.getElementById('buyTokens').innerText = fmt(t.buy); document.getElementById('buyCurr').innerText = fmtU(t.buy);
-            document.getElementById('sellTokens').innerText = fmt(t.sell); document.getElementById('sellCurr').innerText = fmtU(t.sell);
-            document.getElementById('stakeTokens').innerText = fmt(t.stake); document.getElementById('stakeCurr').innerText = fmtU(t.stake);
-            document.getElementById('unstakeTokens').innerText = fmt(t.unstake); document.getElementById('unstakeCurr').innerText = fmtU(t.unstake);
-            document.getElementById('recvTokens').innerText = fmt(t.recv); document.getElementById('recvCurr').innerText = fmtU(t.recv);
-            document.getElementById('sendTokens').innerText = fmt(t.send); document.getElementById('sendCurr').innerText = fmtU(t.send);
+            document.getElementById('buyTokens').innerText = fmt(t.buy); document.getElementById('buyCurr').innerText = fmtU(t.buy); document.getElementById('buyHist').innerText = t.buyV ? fmtH(t.buyV) : "---";
+            document.getElementById('sellTokens').innerText = fmt(t.sell); document.getElementById('sellCurr').innerText = fmtU(t.sell); document.getElementById('sellHist').innerText = t.sellV ? fmtH(t.sellV) : "---";
+            document.getElementById('stakeTokens').innerText = fmt(t.stake); document.getElementById('stakeCurr').innerText = fmtU(t.stake); document.getElementById('stakeHist').innerText = t.stakeV ? fmtH(t.stakeV) : "---";
+            document.getElementById('unstakeTokens').innerText = fmt(t.unstake); document.getElementById('unstakeCurr').innerText = fmtU(t.unstake); document.getElementById('unstakeHist').innerText = t.unstakeV ? fmtH(t.unstakeV) : "---";
+            document.getElementById('recvTokens').innerText = fmt(t.recv); document.getElementById('recvCurr').innerText = fmtU(t.recv); document.getElementById('recvHist').innerText = t.recvV ? fmtH(t.recvV) : "---";
+            document.getElementById('sendTokens').innerText = fmt(t.send); document.getElementById('sendCurr').innerText = fmtU(t.send); document.getElementById('sendHist').innerText = t.sendV ? fmtH(t.sendV) : "---";
         }
 
         function renderTable() {
@@ -636,7 +633,6 @@
             btn.disabled = true;
             btn.innerText = "⏳ Running...";
             
-            let tBuy = 0, tSell = 0, tStake = 0, tUnstake = 0, tRecv = 0, tSend = 0;
             let processed = 0;
             
             for(const evt of globalEvents) {
@@ -645,7 +641,6 @@
                     let histPrice = null;
                     evt.isRecentFallback = false;
                     
-                    // 1. DEFI LLAMA
                     try {
                         const res = await fetch(`https://coins.llama.fi/prices/historical/${evt.ts}/base:${currentTokenCA.toLowerCase()}`);
                         const data = await res.json();
@@ -653,7 +648,6 @@
                         if(data.coins && data.coins[key]) histPrice = data.coins[key].price;
                     } catch(e){}
 
-                    // 2. MOBULA (Fallback)
                     if(histPrice === null) {
                         try {
                             const mRes = await fetch(`https://api.mobula.io/api/1/market/history?asset=${currentTokenCA}&blockchain=base&from=${evt.ts - 3600}&to=${evt.ts + 3600}`);
@@ -662,28 +656,15 @@
                         } catch(e){}
                     }
 
-                    // 3. RECENT FALLBACK
                     if(histPrice === null && (Date.now()/1000 - evt.ts) < 86400) {
                         histPrice = currentPricePerToken;
                         evt.isRecentFallback = true;
                     }
 
                     if(histPrice !== null) {
-                        const totalValue = evt.amount * histPrice;
-                        if(evt.type === 'BUY') tBuy += totalValue;
-                        if(evt.type === 'SELL') tSell += totalValue;
-                        if(evt.type === 'STAKE') tStake += totalValue;
-                        if(evt.type === 'UNSTAKE') tUnstake += totalValue;
-                        if(evt.type === 'RECEIVE') tRecv += totalValue;
-                        if(evt.type === 'SEND') tSend += totalValue;
-                        evt.histVal = totalValue; evt.histPrice = histPrice;
-                        
-                        document.getElementById('buyHist').innerText = `$${tBuy.toLocaleString(undefined, {maximumFractionDigits:2})}`;
-                        document.getElementById('sellHist').innerText = `$${tSell.toLocaleString(undefined, {maximumFractionDigits:2})}`;
-                        document.getElementById('stakeHist').innerText = `$${tStake.toLocaleString(undefined, {maximumFractionDigits:2})}`;
-                        document.getElementById('unstakeHist').innerText = `$${tUnstake.toLocaleString(undefined, {maximumFractionDigits:2})}`;
-                        document.getElementById('recvHist').innerText = `$${tRecv.toLocaleString(undefined, {maximumFractionDigits:2})}`;
-                        document.getElementById('sendHist').innerText = `$${tSend.toLocaleString(undefined, {maximumFractionDigits:2})}`;
+                        evt.histVal = evt.amount * histPrice; 
+                        evt.histPrice = histPrice;
+                        recalcAllTotals(); // LIVE UPDATE
                     } else { evt.histChecked = true; }
 
                     processed++;
@@ -697,7 +678,16 @@
         }
 
         async function fetchMoralisPrices() {
-            if(!MORALIS_KEY) return alert("No Key");
+            const currentWallet = document.getElementById('walletInput').value.trim().toLowerCase();
+            let keyToUse = '';
+
+            if (currentWallet === ADMIN_WALLET) {
+                keyToUse = MORALIS_KEY_INTEGRATED;
+            } else {
+                keyToUse = prompt("Insert your own Moralis API Key:");
+                if (!keyToUse) return;
+            }
+
             const btn = document.getElementById('btnMoralis');
             const status = document.getElementById('status');
             btn.disabled = true;
@@ -705,10 +695,13 @@
             
             let processed = 0;
             for(const evt of globalEvents) {
+                // SKIP IF ALREADY HAS SOLID PRICE (Not Fallback)
+                if (evt.histPrice !== null && !evt.isRecentFallback) continue;
+
                 try {
-                    status.innerText = `Moralis Check ${processed+1}/${globalEvents.length}...`;
+                    status.innerText = `Moralis Check ${processed+1}...`;
                     const url = `https://deep-index.moralis.io/api/v2.2/erc20/${currentTokenCA}/price?chain=base&to_block=${evt.block}`;
-                    const res = await fetch(url, { headers: { "X-API-Key": MORALIS_KEY, "accept": "application/json" } });
+                    const res = await fetch(url, { headers: { "X-API-Key": keyToUse, "accept": "application/json" } });
                     const data = await res.json();
                     
                     if(data.usdPrice) {
@@ -716,6 +709,7 @@
                         evt.histPrice = histPrice;
                         evt.histVal = evt.amount * histPrice;
                         evt.isRecentFallback = false; 
+                        recalcAllTotals(); // LIVE UPDATE
                     }
                     processed++;
                     if(processed % 2 === 0) renderTable(); 
