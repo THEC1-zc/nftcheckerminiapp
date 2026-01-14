@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer v1.0</title>
+    <title>WAST Analyzer 7.1</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -36,7 +36,7 @@
         .wast-mini { font-weight: 900; font-size: 1rem; letter-spacing: 2px; color: var(--primary); margin-left: 10px; }
         .identity-badge { font-size: 0.75rem; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 20px; color: var(--primary); font-weight: 700; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid rgba(0,82,255,0.1); }
 
-        .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; position: relative; }
+        .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; }
         
         .input-group { margin-bottom: 15px; }
         label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.75rem; margin-bottom: 6px; color: #666; text-transform: uppercase; }
@@ -88,14 +88,15 @@
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .page-info { font-size: 0.8rem; color: #666; font-weight: 600; }
 
-        /* VERSION TAG */
+        /* VERSION TAG BLUE */
         .version-tag { 
             text-align: center; 
-            font-size: 0.6rem; 
-            color: #ccc; 
+            font-size: 0.7rem; 
+            color: var(--primary); /* BLUE */
             margin-top: 25px; 
+            font-weight: 800;
             font-family: monospace;
-            opacity: 0.6;
+            opacity: 0.8;
         }
     </style>
 </head>
@@ -218,7 +219,7 @@
         const symbolCache = {}; 
         let isCustomTokenMode = false;
         
-        // --- HARDCODED DECIMALS FOR BASE (CRITICAL FIX) ---
+        // --- HARDCODED DECIMALS FOR BASE (Expanded) ---
         const KNOWN_DECIMALS = {
             "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 6, // USDC
             "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a": 6, // USDT
@@ -226,6 +227,7 @@
             "0x4200000000000000000000000000000000000006": 18, // WETH
             "0x2ae3f1ec7f1f5012cfdd600a18d5eb45039a14d6": 18, // cbETH
             "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA": 6, // USDbC
+            "0x1a35ee466a20d649c3ce5ca631817bb643128464": 8, // WBTC
             "0x0000000000000000000000000000000000000000": 18  // Native ETH
         };
         const ETH_PSEUDO = "0x0000000000000000000000000000000000000000"; 
@@ -257,7 +259,6 @@
             }
         });
 
-        // --- HANDLERS ---
         document.getElementById('txFilter').addEventListener('change', () => { currentPage = 1; renderTable(); });
         document.getElementById('btnPrev').addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderTable(); }});
         document.getElementById('btnNext').addEventListener('click', () => { currentPage++; renderTable(); });
@@ -304,7 +305,6 @@
             select.innerHTML = '';
 
             try {
-                // 1. Fetch RAW Balances
                 let tokens = [];
                 let pageKey = null;
                 let loopCount = 0;
@@ -365,10 +365,10 @@
                     return;
                 }
 
-                // 2. BATCH META FETCH
+                // BATCH META FETCH
                 const unknownTokens = allTokens.filter(t => !KNOWN_DECIMALS[t.ca]);
                 if (unknownTokens.length > 0) {
-                    loading.innerText = `Fetching metadata for ${unknownTokens.length} tokens...`;
+                    loading.innerText = `Fetching metadata...`;
                     const metaChunks = [];
                     for (let i = 0; i < unknownTokens.length; i += 15) metaChunks.push(unknownTokens.slice(i, i + 15));
 
@@ -401,7 +401,7 @@
                     if (KNOWN_DECIMALS[t.ca]) t.decimals = KNOWN_DECIMALS[t.ca];
                 });
 
-                // 3. PRICE CHECK
+                // PRICE CHECK
                 loading.innerText = `Checking prices...`;
                 const priceChunks = [];
                 for (let i = 0; i < allTokens.length; i += 20) priceChunks.push(allTokens.slice(i, i + 20));
@@ -426,20 +426,19 @@
                     await new Promise(r => setTimeout(r, 50));
                 }
 
-                // 4. CALC & SORT
+                // CALC & SORT
                 const validTokens = [];
                 allTokens.forEach(t => {
-                    // Safe math
                     const balFloat = parseFloat(BigInt(t.raw)) / Math.pow(10, t.decimals);
                     t.usdValue = balFloat * t.price;
-                    
-                    if (t.usdValue >= 0.02) validTokens.push(t);
+                    // SHOW EVERYTHING THAT HAS A PRICE (NO LOWER FILTER)
+                    if (t.usdValue > 0) validTokens.push(t);
                 });
 
                 validTokens.sort((a, b) => b.usdValue - a.usdValue);
 
                 select.innerHTML = '<option value="" disabled selected>Select a token...</option>';
-                if(validTokens.length === 0) select.innerHTML = '<option disabled>No tokens > $0.02 found</option>';
+                if(validTokens.length === 0) select.innerHTML = '<option disabled>No priced tokens found</option>';
 
                 validTokens.forEach(t => {
                     const valStr = t.usdValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits:2});
