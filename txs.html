@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 7.3 (Full PnL)</title>
+    <title>WAST Analyzer 7.4 (Buy & Sell)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -40,44 +40,48 @@
         .input-group { margin-bottom: 15px; }
         label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.75rem; margin-bottom: 6px; color: #666; text-transform: uppercase; }
         
-        .clear-link { 
-            color: white; background-color: var(--primary); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; text-decoration: none; font-weight: 700; box-shadow: 0 2px 5px rgba(0,82,255,0.2); transition: opacity 0.2s;
-        }
+        .clear-link { color: white; background-color: var(--primary); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; text-decoration: none; font-weight: 700; box-shadow: 0 2px 5px rgba(0,82,255,0.2); transition: opacity 0.2s; }
         .clear-link:hover { opacity: 0.8; }
 
         input, select { width: 100%; padding: 12px; border: 2px solid #e1e4e8; border-radius: 12px; font-size: 14px; outline: none; background: #fafafa; box-sizing: border-box; font-family: inherit; }
         
         .loading-text { font-size: 0.8rem; color: #999; font-style: italic; margin-top: 5px; display: none; text-align: center; }
 
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: opacity 0.2s; color: white; }
-        .btn-fast { background-color: var(--primary); color: white; }
-        .btn-full { background-color: var(--dark); color: white; }
-        .btn-hist { background-color: var(--purple); color: white; margin-top: 15px; display: none; } 
+        .btn-group { display: flex; gap: 8px; margin-top: 15px; width: 100%; }
+        button { flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s; color: white; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-fast { background-color: var(--primary); }
+        .btn-full { background-color: var(--dark); }
+        .btn-hist { background-color: var(--purple); display: none; } /* Hidden initially */
 
-        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 20px; margin-bottom: 10px; display: none; }
-        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #eee; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        /* DASHBOARD VERTICAL STACK */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; margin-bottom: 10px; display: none; }
+        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; }
         
-        /* NEW SIMPLE TEXT STATS */
-        .stat-title { font-size: 0.7rem; text-transform: uppercase; font-weight: 800; color: var(--green); margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .stat-line { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px; font-family: monospace; color: #333; }
-        .stat-line strong { font-weight: 700; }
+        .stat-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 900; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 6px; display: flex; justify-content: space-between; }
+        .t-buy { color: var(--green); border-color: var(--green); }
+        .t-sell { color: var(--red); border-color: var(--red); }
+
+        .stat-line { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; font-family: monospace; color: #444; }
+        .stat-line strong { font-weight: 700; color: #000; }
         .val-hist { color: var(--purple); }
-        .val-curr { color: var(--primary); }
+        .val-curr { color: #666; }
 
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; table-layout: fixed; }
         th { text-align: left; color: #999; font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid #eee; }
         td { padding: 10px 0; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
         .col-type { width: 40%; } .col-amount { width: 60%; text-align: right; }
-        .tag { font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 700; text-transform: uppercase; margin-right: 4px; display: inline-block; }
+        
+        .tag { font-size: 0.6rem; padding: 3px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-right: 4px; display: inline-block; }
         .bg-buy { background: #e6fffa; color: var(--green); border: 1px solid #b2f5ea; }
+        .bg-sell { background: #fff5f5; color: var(--red); border: 1px solid #fed7d7; }
         
         .tx-sub { font-size: 0.7rem; color: #bbb; display: block; margin-top: 2px; }
-        .tx-usd { font-size: 0.75rem; color: #666; font-weight: 500; }
+        .tx-usd { font-size: 0.75rem; color: #999; font-weight: 500; display: block; margin-top: 2px; }
         
         #status { text-align: center; margin: 15px 0; font-weight: 600; font-size: 0.85rem; min-height: 20px; padding: 0 10px; }
 
-        .wip-tag { text-align: center; font-size: 0.9rem; color: #ff4757; margin-top: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; border: 2px dashed #ff4757; padding: 5px; border-radius: 8px; background: #fff5f5; }
+        .wip-tag { text-align: center; font-size: 0.8rem; color: #ff4757; margin-top: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; border: 1px dashed #ff4757; padding: 5px; border-radius: 8px; background: #fff5f5; }
         .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 25px; font-weight: 800; font-family: monospace; opacity: 0.8; }
     </style>
 </head>
@@ -89,7 +93,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Buy Analysis & Time Machine</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Buy & Sell PnL</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -105,18 +109,24 @@
         <div class="btn-group">
             <button class="btn-fast" id="btnFast">⚡ Last 500</button>
             <button class="btn-full" id="btnFull">🐢 Deep (5k)</button>
+            <button id="btnHistory" class="btn-hist">🔮 Time Machine</button>
         </div>
-        
-        <button id="btnHistory" class="btn-hist">🔮 Fetch Historic Prices (Time Machine)</button>
         
         <div id="status"></div>
 
         <div id="dashboard" class="dashboard-grid">
             <div class="stat-card">
-                <div class="stat-title">BUY SUMMARY</div>
-                <div class="stat-line"><span>Tokens:</span> <strong id="sumTokens">0</strong></div>
-                <div class="stat-line"><span>Cost (Hist):</span> <strong id="sumHist" class="val-hist">---</strong></div>
-                <div class="stat-line"><span>Value (Now):</span> <strong id="sumCurr" class="val-curr">$0.00</strong></div>
+                <div class="stat-title t-buy">BUY SUMMARY</div>
+                <div class="stat-line"><span>Tokens:</span> <strong id="buyTokens">0</strong></div>
+                <div class="stat-line"><span>Cost (Hist):</span> <strong id="buyHist" class="val-hist">---</strong></div>
+                <div class="stat-line"><span>Value (Now):</span> <strong id="buyCurr" class="val-curr">$0.00</strong></div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title t-sell">SELL SUMMARY</div>
+                <div class="stat-line"><span>Tokens:</span> <strong id="sellTokens">0</strong></div>
+                <div class="stat-line"><span>Realized (Hist):</span> <strong id="sellHist" class="val-hist">---</strong></div>
+                <div class="stat-line"><span>Value (Now):</span> <strong id="sellCurr" class="val-curr">$0.00</strong></div>
             </div>
         </div>
 
@@ -125,17 +135,17 @@
             <tbody id="txList"></tbody>
         </table>
 
-        <div class="wip-tag">🚧 WORK IN PROGRESS: BUY + TIME MACHINE 🚧</div>
-        <div class="version-tag">v7.3</div>
+        <div class="wip-tag">🚧 WORK IN PROGRESS: BUY + SELL 🚧</div>
+        <div class="version-tag">v7.4</div>
     </div>
 
     <script>
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
         const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjliMTZhMzZkLWY0Y2MtNGRhNS1hY2EyLThjOWNhYzcyNzc1MiIsIm9yZ0lkIjoiNDkwMzU1IiwidXNlcklkIjoiNTA0NTEzIiwidHlwZUlkIjoiODUwM2NmZjEtMGRiZS00N2Q4LTkxMzQtNzM5NjQ2ZDMwZWI2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NjgzODQ0NTcsImV4cCI6NDkyNDE0NDQ1N30.CHgE9uV5k_uW-44iveLhvre5kPPfuZ8Gnh4ifGOz2Uw'; 
         
-        let globalBuys = []; 
+        let globalEvents = []; // Stores { type: 'BUY'|'SELL', hash, block, amount, date }
         let currentTokenCA = "";
-        let currentPricePerToken = 0; // Current Market Price
+        let currentPricePerToken = 0;
         let isCustomTokenMode = false;
 
         // INIT
@@ -163,7 +173,7 @@
             document.getElementById('tokenInput').value = e.target.value;
         });
 
-        // MORALIS PORTFOLIO LOAD
+        // MORALIS PORTFOLIO
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
@@ -221,15 +231,17 @@
             document.getElementById('dashboard').style.display='none';
             document.getElementById('txTable').style.display='none';
             document.getElementById('btnHistory').style.display='none';
+            document.getElementById('btnHistory').innerText = "🔮 Time Machine"; 
+            document.getElementById('btnHistory').disabled = false;
             document.getElementById('txList').innerHTML = "";
             const status = document.getElementById('status');
-            globalBuys = []; 
+            globalEvents = []; 
 
             if(!wallet.startsWith('0x') || !currentTokenCA.startsWith('0x')) return;
 
             status.innerText = "Initializing...";
             
-            // 1. Get Current Price (for "Value (Now)")
+            // 1. Get Current Price
             try {
                 const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${currentTokenCA}`);
                 const dexData = await dexRes.json();
@@ -238,36 +250,50 @@
                 }
             } catch(e){ currentPricePerToken = 0; }
 
-            // 2. Fetch Deep History
+            // 2. Fetch Deep History (In & Out)
             const rawTxs = await fetchUnifiedTransfers(wallet, currentTokenCA, limit, status);
             status.innerText = `Analyzing ${rawTxs.length} transactions...`;
 
-            let totalTokens = 0;
+            let buyTokens = 0, sellTokens = 0;
             const tbody = document.getElementById('txList');
 
-            // 3. Identify BUYs
+            // 3. Process Transactions
             for(const tx of rawTxs) {
-                const category = await analyzeBuy(tx, wallet, currentTokenCA);
-                const val = parseFloat(tx.value);
+                const myWallet = wallet.toLowerCase();
+                let category = 'IGNORE';
 
-                if(category === 'BUY') {
-                    totalTokens += val;
+                // Determine Direction base on AssetTransfer
+                const isIncoming = tx.to && tx.to.toLowerCase() === myWallet;
+                const isOutgoing = tx.from && tx.from.toLowerCase() === myWallet;
+
+                if (isIncoming) {
+                    category = await analyzeBuy(tx, wallet, currentTokenCA);
+                } else if (isOutgoing) {
+                    category = await analyzeSell(tx, wallet, currentTokenCA);
+                }
+
+                if(category === 'BUY' || category === 'SELL') {
+                    const val = parseFloat(tx.value);
                     const date = new Date(tx.metadata.blockTimestamp).toLocaleDateString();
                     
-                    // Store for history fetch
-                    globalBuys.push({
+                    if(category === 'BUY') buyTokens += val;
+                    if(category === 'SELL') sellTokens += val;
+
+                    globalEvents.push({
+                        type: category,
                         hash: tx.hash,
-                        block: tx.blockNum, 
+                        block: tx.blockNum,
                         amount: val,
                         date: date,
                         rowId: `tx-${tx.hash}`
                     });
 
-                    // Initial Row (Current Value displayed as placeholder)
+                    const badge = category === 'BUY' ? 'bg-buy' : 'bg-sell';
                     const currVal = val * currentPricePerToken;
+                    
                     const row = `<tr id="tx-${tx.hash}">
                         <td class="col-type">
-                            <span class="tag bg-buy">BUY</span> <span style="color:#999;font-size:0.7em">${date}</span>
+                            <span class="tag ${badge}">${category}</span> <span style="color:#999;font-size:0.7em">${date}</span>
                         </td>
                         <td class="col-amount">
                             <strong>${val.toLocaleString(undefined, {maximumFractionDigits:0})}</strong>
@@ -278,73 +304,72 @@
                 }
             }
 
-            // Update Summary Box (Initial State)
-            document.getElementById('sumTokens').innerText = totalTokens.toLocaleString(undefined, {maximumFractionDigits:2});
-            document.getElementById('sumCurr').innerText = `$${(totalTokens * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
-            document.getElementById('sumHist').innerText = "Click Time Machine"; // Placeholder
+            // Update Summary (Initial)
+            document.getElementById('buyTokens').innerText = buyTokens.toLocaleString(undefined, {maximumFractionDigits:2});
+            document.getElementById('buyCurr').innerText = `$${(buyTokens * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
+            document.getElementById('buyHist').innerText = "---";
+
+            document.getElementById('sellTokens').innerText = sellTokens.toLocaleString(undefined, {maximumFractionDigits:2});
+            document.getElementById('sellCurr').innerText = `$${(sellTokens * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
+            document.getElementById('sellHist').innerText = "---";
 
             document.getElementById('dashboard').style.display='grid';
             document.getElementById('txTable').style.display='table';
             
-            if(globalBuys.length > 0) document.getElementById('btnHistory').style.display='block';
+            if(globalEvents.length > 0) {
+                document.getElementById('btnHistory').style.display='flex'; // Flex for alignment
+            }
             
             status.innerText = "Analysis Complete ✅";
         }
 
-        // --- TIME MACHINE (FETCH HISTORICAL PRICES) ---
+        // --- TIME MACHINE ---
         async function fetchHistoricalPrices() {
             const btn = document.getElementById('btnHistory');
             const status = document.getElementById('status');
             btn.disabled = true;
-            btn.innerText = "⏳ Travelling in Time...";
+            btn.innerText = "⏳ Running...";
             
-            let totalHistoricalCost = 0;
+            let totalBuyCost = 0;
+            let totalSellProceeds = 0;
             let processed = 0;
             
-            for(const buy of globalBuys) {
+            for(const evt of globalEvents) {
                 try {
-                    status.innerText = `Fetching Price ${processed+1}/${globalBuys.length}...`;
-                    
-                    const blockInt = parseInt(buy.block, 16);
+                    status.innerText = `Fetching ${processed+1}/${globalEvents.length}...`;
+                    const blockInt = parseInt(evt.block, 16);
                     const url = `https://deep-index.moralis.io/api/v2.2/erc20/${currentTokenCA}/price?chain=base&to_block=${blockInt}`;
-                    
                     const res = await fetch(url, { headers: { 'accept': 'application/json', 'X-API-Key': MORALIS_API_KEY }});
-                    const data = await responseOk(res) ? await res.json() : {};
+                    const data = res.ok ? await res.json() : {};
                     
                     if(data.usdPrice) {
                         const histPrice = parseFloat(data.usdPrice);
-                        const txCost = buy.amount * histPrice;
-                        totalHistoricalCost += txCost;
+                        const totalValue = evt.amount * histPrice;
                         
-                        // Update Row to show Historical Cost
-                        const el = document.getElementById(`usd-${buy.hash}`);
+                        if(evt.type === 'BUY') totalBuyCost += totalValue;
+                        if(evt.type === 'SELL') totalSellProceeds += totalValue;
+                        
+                        const el = document.getElementById(`usd-${evt.hash}`);
                         if(el) {
-                            el.innerText = `Hist: $${txCost.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-                            el.style.color = "#9c27b0"; // Purple for History
+                            el.innerText = `$${totalValue.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+                            el.style.color = "#9c27b0"; 
                             el.style.fontWeight = "700";
                         }
                     }
-                    
                     processed++;
-                    await new Promise(r => setTimeout(r, 220)); // Rate Limit Pacing
-
-                } catch(e) { console.log("Skip", e); }
+                    await new Promise(r => setTimeout(r, 220)); 
+                } catch(e) {}
             }
             
-            // Final Update of Summary Box
-            document.getElementById('sumHist').innerText = `$${totalHistoricalCost.toLocaleString(undefined, {maximumFractionDigits:2})}`;
+            document.getElementById('buyHist').innerText = `$${totalBuyCost.toLocaleString(undefined, {maximumFractionDigits:2})}`;
+            document.getElementById('sellHist').innerText = `$${totalSellProceeds.toLocaleString(undefined, {maximumFractionDigits:2})}`;
             
-            status.innerText = "Historical Data Loaded 📜";
-            btn.innerText = "✅ Time Machine Complete";
+            status.innerText = "History Updated 📜";
+            btn.innerHTML = "✅ Time Machine";
         }
 
-        async function responseOk(res) { return res.ok; }
-
-        // --- CORE LOGIC: BUY ONLY ---
+        // --- LOGIC: BUY (Cash Flow In) ---
         async function analyzeBuy(tx, wallet, targetTokenCA) {
-            const myWallet = wallet.toLowerCase();
-            if (tx.to && tx.to.toLowerCase() !== myWallet) return 'IGNORE'; 
-
             try {
                 const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
@@ -353,52 +378,84 @@
                 const d = await res.json();
                 const logs = d.result?.logs || [];
                 const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-                const walletTopic = "0x000000000000000000000000" + myWallet.replace("0x", "");
+                const myWallet = wallet.toLowerCase().replace("0x", "");
 
-                let sentSomething = false;
+                // Did I send something?
                 for(const log of logs) {
                     if(log.topics[0] !== TRANSFER) continue;
                     const contract = log.address.toLowerCase();
-                    const fromMe = log.topics[1] && log.topics[1].toLowerCase() === walletTopic;
-                    if (fromMe && contract !== targetTokenCA) {
-                        sentSomething = true;
-                        break; 
-                    }
+                    const fromMe = log.topics[1] && log.topics[1].toLowerCase().includes(myWallet);
+                    
+                    if (fromMe && contract !== targetTokenCA) return 'BUY'; // Sent Other Token -> Buy
                 }
-                return sentSomething ? 'BUY' : 'IGNORE';
+                return 'IGNORE'; // Received but didn't pay in token (Airdrop/Transfer) - Simplified
             } catch(e) { return 'IGNORE'; }
         }
 
-        async function fetchUnifiedTransfers(wallet, token, limit, statusElement) {
-            let accumulated = [];
-            let pageKey = null;
-            let count = 0;
-            
-            do {
-                if(accumulated.length >= limit) break;
-                statusElement.innerText = `Fetching page ${count+1}... (${accumulated.length} txs)`;
-                
-                const params = { 
-                    "fromBlock": "0x0", "toBlock": "latest", 
-                    "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, 
-                    "contractAddresses": [token], "toAddress": wallet, "order": "desc", "maxCount": "0x3e8" 
-                };
-                if(pageKey) params.pageKey = pageKey;
-                
+        // --- LOGIC: SELL (Cash Flow Out) ---
+        async function analyzeSell(tx, wallet, targetTokenCA) {
+            try {
                 const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] })
+                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "params": [tx.hash] })
                 });
                 const d = await res.json();
-                if(!d.result) break;
-                
-                accumulated = accumulated.concat(d.result.transfers || []);
-                pageKey = d.result.pageKey;
-                count++;
-                await new Promise(r => setTimeout(r, 100));
-            } while (pageKey);
+                const logs = d.result?.logs || [];
+                const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+                const myWallet = wallet.toLowerCase().replace("0x", "");
+
+                // Did I receive something?
+                for(const log of logs) {
+                    if(log.topics[0] !== TRANSFER) continue;
+                    const contract = log.address.toLowerCase();
+                    const toMe = log.topics[2] && log.topics[2].toLowerCase().includes(myWallet);
+                    
+                    if (toMe && contract !== targetTokenCA) return 'SELL'; // Received Other Token -> Sell
+                }
+                return 'IGNORE'; // Sent but didn't get token (Send/Stake/Burn)
+            } catch(e) { return 'IGNORE'; }
+        }
+
+        // --- FETCH BOTH IN & OUT ---
+        async function fetchUnifiedTransfers(wallet, token, limit, statusElement) {
+            let accumulated = [];
             
-            return accumulated;
+            // Helper to fetch one direction
+            const fetchDir = async (isIncoming) => {
+                let list = [];
+                let pageKey = null;
+                let loops = 0;
+                do {
+                    if(list.length >= limit || loops > 10) break;
+                    const params = { 
+                        "fromBlock": "0x0", "toBlock": "latest", "category": ["erc20"], 
+                        "withMetadata": true, "excludeZeroValue": true, 
+                        "contractAddresses": [token], "order": "desc", "maxCount": "0x3e8" 
+                    };
+                    if(isIncoming) params.toAddress = wallet; else params.fromAddress = wallet;
+                    if(pageKey) params.pageKey = pageKey;
+
+                    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
+                        method: "POST", headers: {"Content-Type":"application/json"},
+                        body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] })
+                    });
+                    const d = await res.json();
+                    if(!d.result) break;
+                    list = list.concat(d.result.transfers || []);
+                    pageKey = d.result.pageKey;
+                    loops++;
+                    statusElement.innerText = `Fetching ${isIncoming?'IN':'OUT'}... (${list.length})`;
+                    await new Promise(r => setTimeout(r, 100));
+                } while(pageKey);
+                return list;
+            };
+
+            const [inTxs, outTxs] = await Promise.all([fetchDir(true), fetchDir(false)]);
+            accumulated = [...inTxs, ...outTxs];
+            
+            // Sort Descending (Newest First)
+            accumulated.sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16));
+            return accumulated.slice(0, limit);
         }
     </script>
 </body>
