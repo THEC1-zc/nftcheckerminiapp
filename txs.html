@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 6.0</title>
+    <title>WAST Analyzer 6.1</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -205,7 +205,7 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="version-tag">v6.0</div>
+        <div class="version-tag">v6.1</div>
     </div>
 
     <script>
@@ -217,24 +217,19 @@
         const rowsPerPage = 25;
         let isCustomTokenMode = false;
 
-        // --- METHOD ID SIGNATURES ---
-        // Known Swap Methods (Uniswap, Aerodrome, 1inch)
-        const SWAP_METHODS = [
-            '0x38ed1739', '0x18cbafe5', '0x7ff36ab5', '0x5f575529', 
-            '0x415565b0', '0x8803dbee', '0xc04b8d59'
-        ];
-        // Known Staking Methods (Deposit, Stake, Mint, Enter)
-        const STAKE_METHODS = [
-            '0xa694fc3a', '0xb6b55f25', '0xe2bbb158', '0x40c10f19', 
-            '0xa9059cbb', // standard transfer can be stake if sent to contract
-            '0x3a4b66f1'
-        ];
-        // Known Unstake Methods (Withdraw, Leave, Exit)
-        const UNSTAKE_METHODS = [
-            '0x2e1a7d4d', '0x2e17de78', '0x441a3e70'
+        // LIQUID ASSETS WHITELIST (Universal for Base Chain)
+        const LIQUID_ASSETS = [
+            "0x4200000000000000000000000000000000000006", // WETH
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC
+            "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca", // USDbC
+            "0x50c5725949a6f0c72e6c4a641f24049a917db0cb", // DAI
+            "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", // EURC
+            "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a"  // USDT
         ];
 
-        // --- INIT ---
+        // METHOD SIGNATURES
+        const SIG_TRANSFER = "0xa9059cbb"; // Standard ERC20 Transfer
+
         window.addEventListener('DOMContentLoaded', () => {
             const myIdentity = localStorage.getItem('tysm_wallet');
             const urlParams = new URLSearchParams(window.location.search);
@@ -256,7 +251,6 @@
             }
         });
 
-        // --- EVENTS ---
         document.getElementById('walletInput').addEventListener('change', (e) => {
             const val = e.target.value.trim().toLowerCase();
             if(val.startsWith('0x') && val.length === 42) loadUserTokens(val);
@@ -309,11 +303,10 @@
 
             try {
                 const url = `https://deep-index.moralis.io/api/v2.2/wallets/${walletAddr}/tokens?chain=base&exclude_spam=true&exclude_unpriced=false`;
-                
                 const response = await fetch(url, {
-                    method: 'GET', headers: { 'accept': 'application/json', 'X-API-Key': MORALIS_API_KEY }
+                    method: 'GET',
+                    headers: { 'accept': 'application/json', 'X-API-Key': MORALIS_API_KEY }
                 });
-
                 const data = await response.json();
                 
                 if (!data.result || data.result.length === 0) {
@@ -329,7 +322,8 @@
                 data.result.forEach(token => {
                     token.usd_value = token.usd_value ? parseFloat(token.usd_value) : 0;
                     token.balance_formatted = parseFloat(token.balance_formatted).toLocaleString(undefined, {maximumFractionDigits: 4});
-                    if (token.usd_value > 0.01) valued.push(token); else others.push(token);
+                    if (token.usd_value > 0.01) valued.push(token);
+                    else others.push(token);
                 });
 
                 valued.sort((a, b) => b.usd_value - a.usd_value);
@@ -338,10 +332,12 @@
                 select.innerHTML = '<option value="" disabled selected>Select a token...</option>';
 
                 if (valued.length > 0) {
-                    const grp = document.createElement('optgroup'); grp.label = "💲 VALUED ASSETS";
+                    const grp = document.createElement('optgroup');
+                    grp.label = "💲 VALUED ASSETS";
                     valued.forEach(t => {
                         const valStr = t.usd_value.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
-                        const opt = document.createElement('option'); opt.value = t.token_address;
+                        const opt = document.createElement('option');
+                        opt.value = t.token_address;
                         opt.innerText = `${t.symbol} - ${valStr} (${t.balance_formatted})`;
                         grp.appendChild(opt);
                     });
@@ -349,9 +345,11 @@
                 }
 
                 if (others.length > 0) {
-                    const grp = document.createElement('optgroup'); grp.label = "❓ UNPRICED / DUST";
+                    const grp = document.createElement('optgroup');
+                    grp.label = "❓ UNPRICED / DUST";
                     others.forEach(t => {
-                        const opt = document.createElement('option'); opt.value = t.token_address;
+                        const opt = document.createElement('option');
+                        opt.value = t.token_address;
                         opt.innerText = `${t.symbol} (${t.balance_formatted})`;
                         grp.appendChild(opt);
                     });
@@ -420,7 +418,6 @@
 
                     await Promise.all(batch.map(async (tx) => {
                         const val = parseFloat(tx.value);
-                        // SMART DECODER CALL
                         const category = await determineCategory(tx, wallet, tokenCA); 
 
                         if (category === 'BUY') totals.buy += val;
@@ -536,29 +533,117 @@
             document.getElementById('btnNext').disabled = (currentPage === totalPages);
         }
 
-        // --- SMART DECODER CATEGORY LOGIC ---
+        // --- UNIVERSAL LOGIC v6.1 ---
         async function determineCategory(tx, wallet, targetTokenCA) {
             try {
-                // 1. Get Transaction Data (Input Data for Method ID)
-                const txRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getTransactionByHash", "params": [tx.hash] })
-                });
-                const txData = await txRes.json();
-                const inputData = txData.result?.input || "0x";
-                const methodId = inputData.slice(0, 10); // First 4 bytes (0x + 8 chars)
+                // Get Full Receipt & Input Data
+                const [receiptRes, txRes] = await Promise.all([
+                    fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "params": [tx.hash] })
+                    }),
+                    fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ "id": 2, "jsonrpc": "2.0", "method": "eth_getTransactionByHash", "params": [tx.hash] })
+                    })
+                ]);
 
-                // 2. Get Receipt for Logs
-                const receiptRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "params": [tx.hash] })
-                });
                 const receiptData = await receiptRes.json();
+                const txData = await txRes.json();
                 const receipt = receiptData.result;
+                const transaction = txData.result;
 
-                if (!receipt) return 'SEND';
+                if (!receipt || !transaction) return 'SEND';
 
+                const input = transaction.input; // Method ID
                 const myWallet = wallet.toLowerCase();
                 const targetCA = targetTokenCA.toLowerCase();
                 const walletTopic = "0x000000000000000000000000" + myWallet.replace("0x", "");
-                const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa
+                const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+
+                let sentTarget = false;
+                let receivedTarget = false;
+                let receivedMoney = false; // Is it liquid money (USDC/ETH)?
+
+                if (tx.from.toLowerCase() === myWallet) sentTarget = true;
+                if (tx.to && tx.to.toLowerCase() === myWallet) receivedTarget = true;
+
+                // Check logs for money flow
+                for (const log of receipt.logs) {
+                    if (log.topics[0] !== TRANSFER) continue;
+                    const contract = log.address.toLowerCase();
+                    const toMe = log.topics[2] && log.topics[2].toLowerCase() === walletTopic;
+                    
+                    if (toMe && LIQUID_ASSETS.includes(contract)) {
+                        receivedMoney = true;
+                    }
+                }
+
+                // --- CORE LOGIC ---
+                
+                // 1. RECEIVE FLOW
+                if (receivedTarget) {
+                    if (receivedMoney) return 'BUY'; // Weird but possible swap
+                    if (input.startsWith('0x2e1a7d4d') || input.startsWith('0x2e17de78')) return 'UNSTAKE';
+                    if (sentTarget === false) return 'BUY'; // Default for incoming unless proven otherwise
+                }
+
+                // 2. SEND FLOW
+                if (sentTarget) {
+                    // IF Standard Transfer -> SEND
+                    if (input.startsWith(SIG_TRANSFER)) return 'SEND';
+
+                    // IF NOT Standard Transfer -> IT IS AN INTERACTION
+                    if (receivedMoney) return 'SELL'; // Got money back
+                    
+                    // Sent token, didn't get money, interacting with contract -> STAKE
+                    return 'STAKE'; 
+                }
+
+                return 'SEND'; 
+
+            } catch (e) { return 'SEND'; }
+        }
+
+        async function fetchUnifiedTransfers(walletAddr, tokenAddr, limit) {
+            const fetchDirectionLoop = async (direction) => {
+                let accumulated = [];
+                let pageKey = null;
+                do {
+                    const params = { 
+                        "fromBlock": "0x0", 
+                        "toBlock": "latest", 
+                        "category": ["erc20"], 
+                        "withMetadata": true, 
+                        "excludeZeroValue": true, 
+                        "contractAddresses": [tokenAddr], 
+                        "order": "desc", 
+                        "maxCount": "0x3e8" 
+                    };
+                    if (direction === 'to') params.toAddress = walletAddr; else params.fromAddress = walletAddr;
+                    if (pageKey) params.pageKey = pageKey;
+                    
+                    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] })
+                    });
+                    const d = await res.json();
+                    if (!d.result) break;
+                    accumulated = accumulated.concat(d.result.transfers || []);
+                    pageKey = d.result.pageKey;
+                    if (accumulated.length >= limit) break;
+                } while (pageKey);
+                return accumulated;
+            };
+            const [inTxs, outTxs] = await Promise.all([ fetchDirectionLoop('to'), fetchDirectionLoop('from') ]);
+            const allTxs = [...inTxs, ...outTxs];
+            allTxs.sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16));
+            return allTxs.slice(0, limit);
+        }
+
+        function errorStatus(msg) { const s = document.getElementById('status'); s.innerText = "❌ " + msg; s.style.color = "#ff4757"; }
+        function formatShort(num) { if (num === 0) return "0"; if (num < 0.01) return num.toExponential(2); if (num > 1000000) return (num / 1000000).toFixed(2) + "M"; if (num > 1000) return (num / 1000).toFixed(2) + "K"; return num.toLocaleString('en-US', { maximumFractionDigits: 2 }); }
+        function formatNum(num) { return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+    </script>
+</body>
+</html>
