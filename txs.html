@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 5.3 (Category Filter)</title>
+    <title>WAST Analyzer 6.0 (Pagination)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -39,7 +39,6 @@
         .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; }
         
         .input-group { margin-bottom: 15px; }
-        
         label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.75rem; margin-bottom: 6px; color: #666; text-transform: uppercase; }
         
         .clear-link { 
@@ -67,9 +66,10 @@
         .c-green { color: var(--green); } .c-red { color: var(--red); } .c-orange { color: var(--orange); } .c-purple { color: var(--purple); } .c-blue { color: var(--primary); } .c-cyan { color: var(--cyan); } .c-indigo { color: var(--indigo); }
 
         /* FILTER SECTION */
-        .filter-section { margin-top: 20px; display: none; /* Hidden until loaded */ }
+        .filter-section { margin-top: 20px; display: none; }
         .filter-select { padding: 8px; border-radius: 8px; border: 1px solid #ddd; width: 100%; font-weight: 600; background: white; }
 
+        /* TABLE & PAGINATION */
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; table-layout: fixed; }
         th { text-align: left; color: #999; font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid #eee; }
         td { padding: 10px 0; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
@@ -82,7 +82,15 @@
         .bg-receive { background: #f3e5f5; color: var(--purple); border: 1px solid #e1bee7; }
         .bg-stake { background: #e0f7fa; color: var(--cyan); border: 1px solid #b2ebf2; }
         .bg-unstake { background: #e8eaf6; color: var(--indigo); border: 1px solid #c5cae9; }
+        
         #status { text-align: center; margin: 15px 0; font-weight: 600; font-size: 0.85rem; min-height: 20px; padding: 0 10px; }
+
+        /* PAGINATION CONTROLS */
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; display: none; }
+        .page-btn { background: #fff; border: 1px solid #ddd; padding: 5px 15px; border-radius: 8px; cursor: pointer; color: #333; font-weight: 600; font-size: 0.8rem; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-info { font-size: 0.8rem; color: #666; font-weight: 600; }
+
     </style>
 </head>
 <body>
@@ -189,6 +197,12 @@
             </thead>
             <tbody id="txList"></tbody>
         </table>
+
+        <div id="paginationContainer" class="pagination">
+            <button id="btnPrev" class="page-btn">Previous</button>
+            <span id="pageIndicator" class="page-info">Page 1</span>
+            <button id="btnNext" class="page-btn">Next</button>
+        </div>
     </div>
 
     <script>
@@ -197,6 +211,12 @@
         let isCustomTokenMode = false;
         const WETH_ADDR = "0x4200000000000000000000000000000000000006";
 
+        // GLOBAL VARS FOR PAGINATION
+        let globalTransactions = []; // Stores all fetched transactions with metadata
+        let currentPage = 1;
+        const rowsPerPage = 25;
+
+        // --- INIT ---
         window.addEventListener('DOMContentLoaded', () => {
             const myIdentity = localStorage.getItem('tysm_wallet');
             const urlParams = new URLSearchParams(window.location.search);
@@ -218,25 +238,28 @@
             }
         });
 
-        // --- FILTER LOGIC ---
-        document.getElementById('txFilter').addEventListener('change', (e) => {
-            const filter = e.target.value;
-            const rows = document.querySelectorAll('.tx-row');
-            
-            rows.forEach(row => {
-                const category = row.getAttribute('data-category');
-                if (filter === 'ALL' || category === filter) {
-                    row.style.display = 'table-row';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+        // --- HANDLERS ---
+        document.getElementById('txFilter').addEventListener('change', () => {
+            currentPage = 1; // Reset to page 1 on filter change
+            renderTable();
+        });
+
+        document.getElementById('btnPrev').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        });
+
+        document.getElementById('btnNext').addEventListener('click', () => {
+            // Check if next page exists logic handled in renderTable
+            currentPage++;
+            renderTable();
         });
 
         document.getElementById('btnChangeTarget').addEventListener('click', () => {
-            const wInput = document.getElementById('walletInput');
-            wInput.value = "";
-            wInput.focus();
+            document.getElementById('walletInput').value = "";
+            document.getElementById('walletInput').focus();
             const url = new URL(window.location);
             url.searchParams.delete('wallet');
             window.history.pushState({}, '', url);
@@ -262,6 +285,7 @@
             }
         });
 
+        // --- FULL WALLET SCAN + 0.02 FILTER ---
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
@@ -271,14 +295,36 @@
             select.innerHTML = '';
 
             try {
-                const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", "params": [walletAddr] })
-                });
-                const data = await res.json();
-                let tokens = data.result?.tokenBalances || [];
+                // 1. Get ALL Token Balances (With Pagination for Alchemy)
+                let tokens = [];
+                let pageKey = null;
+                
+                // LOOP to get ALL tokens
+                do {
+                    const params = { 
+                        "id": 1, 
+                        "jsonrpc": "2.0", 
+                        "method": "alchemy_getTokenBalances", 
+                        "params": [walletAddr] 
+                    };
+                    if(pageKey) params.params.push({ pageKey: pageKey });
+
+                    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(params)
+                    });
+                    const data = await res.json();
+                    
+                    if (data.result?.tokenBalances) {
+                        tokens = tokens.concat(data.result.tokenBalances);
+                    }
+                    pageKey = data.result?.pageKey;
+                } while (pageKey);
+
+                // Filter zero balances
                 tokens = tokens.filter(t => t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000");
 
+                // 2. Add Native ETH
                 const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${API_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] })
@@ -295,8 +341,9 @@
                     return;
                 }
 
-                loading.innerText = `Checking prices for ${tokens.length} tokens...`;
+                loading.innerText = `Found ${tokens.length} tokens. Checking prices...`;
 
+                // 3. Batch Prices
                 const chunks = [];
                 for (let i = 0; i < tokens.length; i += 30) chunks.push(tokens.slice(i, i + 30));
 
@@ -319,8 +366,9 @@
                     } catch(e) {}
                 }));
 
-                loading.innerText = `Analyzing value of ${pricedTokens.length} valid tokens...`;
+                loading.innerText = `Calculating value of ${pricedTokens.length} valid tokens...`;
 
+                // 4. Fetch Decimals
                 await Promise.all(pricedTokens.map(async (t) => {
                     if(t.isNative) { t.decimals = 18; t.symbol = "ETH"; return; }
                     try {
@@ -334,18 +382,19 @@
                     } catch(e) { t.decimals = 18; }
                 }));
 
+                // 5. Filter > 0.02 USD
                 let validTokens = [];
                 pricedTokens.forEach(t => {
                     const rawBal = parseInt(t.tokenBalance, 16);
                     t.realBalance = rawBal / Math.pow(10, t.decimals);
                     t.totalValue = t.realBalance * t.priceUsd;
-                    if(t.totalValue >= 0.01) validTokens.push(t);
+                    if(t.totalValue >= 0.02) validTokens.push(t); // NEW LIMIT
                 });
 
                 validTokens.sort((a, b) => b.totalValue - a.totalValue);
 
                 select.innerHTML = '<option value="" disabled selected>Select a token...</option>';
-                if(validTokens.length === 0) select.innerHTML = '<option disabled>No valuable tokens found (> $0.01)</option>';
+                if(validTokens.length === 0) select.innerHTML = '<option disabled>No tokens > $0.02 found</option>';
 
                 validTokens.forEach(t => {
                     const label = `${t.symbol} - $${t.totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits:2})}`;
@@ -379,10 +428,13 @@
 
             const status = document.getElementById('status');
             
+            // RESET
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('filterContainer').style.display = 'none';
             document.getElementById('txTable').style.display = 'none';
+            document.getElementById('paginationContainer').style.display = 'none';
             document.getElementById('txList').innerHTML = "";
+            globalTransactions = []; // Clear global data
 
             if (!wallet.startsWith('0x')) return errorStatus("Invalid Wallet Address");
             if (!tokenCA.startsWith('0x')) return errorStatus("Please select a Token");
@@ -409,11 +461,7 @@
                 status.innerText = `Analyzing ${rawTxs.length} receipts...`;
                 
                 let totals = { buy: 0, sell: 0, receive: 0, send: 0, stake: 0, unstake: 0 };
-                const tbody = document.getElementById('txList');
                 
-                // Get Current Filter State
-                const currentFilter = document.getElementById('txFilter').value;
-
                 const batchSize = 5;
                 for (let i = 0; i < rawTxs.length; i += batchSize) {
                     const batch = rawTxs.slice(i, i + batchSize);
@@ -425,6 +473,7 @@
                         const isTargetIn = tx.to && tx.to.toLowerCase() === wallet;
                         const category = await determineCategory(tx.hash, wallet, tokenCA, isTargetIn, mainSymbol);
 
+                        // Accumulate totals
                         if (category === 'BUY') totals.buy += val;
                         else if (category === 'SELL') totals.sell += val;
                         else if (category === 'RECEIVE') totals.receive += val;
@@ -432,38 +481,19 @@
                         else if (category === 'STAKE') totals.stake += val;
                         else if (category === 'UNSTAKE') totals.unstake += val;
 
-                        if (i < 100) {
-                            const dateObj = new Date(tx.metadata.blockTimestamp);
-                            let badgeClass = "";
-                            if(category === 'BUY') badgeClass = 'bg-buy';
-                            if(category === 'SELL') badgeClass = 'bg-sell';
-                            if(category === 'RECEIVE') badgeClass = 'bg-receive';
-                            if(category === 'SEND') badgeClass = 'bg-send';
-                            if(category === 'STAKE') badgeClass = 'bg-stake';
-                            if(category === 'UNSTAKE') badgeClass = 'bg-unstake';
-
-                            // Logic: Add row but respect filter immediately
-                            const displayStyle = (currentFilter === 'ALL' || currentFilter === category) ? 'table-row' : 'none';
-
-                            const rowHTML = `
-                                <tr class="tx-row" data-category="${category}" style="display:${displayStyle}">
-                                    <td class="col-type">
-                                        <span class="tag ${badgeClass}">${category}</span>
-                                        <span class="tx-sub">${dateObj.toLocaleDateString()}</span>
-                                    </td>
-                                    <td class="col-amount">
-                                        <strong>${formatNum(val)}</strong>
-                                        <span class="tx-sub">${tx.hash.slice(0,6)}...</span>
-                                    </td>
-                                </tr>
-                            `;
-                            tbody.insertAdjacentHTML('beforeend', rowHTML);
-                        }
+                        // Store for Pagination
+                        const dateObj = new Date(tx.metadata.blockTimestamp);
+                        globalTransactions.push({
+                            val: val,
+                            hash: tx.hash,
+                            category: category,
+                            date: dateObj.toLocaleDateString(),
+                            rawDate: dateObj // for sorting if needed later
+                        });
                     }));
                 }
 
-                if (rawTxs.length > 100) tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="2" style="text-align:center;color:#999">... and ${rawTxs.length - 100} more</td></tr>`);
-
+                // FETCH PRICE
                 let currentPrice = 0;
                 try {
                     const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenCA}`);
@@ -474,11 +504,10 @@
                     }
                 } catch(e){}
 
+                // UPDATE DASHBOARD
                 const updateCard = (id, qty) => {
-                    const elQty = document.getElementById('qty'+id);
-                    const elVal = document.getElementById('val'+id);
-                    if(elQty) elQty.innerText = formatShort(qty);
-                    if(elVal) elVal.innerText = currentPrice > 0 ? `$${formatShort(qty * currentPrice)}` : "-";
+                    document.getElementById('qty'+id).innerText = formatShort(qty);
+                    document.getElementById('val'+id).innerText = currentPrice > 0 ? `$${formatShort(qty * currentPrice)}` : "-";
                 };
 
                 updateCard('Buy', totals.buy);
@@ -492,13 +521,79 @@
                 document.getElementById('qtyNet').innerText = formatShort(netQty) + " " + mainSymbol;
                 document.getElementById('valNet').innerText = currentPrice > 0 ? `$${formatNum(netQty * currentPrice, 2)}` : "Price N/A";
 
+                // SHOW UI
                 document.getElementById('dashboard').style.display = 'grid';
                 document.getElementById('filterContainer').style.display = 'block';
                 document.getElementById('txTable').style.display = 'table';
                 
+                // RENDER TABLE (Page 1)
+                currentPage = 1;
+                renderTable();
+
                 status.innerText = "Complete ✅";
                 status.style.color = "#2ecc71";
+
             } catch (err) { console.error(err); errorStatus("Analysis Error: " + err.message); }
+        }
+
+        // --- RENDER TABLE WITH PAGINATION & FILTERS ---
+        function renderTable() {
+            const filter = document.getElementById('txFilter').value;
+            const tbody = document.getElementById('txList');
+            tbody.innerHTML = "";
+
+            // 1. Apply Filter
+            const filteredData = globalTransactions.filter(tx => {
+                return filter === 'ALL' || tx.category === filter;
+            });
+
+            // 2. Paginate
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+            if (totalPages === 0) {
+                document.getElementById('paginationContainer').style.display = 'none';
+                tbody.innerHTML = "<tr><td colspan='2' style='text-align:center; padding:15px;'>No transactions found for this filter.</td></tr>";
+                return;
+            }
+
+            document.getElementById('paginationContainer').style.display = 'flex';
+            
+            // Adjust page if out of bounds
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageData = filteredData.slice(start, end);
+
+            // 3. Generate HTML
+            pageData.forEach(tx => {
+                let badgeClass = "";
+                if(tx.category === 'BUY') badgeClass = 'bg-buy';
+                if(tx.category === 'SELL') badgeClass = 'bg-sell';
+                if(tx.category === 'RECEIVE') badgeClass = 'bg-receive';
+                if(tx.category === 'SEND') badgeClass = 'bg-send';
+                if(tx.category === 'STAKE') badgeClass = 'bg-stake';
+                if(tx.category === 'UNSTAKE') badgeClass = 'bg-unstake';
+
+                const rowHTML = `
+                    <tr>
+                        <td class="col-type">
+                            <span class="tag ${badgeClass}">${tx.category}</span>
+                            <span class="tx-sub">${tx.date}</span>
+                        </td>
+                        <td class="col-amount">
+                            <strong>${formatNum(tx.val)}</strong>
+                            <span class="tx-sub">${tx.hash.slice(0,6)}...</span>
+                        </td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', rowHTML);
+            });
+
+            // 4. Update Controls
+            document.getElementById('pageIndicator').innerText = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('btnPrev').disabled = (currentPage === 1);
+            document.getElementById('btnNext').disabled = (currentPage === totalPages);
         }
 
         async function determineCategory(txHash, wallet, targetTokenCA, isTargetIn, mainSymbol) {
