@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 10.6 (ITA Export)</title>
+    <title>WAST Analyzer 10.8 (Smart Fallback)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -103,7 +103,6 @@
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .page-info { font-size: 0.8rem; color: #666; font-weight: 600; }
 
-        /* EXPORT DOWNLOAD AREA */
         #exportArea { margin-top: 15px; text-align: center; min-height: 40px; }
         .download-link { 
             display: inline-block; background-color: #27ae60; color: white; padding: 12px 25px; 
@@ -127,7 +126,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Italian Export & Llama Fix</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Smart Fallback</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -210,8 +209,8 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="wip-tag">🚧 v10.6 ITA EXPORT 🚧</div>
-        <div class="version-tag">v10.6</div>
+        <div class="wip-tag">🚧 v10.8 SMART FALLBACK 🚧</div>
+        <div class="version-tag">v10.8</div>
     </div>
 
     <script>
@@ -225,6 +224,7 @@
         
         let currentPage = 1;
         const rowsPerPage = 50;
+        const BATCH_SIZE = 15; // Conservative
 
         const MAJOR_TOKENS = {
             "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": { sym: "USDC", dec: 6 },
@@ -426,6 +426,7 @@
             const wallet = document.getElementById('walletInput').value.trim().toLowerCase();
             currentTokenCA = isCustomTokenMode ? document.getElementById('tokenInput').value.trim().toLowerCase() : document.getElementById('tokenSelect').value.trim().toLowerCase();
             
+            // RESET
             document.getElementById('dashboard').style.display='none';
             document.getElementById('txTable').style.display='none';
             document.getElementById('tokenHeader').style.display='none';
@@ -502,14 +503,14 @@
             refineDataInBackground(wallet, currentTokenCA);
         }
 
+        // --- SMART FALLBACK LOGIC ---
         async function refineDataInBackground(wallet, tokenCA) {
             const deepStatus = document.getElementById('deepStatus');
-            const batchSize = 40; 
             let totals = { buy:0, sell:0, recv:0, send:0 };
 
-            for (let i = 0; i < globalEvents.length; i += batchSize) {
-                const batch = globalEvents.slice(i, i + batchSize);
-                deepStatus.innerText = `Refining Data: ${Math.min(i + batchSize, globalEvents.length)} / ${globalEvents.length}...`;
+            for (let i = 0; i < globalEvents.length; i += BATCH_SIZE) {
+                const batch = globalEvents.slice(i, i + BATCH_SIZE);
+                deepStatus.innerText = `Refining Data: ${Math.min(i + BATCH_SIZE, globalEvents.length)} / ${globalEvents.length}...`;
 
                 const requestBody = batch.map((evt, idx) => ({
                     jsonrpc: "2.0",
@@ -518,67 +519,47 @@
                     params: [evt.hash]
                 }));
 
+                let batchSuccess = false;
+                let responses = null;
+
                 try {
                     const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                         method: "POST", headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(requestBody)
                     });
-                    const responses = await res.json();
+                    if (res.ok) {
+                        responses = await res.json();
+                        batchSuccess = true;
+                    }
+                } catch(e) { console.warn("Batch failed, switching to single fetch..."); }
 
-                    responses.forEach(r => {
-                        if (!r.result) return;
-                        const evtIndex = i + r.id; 
-                        if (!globalEvents[evtIndex]) return;
-
-                        const logs = r.result.logs;
-                        const evt = globalEvents[evtIndex];
-                        const myWallet = wallet.toLowerCase().replace("0x", "");
-                        const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-
-                        let newType = evt.isIncoming ? 'RECEIVE' : 'SEND'; 
-
-                        if (evt.isIncoming) {
-                            for(const log of logs) {
-                                if(log.topics[0] !== TRANSFER) continue;
-                                const contract = log.address.toLowerCase();
-                                const fromMe = log.topics[1] && log.topics[1].toLowerCase().includes(myWallet);
-                                if (fromMe && contract !== tokenCA) { newType = 'BUY'; break; }
-                            }
-                        } else {
-                            for(const log of logs) {
-                                if(log.topics[0] !== TRANSFER) continue;
-                                const contract = log.address.toLowerCase();
-                                const toMe = log.topics[2] && log.topics[2].toLowerCase().includes(myWallet);
-                                if (toMe && contract !== tokenCA) { newType = 'SELL'; break; }
-                            }
-                        }
-
-                        globalEvents[evtIndex].type = newType;
-
-                        if(newType === 'BUY') totals.buy += evt.amount;
-                        else if(newType === 'SELL') totals.sell += evt.amount;
-                        else if(newType === 'RECEIVE') totals.recv += evt.amount;
-                        else if(newType === 'SEND') totals.send += evt.amount;
-                    });
-
-                    document.getElementById('buyTokens').innerText = totals.buy.toLocaleString(undefined, {maximumFractionDigits:2});
-                    document.getElementById('buyCurr').innerText = `$${(totals.buy * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
-                    
-                    document.getElementById('sellTokens').innerText = totals.sell.toLocaleString(undefined, {maximumFractionDigits:2});
-                    document.getElementById('sellCurr').innerText = `$${(totals.sell * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
-                    
-                    document.getElementById('recvTokens').innerText = totals.recv.toLocaleString(undefined, {maximumFractionDigits:2});
-                    document.getElementById('sendTokens').innerText = totals.send.toLocaleString(undefined, {maximumFractionDigits:2});
-
-                    const startPageRow = (currentPage - 1) * rowsPerPage;
-                    const endPageRow = startPageRow + rowsPerPage;
-                    if (i >= startPageRow && i < endPageRow) renderTable(); 
-
-                } catch(e) { console.error("Batch fail", e); }
+                // PROCESS RESPONSES OR FALLBACK
+                if (batchSuccess && responses) {
+                    processReceipts(responses, i, wallet, tokenCA, totals);
+                } else {
+                    // FALLBACK: Fetch one by one
+                    for (let j = 0; j < batch.length; j++) {
+                        const evt = batch[j];
+                        const globalIdx = i + j;
+                        try {
+                            const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
+                                method: "POST", headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    jsonrpc: "2.0", id: 1, method: "eth_getTransactionReceipt", params: [evt.hash]
+                                })
+                            });
+                            const r = await res.json();
+                            processReceipts([r], i + j, wallet, tokenCA, totals, true); 
+                        } catch(e) {}
+                        await new Promise(r => setTimeout(r, 50)); // Tiny delay between singles
+                    }
+                }
                 
-                await new Promise(r => setTimeout(r, 80)); 
+                await new Promise(r => setTimeout(r, 100)); // Pace batches
+                updateTotals(); // Refresh UI
             }
 
+            finalizePending(); 
             deepStatus.innerText = "Data Fully Refined ✅";
             document.getElementById('status').innerText = "Complete ✅";
             renderTable(); 
@@ -587,6 +568,69 @@
                 document.getElementById('btnHistory').style.display='flex';
                 document.getElementById('btnCopy').style.display='flex';
             }
+        }
+
+        function processReceipts(responses, offsetIndex, wallet, tokenCA, totals, isSingle=false) {
+            responses.forEach(r => {
+                if (!r.result) return;
+                
+                // If single fetch, ID is always 1, use offset directly. If batch, ID is relative.
+                const evtIndex = isSingle ? offsetIndex : (offsetIndex + r.id);
+                if (!globalEvents[evtIndex]) return;
+
+                const logs = r.result.logs;
+                const evt = globalEvents[evtIndex];
+                const myWallet = wallet.toLowerCase().replace("0x", "");
+                const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+
+                let newType = evt.isIncoming ? 'RECEIVE' : 'SEND'; 
+
+                if (evt.isIncoming) {
+                    for(const log of logs) {
+                        if(log.topics[0] !== TRANSFER) continue;
+                        const contract = log.address.toLowerCase();
+                        const fromMe = log.topics[1] && log.topics[1].toLowerCase().includes(myWallet);
+                        if (fromMe && contract !== tokenCA) { newType = 'BUY'; break; }
+                    }
+                } else {
+                    for(const log of logs) {
+                        if(log.topics[0] !== TRANSFER) continue;
+                        const contract = log.address.toLowerCase();
+                        const toMe = log.topics[2] && log.topics[2].toLowerCase().includes(myWallet);
+                        if (toMe && contract !== tokenCA) { newType = 'SELL'; break; }
+                    }
+                }
+                globalEvents[evtIndex].type = newType;
+            });
+        }
+
+        function finalizePending() {
+            globalEvents.forEach(evt => {
+                if(evt.type.includes('(Pend)')) {
+                    if(evt.isIncoming) evt.type = 'RECEIVE';
+                    else evt.type = 'SEND';
+                }
+            });
+            updateTotals();
+        }
+
+        function updateTotals() {
+            let totals = { buy:0, sell:0, recv:0, send:0 };
+            globalEvents.forEach(evt => {
+                if(evt.type === 'BUY') totals.buy += evt.amount;
+                else if(evt.type === 'SELL') totals.sell += evt.amount;
+                else if(evt.type === 'RECEIVE') totals.recv += evt.amount;
+                else if(evt.type === 'SEND') totals.send += evt.amount;
+            });
+
+            document.getElementById('buyTokens').innerText = totals.buy.toLocaleString(undefined, {maximumFractionDigits:2});
+            document.getElementById('buyCurr').innerText = `$${(totals.buy * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
+            
+            document.getElementById('sellTokens').innerText = totals.sell.toLocaleString(undefined, {maximumFractionDigits:2});
+            document.getElementById('sellCurr').innerText = `$${(totals.sell * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
+            
+            document.getElementById('recvTokens').innerText = totals.recv.toLocaleString(undefined, {maximumFractionDigits:2});
+            document.getElementById('sendTokens').innerText = totals.send.toLocaleString(undefined, {maximumFractionDigits:2});
         }
 
         function renderTable() {
@@ -684,7 +728,7 @@
                         evt.histVal = totalValue; 
                         evt.histPrice = histPrice;
                     } else {
-                        evt.histChecked = true; // Mark as checked but failed
+                        evt.histChecked = true; 
                     }
                     processed++;
                     
@@ -715,12 +759,7 @@
             csvContent += `Target Wallet;${document.getElementById('walletInput').value}\n`;
             csvContent += `Token;${currentTokenSymbol} (${currentTokenCA})\n\n`;
             
-            csvContent += "SUMMARY STATS\n";
-            csvContent += "Category;Tokens;Hist Value;Curr Value\n";
-            
             const getVal = (id) => document.getElementById(id).innerText.replace('$','').replace('---','0').replace(/,/g,'').replace(/\./g,'').replace(/\s/g,'');
-            // Helper to clean UI string back to raw number then to Italian format might be complex. 
-            // Better to use computed values if possible, but for simplicity let's use globalEvents sum.
             
             // Re-calculate totals for accuracy
             let sBuy=0, sSell=0, sRecv=0, sSend=0;
