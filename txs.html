@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 8.3 (Clean & Unique)</title>
+    <title>WAST Analyzer 8.9 (Report Edition)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -53,21 +53,27 @@
         .btn-fast { background-color: var(--primary); }
         .btn-full { background-color: var(--dark); }
         .btn-hist { background-color: var(--purple); display: none; } 
+        .btn-export { background-color: #27ae60; display: none; }
 
-        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; margin-bottom: 10px; display: none; }
-        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; }
+        /* TOKEN HEADER */
+        .token-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; display: none; }
+        .token-icon { width: 48px; height: 48px; border-radius: 50%; background: #eee; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .token-info h3 { margin: 0; font-size: 1.4rem; font-weight: 900; color: #333; line-height: 1; }
+        .token-info span { font-size: 0.85rem; color: #666; font-weight: 500; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; display: none; }
+        .stat-card { background: #f8f9fa; padding: 12px; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; }
         
-        .stat-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 900; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 6px; display: flex; justify-content: space-between; }
+        .stat-title { font-size: 0.7rem; text-transform: uppercase; font-weight: 900; margin-bottom: 8px; border-bottom: 2px solid #eee; padding-bottom: 4px; }
         .t-buy { color: var(--green); border-color: var(--green); }
         .t-sell { color: var(--red); border-color: var(--red); }
-        .t-receive { color: var(--purple); border-color: var(--purple); }
-        .t-send { color: var(--orange); border-color: var(--orange); }
+        .t-in { color: var(--purple); border-color: var(--purple); }
+        .t-out { color: var(--orange); border-color: var(--orange); }
 
-        .stat-line { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; font-family: monospace; color: #444; }
+        .stat-line { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 3px; font-family: monospace; color: #444; }
         .stat-line strong { font-weight: 700; color: #000; }
         .val-hist { color: var(--purple); }
-        .val-curr { color: #666; }
-
+        
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; table-layout: fixed; }
         th { text-align: left; color: #999; font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid #eee; }
         td { padding: 10px 0; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
@@ -96,7 +102,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Free Stack + Unique</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: Free Stack + Report</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -113,32 +119,39 @@
             <button class="btn-fast" id="btnFast">⚡ Last 500</button>
             <button class="btn-full" id="btnFull">🐢 Deep (5k)</button>
             <button id="btnHistory" class="btn-hist">🔮 Time Machine</button>
+            <button id="btnExport" class="btn-export">📥 Export CSV</button>
         </div>
         
         <div id="status"></div>
 
+        <div id="tokenHeader" class="token-header">
+            <img id="tokenImg" src="" class="token-icon" onerror="this.src='https://placehold.co/48x48?text=?'">
+            <div class="token-info">
+                <h3 id="tokenSym">TOKEN</h3>
+                <span id="tokenPrice">$0.00</span>
+            </div>
+        </div>
+
         <div id="dashboard" class="dashboard-grid">
             <div class="stat-card">
-                <div class="stat-title t-buy">BUY SUMMARY</div>
+                <div class="stat-title t-buy">BUY</div>
                 <div class="stat-line"><span>Tokens:</span> <strong id="buyTokens">0</strong></div>
-                <div class="stat-line"><span>Cost (Hist):</span> <strong id="buyHist" class="val-hist">---</strong></div>
-                <div class="stat-line"><span>Value (Now):</span> <strong id="buyCurr" class="val-curr">$0.00</strong></div>
+                <div class="stat-line"><span>Hist $:</span> <strong id="buyHist" class="val-hist">---</strong></div>
             </div>
             <div class="stat-card">
-                <div class="stat-title t-sell">SELL SUMMARY</div>
+                <div class="stat-title t-sell">SELL</div>
                 <div class="stat-line"><span>Tokens:</span> <strong id="sellTokens">0</strong></div>
-                <div class="stat-line"><span>Realized (Hist):</span> <strong id="sellHist" class="val-hist">---</strong></div>
-                <div class="stat-line"><span>Value (Now):</span> <strong id="sellCurr" class="val-curr">$0.00</strong></div>
+                <div class="stat-line"><span>Hist $:</span> <strong id="sellHist" class="val-hist">---</strong></div>
             </div>
             <div class="stat-card">
-                <div class="stat-title t-receive">RECEIVE (IN)</div>
+                <div class="stat-title t-in">RECEIVE (IN)</div>
                 <div class="stat-line"><span>Tokens:</span> <strong id="recvTokens">0</strong></div>
-                <div class="stat-line"><span>Value (Hist):</span> <strong id="recvHist" class="val-hist">---</strong></div>
+                <div class="stat-line"><span>Hist $:</span> <strong id="recvHist" class="val-hist">---</strong></div>
             </div>
             <div class="stat-card">
-                <div class="stat-title t-send">SEND (OUT)</div>
+                <div class="stat-title t-out">SEND (OUT)</div>
                 <div class="stat-line"><span>Tokens:</span> <strong id="sendTokens">0</strong></div>
-                <div class="stat-line"><span>Value (Hist):</span> <strong id="sendHist" class="val-hist">---</strong></div>
+                <div class="stat-line"><span>Hist $:</span> <strong id="sendHist" class="val-hist">---</strong></div>
             </div>
         </div>
 
@@ -147,8 +160,8 @@
             <tbody id="txList"></tbody>
         </table>
 
-        <div class="wip-tag">🚧 FREE STACK: UNIQUE 🚧</div>
-        <div class="version-tag">v8.3</div>
+        <div class="wip-tag">🚧 REPORT EDITION 🚧</div>
+        <div class="version-tag">v8.9</div>
     </div>
 
     <script>
@@ -156,6 +169,7 @@
         
         let globalEvents = []; 
         let currentTokenCA = "";
+        let currentTokenSymbol = "TOKEN";
         let currentPricePerToken = 0;
         let isCustomTokenMode = false;
 
@@ -193,15 +207,13 @@
             document.getElementById('tokenInput').value = e.target.value;
         });
 
-        // --- UNIQUE LOADER ---
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
             select.style.display = 'none'; loading.style.display = 'block'; select.innerHTML = '';
 
             try {
-                // 1. Fetch RAW (Pagination)
-                let rawTokens = [];
+                let allTokens = [];
                 let pageKey = null;
                 let loopCount = 0;
 
@@ -215,37 +227,30 @@
                         body: JSON.stringify(params)
                     });
                     const data = await res.json();
-                    if(data.result?.tokenBalances) rawTokens = rawTokens.concat(data.result.tokenBalances);
+                    if(data.result?.tokenBalances) allTokens = allTokens.concat(data.result.tokenBalances);
                     pageKey = data.result?.pageKey;
                     loopCount++;
                 } while (pageKey);
 
-                // 2. FILTER ZERO & DEDUPLICATE
-                const uniqueMap = new Map();
-                
-                // Add ETH if exists
+                let tokens = allTokens.filter(t => t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000");
+
                 const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] })
                 });
                 const ethData = await ethRes.json();
                 if(ethData.result && ethData.result !== "0x0") {
-                    uniqueMap.set(ETH_PSEUDO, { contractAddress: ETH_PSEUDO, tokenBalance: ethData.result });
+                    tokens.push({ contractAddress: ETH_PSEUDO, tokenBalance: ethData.result });
                 }
 
-                // Add ERC20s (Only keep first occurence, ignore dupes)
-                for(const t of rawTokens) {
-                    if(t.tokenBalance === "0x0000000000000000000000000000000000000000000000000000000000000000") continue;
-                    const lowerCA = t.contractAddress.toLowerCase();
-                    if(!uniqueMap.has(lowerCA)) {
-                        uniqueMap.set(lowerCA, t);
-                    }
+                const uniqueMap = new Map();
+                for(const t of tokens) {
+                    uniqueMap.set(t.contractAddress.toLowerCase(), t);
                 }
+                tokens = Array.from(uniqueMap.values());
 
-                const tokens = Array.from(uniqueMap.values());
                 if (tokens.length === 0) { select.innerHTML = '<option disabled>No tokens found</option>'; return; }
 
-                // 3. METADATA (Batch)
                 loading.innerText = `Indexing ${tokens.length} tokens...`;
                 const enrichedTokens = [];
                 const metaQueue = [];
@@ -290,7 +295,6 @@
                     }
                 }
 
-                // 4. PRICES
                 loading.innerText = "Checking prices...";
                 const pricedTokens = [];
                 const chunks = [];
@@ -322,7 +326,6 @@
                     await new Promise(r=>setTimeout(r, 100));
                 }
 
-                // 5. SORT & DISPLAY
                 pricedTokens.sort((a,b) => b.usd - a.usd);
                 
                 const valued = pricedTokens.filter(t => t.usd > 0.05);
@@ -346,7 +349,8 @@
                     others.forEach(t => { 
                         const valToPass = t.ca === ETH_PSEUDO ? WETH_ADDR : t.ca;
                         const o = document.createElement('option'); o.value = valToPass; 
-                        o.innerText = `${t.symbol} (${t.bal.toFixed(4)})`;
+                        const dispSym = (t.symbol && t.symbol !== "UNK") ? t.symbol : `${t.ca.slice(0,4)}..${t.ca.slice(-4)}`;
+                        o.innerText = `${dispSym} (${t.bal.toFixed(4)})`;
                         grp.appendChild(o);
                     });
                     select.appendChild(grp);
@@ -359,6 +363,7 @@
         document.getElementById('btnFast').addEventListener('click', () => runAnalysis(500)); 
         document.getElementById('btnFull').addEventListener('click', () => runAnalysis(5000)); 
         document.getElementById('btnHistory').addEventListener('click', fetchHistoricalPrices);
+        document.getElementById('btnExport').addEventListener('click', exportData);
 
         async function runAnalysis(limit) {
             const wallet = document.getElementById('walletInput').value.trim().toLowerCase();
@@ -366,7 +371,9 @@
             
             document.getElementById('dashboard').style.display='none';
             document.getElementById('txTable').style.display='none';
+            document.getElementById('tokenHeader').style.display='none';
             document.getElementById('btnHistory').style.display='none';
+            document.getElementById('btnExport').style.display='none';
             document.getElementById('btnHistory').innerText = "🔮 Time Machine"; 
             document.getElementById('btnHistory').disabled = false;
             document.getElementById('txList').innerHTML = "";
@@ -377,21 +384,40 @@
 
             status.innerText = "Initializing...";
             
+            // 1. HEADER DATA
             try {
                 const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${currentTokenCA}`);
                 const dexData = await dexRes.json();
                 if(dexData.pairs && dexData.pairs.length > 0) {
-                    currentPricePerToken = parseFloat(dexData.pairs.find(p=>p.chainId==='base').priceUsd);
+                    const pair = dexData.pairs.find(p=>p.chainId==='base');
+                    currentPricePerToken = parseFloat(pair.priceUsd);
+                    currentTokenSymbol = pair.baseToken.symbol;
+                    
+                    // Update Header UI
+                    document.getElementById('tokenSym').innerText = currentTokenSymbol;
+                    document.getElementById('tokenPrice').innerText = `$${currentPricePerToken}`;
+                    document.getElementById('tokenImg').src = pair.info?.imageUrl || `https://dd.dexscreener.com/ds-data/tokens/base/${currentTokenCA}.png`;
+                    document.getElementById('tokenHeader').style.display = 'flex';
                 }
             } catch(e){ currentPricePerToken = 0; }
 
             const rawTxs = await fetchUnifiedTransfers(wallet, currentTokenCA, limit, status);
             status.innerText = `Analyzing ${rawTxs.length} transactions...`;
 
-            let buyTokens = 0, sellTokens = 0, recvTokens = 0, sendTokens = 0;
+            let buyT=0, sellT=0, recvT=0, sendT=0;
             const tbody = document.getElementById('txList');
 
+            let processedCount = 0;
+            const totalToProcess = rawTxs.length;
+
             for(const tx of rawTxs) {
+                processedCount++;
+                if(processedCount % 5 === 0) {
+                    const pct = Math.round((processedCount / totalToProcess) * 100);
+                    status.innerText = `Analyzing... ${pct}%`;
+                    await new Promise(r => requestAnimationFrame(r));
+                }
+
                 const myWallet = wallet.toLowerCase();
                 let category = 'IGNORE';
 
@@ -410,17 +436,21 @@
                     const date = dateObj.toLocaleDateString();
                     const timestamp = Math.floor(dateObj.getTime() / 1000); 
                     
-                    if(category === 'BUY') buyTokens += val;
-                    if(category === 'SELL') sellTokens += val;
-                    if(category === 'RECEIVE') recvTokens += val;
-                    if(category === 'SEND') sendTokens += val;
+                    if(category === 'BUY') buyT += val;
+                    if(category === 'SELL') sellT += val;
+                    if(category === 'RECEIVE') recvT += val;
+                    if(category === 'SEND') sendT += val;
 
                     globalEvents.push({
                         type: category,
                         hash: tx.hash,
                         ts: timestamp, 
                         amount: val,
-                        rowId: `tx-${tx.hash}`
+                        date: date,
+                        rowId: `tx-${tx.hash}`,
+                        rawVal: val,
+                        currVal: val * currentPricePerToken,
+                        histVal: null // Placeholder
                     });
 
                     let badge = '';
@@ -444,18 +474,18 @@
                 }
             }
 
-            document.getElementById('buyTokens').innerText = buyTokens.toLocaleString(undefined, {maximumFractionDigits:2});
-            document.getElementById('buyCurr').innerText = `$${(buyTokens * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
+            document.getElementById('buyTokens').innerText = buyT.toLocaleString(undefined, {maximumFractionDigits:2});
+            document.getElementById('buyCurr').innerText = `$${(buyT * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
             document.getElementById('buyHist').innerText = "---";
 
-            document.getElementById('sellTokens').innerText = sellTokens.toLocaleString(undefined, {maximumFractionDigits:2});
-            document.getElementById('sellCurr').innerText = `$${(sellTokens * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
+            document.getElementById('sellTokens').innerText = sellT.toLocaleString(undefined, {maximumFractionDigits:2});
+            document.getElementById('sellCurr').innerText = `$${(sellT * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
             document.getElementById('sellHist').innerText = "---";
 
-            document.getElementById('recvTokens').innerText = recvTokens.toLocaleString(undefined, {maximumFractionDigits:2});
+            document.getElementById('recvTokens').innerText = recvT.toLocaleString(undefined, {maximumFractionDigits:2});
             document.getElementById('recvHist').innerText = "---";
 
-            document.getElementById('sendTokens').innerText = sendTokens.toLocaleString(undefined, {maximumFractionDigits:2});
+            document.getElementById('sendTokens').innerText = sendT.toLocaleString(undefined, {maximumFractionDigits:2});
             document.getElementById('sendHist').innerText = "---";
 
             document.getElementById('dashboard').style.display='grid';
@@ -463,6 +493,7 @@
             
             if(globalEvents.length > 0) {
                 document.getElementById('btnHistory').style.display='flex';
+                document.getElementById('btnExport').style.display='flex';
             }
             
             status.innerText = "Analysis Complete ✅";
@@ -494,6 +525,8 @@
                         if(evt.type === 'RECEIVE') tRecv += totalValue;
                         if(evt.type === 'SEND') tSend += totalValue;
                         
+                        evt.histVal = totalValue; // Save for export
+
                         const el = document.getElementById(`usd-${evt.rowId.replace('tx-','')}`);
                         if(el) {
                             el.innerText = `$${totalValue.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
@@ -515,6 +548,47 @@
             btn.innerHTML = "✅ Time Machine";
         }
 
+        // --- EXPORT FUNCTION ---
+        function exportData() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Header Stats
+            csvContent += "WAST ANALYSIS REPORT\n";
+            csvContent += `Generated,${new Date().toLocaleString()}\n`;
+            csvContent += `Target Wallet,${document.getElementById('walletInput').value}\n`;
+            csvContent += `Token,${currentTokenSymbol} (${currentTokenCA})\n\n`;
+            
+            // Summary Table
+            csvContent += "SUMMARY STATS\n";
+            csvContent += "Category,Tokens,Historical Value ($),Current Value ($)\n";
+            
+            const getTxt = (id) => document.getElementById(id).innerText.replace('$','').replace('---','0');
+            
+            csvContent += `BUY,${getTxt('buyTokens')},${getTxt('buyHist')},${getTxt('buyCurr')}\n`;
+            csvContent += `SELL,${getTxt('sellTokens')},${getTxt('sellHist')},${getTxt('sellCurr')}\n`;
+            csvContent += `RECEIVE,${getTxt('recvTokens')},${getTxt('recvHist')},-\n`;
+            csvContent += `SEND,${getTxt('sendTokens')},${getTxt('sendHist')},-\n\n`;
+
+            // Transactions Table
+            csvContent += "TRANSACTION DETAILS\n";
+            csvContent += "Date,Type,Tokens,Value ($),Hash,Note\n";
+
+            globalEvents.forEach(evt => {
+                const val = evt.histVal ? evt.histVal.toFixed(2) : (evt.currVal ? evt.currVal.toFixed(2) + " (Curr)" : "0");
+                const note = evt.histVal ? "Historical" : "Estimated Current";
+                csvContent += `${evt.date},${evt.type},${evt.amount},${val},${evt.hash},${note}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `WAST_Report_${currentTokenSymbol}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // LOGIC HELPERS
         async function analyzeBuy(tx, wallet, targetTokenCA) {
             try {
                 const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
