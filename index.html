@@ -52,9 +52,10 @@
 
         /* LOGOUT BUTTON */
         .btn-logout { 
-            background: transparent; border: 1px solid #ddd; color: #666; 
-            padding: 8px 16px; font-size: 0.8rem; font-weight: 600; border-radius: 20px; 
+            background: #fff; border: 1px solid #ddd; color: #666; 
+            padding: 8px 20px; font-size: 0.8rem; font-weight: 700; border-radius: 20px; 
             cursor: pointer; transition: all 0.2s; display: none; /* Hidden by default */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .btn-logout:hover { background-color: #ffe5e5; color: var(--red); border-color: var(--red); }
 
@@ -138,20 +139,6 @@
             updateLinks(address);
         }
 
-        function setDisconnectedState() {
-            const btn = document.getElementById('btnConnect');
-            const btnText = document.getElementById('btnText');
-            const logoutBtn = document.getElementById('btnLogout');
-
-            btnText.innerText = "Connect Wallet";
-            btn.classList.remove('connected');
-            logoutBtn.style.display = 'none'; // Hide Logout
-            
-            localStorage.removeItem('tysm_wallet');
-            
-            updateLinks(""); // Clear params
-        }
-
         function updateLinks(address) {
             const param = address ? `?wallet=${address}` : "";
             document.getElementById('linkScanner').href = `scanner.html${param}`;
@@ -183,18 +170,21 @@
             } catch (error) {
                 console.error("Login Error:", error);
                 document.getElementById('btnText').innerText = "❌ Error";
-                setTimeout(() => { setDisconnectedState(); }, 2000);
+                // Reset after 2 seconds
+                setTimeout(() => { 
+                    document.getElementById('btnText').innerText = "Connect Wallet";
+                }, 2000);
             }
         }
 
-        function logout() {
-            if(confirm("Disconnect wallet?")) {
-                setDisconnectedState();
-            }
+        // NUCLEAR LOGOUT (Reliable)
+        function performLogout() {
+            localStorage.removeItem('tysm_wallet');
+            location.reload(); // Hard Refresh to clear state
         }
 
         document.getElementById('btnConnect').addEventListener('click', connectWallet);
-        document.getElementById('btnLogout').addEventListener('click', logout);
+        document.getElementById('btnLogout').addEventListener('click', performLogout);
         
         document.getElementById('btnTip').addEventListener('click', () => {
             alert("Tip functionality coming soon!"); 
