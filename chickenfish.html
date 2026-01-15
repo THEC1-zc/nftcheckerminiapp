@@ -87,30 +87,27 @@
         
         <div class="info">
             <h2 class="main-title">Chickens by $EGGS</h2>
-            <div class="subtitle">Sniper Bot (Proxy Mode)</div>
+            <div class="subtitle">Sniper Bot (Rarible Engine)</div>
             
             <button id="scanBtn" class="scan-btn" onclick="runSniper()">
                 <span>🔎 Scan Market</span>
             </button>
             
-            <div id="loader" class="loader">Scanning via Proxy...</div>
+            <div id="loader" class="loader">Fetching from Rarible API...</div>
             <div id="errorLog" class="error-log"></div>
 
             <div id="results" class="results-grid"></div>
         </div>
     </div>
 
-    <div class="version">v22.0 (Client-Side Proxy)</div>
+    <div class="version">v23.0 (Rarible Source)</div>
 
     <script>
-        // CONFIGURAZIONE
-        const COLLECTION = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0";
-        
-        // 1. IL TRUCCO: Usiamo un Proxy CORS pubblico per aggirare i blocchi del browser
-        const PROXY_URL = "https://api.allorigins.win/raw?url=";
-        
-        // 2. L'API DI RESERVOIR (Richiediamo i 50 più economici)
-        const TARGET_URL = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION}&sortBy=floorAskPrice&limit=50&includeAttributes=true`;
+        // RARIBLE API CONFIG
+        // Rarible usa il formato "NETWORK:ADDRESS"
+        const COLLECTION_ID = "BASE:0x84eea2be67b17698b0e09b57eeeda47aa921bbf0";
+        // Richiediamo 50 item della collezione
+        const API_URL = `https://api.rarible.org/v0.1/items/byCollection?collection=${COLLECTION_ID}&size=50`;
 
         async function runSniper() {
             const btn = document.getElementById('scanBtn');
@@ -118,33 +115,35 @@
             const results = document.getElementById('results');
             const errLog = document.getElementById('errorLog');
 
-            // Reset UI
             btn.disabled = true;
             loader.style.display = 'block';
             results.style.display = 'none';
             errLog.style.display = 'none';
 
             try {
-                // ESEGUI LA CHIAMATA PROXY (Parte dal telefono, non dal server Vercel)
-                const finalUrl = PROXY_URL + encodeURIComponent(TARGET_URL);
+                // 1. Chiamata diretta all'API pubblica di Rarible (CORS Friendly)
+                const response = await fetch(API_URL);
                 
-                const response = await fetch(finalUrl);
-                if (!response.ok) throw new Error(`Network Error: ${response.status}`);
+                if (!response.ok) throw new Error(`Rarible API Error: ${response.status}`);
                 
                 const data = await response.json();
-                const tokens = data.tokens || [];
+                const items = data.items || [];
                 
-                // --- LOGICA DI FILTRAGGIO (Golden Egg) ---
+                // 2. FILTRAGGIO
                 const bestDeals = {};
                 let foundAny = false;
 
-                for (const item of tokens) {
-                    // Check Prezzo
-                    const price = item.market?.floorAsk?.price?.amount?.native;
-                    if (!price) continue;
+                for (const item of items) {
+                    // Check se è in vendita (bestSellOrder deve esistere)
+                    const sellOrder = item.bestSellOrder;
+                    if (!sellOrder) continue;
 
-                    // Estrai Tratti
-                    const attrs = item.token.attributes || [];
+                    // Estrazione Prezzo (Rarible restituisce il valore "makePrice")
+                    const priceVal = parseFloat(sellOrder.makePrice);
+                    if (isNaN(priceVal)) continue;
+
+                    // Estrazione Tratti (Sono dentro item.meta.attributes)
+                    const attrs = item.meta?.attributes || [];
                     let level = -1;
                     let neynarScore = 0;
                     let maxChickenLevel = 0;
@@ -154,41 +153,45 @@
                         const val = parseFloat(a.value);
 
                         if (key === 'level') level = val;
+                        // Rarible potrebbe formattare i nomi diversamente, controlliamo substrings
                         if (key.includes('neynar') && key.includes('score')) neynarScore = val;
                         if (key.includes('max') && key.includes('chicken')) maxChickenLevel = val;
                     }
 
-                    // Filtra Livelli 1-5
+                    // Filtra solo Level 1-5
                     if (level < 1 || level > 5) continue;
 
-                    // CHECK SICUREZZA: Score >= 0.69 OR Whale (MaxLvl >= 3)
+                    // LOGICA GOLDEN EGG: Score >= 0.69 OR MaxLvl >= 3
                     const isSafe = (neynarScore >= 0.69) || (maxChickenLevel >= 3);
 
                     if (!isSafe) continue; // Scarta
 
-                    // Salva il migliore per questo livello
-                    if (!bestDeals[level]) {
+                    // Trovato! Salva se è il primo (Rarible non ordina sempre per prezzo, quindi controlliamo)
+                    if (!bestDeals[level] || priceVal < bestDeals[level].price) {
                         foundAny = true;
+                        // L'ID Rarible è "BASE:0x...:TOKENID", estraiamo solo l'ID numerico
+                        const tokenId = item.tokenId; 
+                        
                         bestDeals[level] = {
-                            id: item.token.tokenId,
-                            price: price,
+                            id: tokenId,
+                            price: priceVal,
                             reason: (neynarScore >= 0.69) ? `Score ${neynarScore}` : `Whale (Lvl ${maxChickenLevel})`
                         };
                     }
-                    
-                    if (Object.keys(bestDeals).length === 5) break;
                 }
 
-                // --- VISUALIZZAZIONE RISULTATI ---
+                // 3. RENDER
                 let html = "";
                 if (!foundAny) {
-                    html = `<div style="color:#666;font-size:0.9rem;margin-top:10px;">No safe deals found in top 50 listings.</div>`;
+                    html = `<div style="color:#666;font-size:0.9rem;margin-top:10px;">No safe deals found in API sample.</div>`;
                 } else {
+                    // Ordina per livello 1-5
                     for (let i = 1; i <= 5; i++) {
                         const deal = bestDeals[i];
                         if (deal) {
-                            const price = parseFloat(deal.price).toFixed(4);
-                            const link = `https://opensea.io/assets/base/${COLLECTION}/${deal.id}`;
+                            const price = deal.price.toFixed(4);
+                            // Linkiamo a OpenSea per l'acquisto (più familiare)
+                            const link = `https://opensea.io/assets/base/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0/${deal.id}`;
 
                             html += `
                             <a href="${link}" target="_blank" class="result-item">
@@ -211,7 +214,7 @@
 
             } catch (e) {
                 console.error(e);
-                errLog.innerText = `Proxy Error: ${e.message}. Try again.`;
+                errLog.innerText = `Error: ${e.message}`;
                 errLog.style.display = 'block';
                 btn.innerText = "⚠️ Retry";
             } finally {
