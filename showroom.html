@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Showroom v1.1</title>
+    <title>Showroom v1.2</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -86,8 +86,10 @@
         }
         .buy-btn:hover { background-color: var(--primary); }
 
-        .error-msg { color: var(--red); text-align: center; font-weight: 600; font-size: 0.9rem; display: none; padding: 20px; background: #fff5f5; border-radius: 10px; }
-        
+        .error-container { display: none; text-align: center; padding: 20px; background: #fff5f5; border-radius: 12px; border: 1px dashed var(--red); }
+        .error-msg { color: var(--red); font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; display: block; }
+        .fallback-btn { background-color: var(--red); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem; display: inline-block; }
+
         .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 25px; font-weight: 800; font-family: monospace; opacity: 0.8; }
     </style>
 </head>
@@ -103,21 +105,25 @@
 
         <div id="loader">
             <div class="loading-spinner"></div>
-            <div class="loading-text">Connecting via AllOrigins...</div>
+            <div class="loading-text">Connecting via Secure Proxy...</div>
         </div>
         
-        <div id="error" class="error-msg"></div>
+        <div id="errorBox" class="error-container">
+            <span id="errorText" class="error-msg"></span>
+            <a href="https://opensea.io/collection/tysm-1?search[sortAscending]=true&search[sortBy]=UNIT_PRICE" target="_blank" class="fallback-btn">⚠️ Open OpenSea Floor</a>
+        </div>
 
         <div id="grid" class="nft-grid"></div>
         
-        <div class="version-tag">Showroom v1.1</div>
+        <div class="version-tag">Showroom v1.2</div>
     </div>
 
     <script>
         const COLLECTION_ADDR = "0x160650efd60032aa49bbec70920a870aacffdc39".toLowerCase(); 
         
-        // NEW PROXY STRATEGY: AllOrigins (More robust than corsproxy.io for JSON)
-        const PROXY_BASE = "https://api.allorigins.win/get?url=";
+        // PROXY STRATEGY: AllOrigins RAW + Encoded URL
+        // We use 'raw' to avoid JSON wrapping and strict encoding to avoid 400 errors
+        const PROXY_BASE = "https://api.allorigins.win/raw?url=";
         const TARGET_API = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=20&includeAttributes=false`;
 
         window.addEventListener('DOMContentLoaded', fetchShowroom);
@@ -125,26 +131,21 @@
         async function fetchShowroom() {
             const grid = document.getElementById('grid');
             const loader = document.getElementById('loader');
-            const errorDiv = document.getElementById('error');
+            const errorBox = document.getElementById('errorBox');
+            const errorText = document.getElementById('errorText');
 
             try {
-                // Add timestamp to prevent caching
-                const freshUrl = TARGET_API + `&_t=${new Date().getTime()}`;
-                const fullUrl = PROXY_BASE + encodeURIComponent(freshUrl);
+                // Strict Encoding ensures & and ? are passed as data, not as proxy params
+                const safeUrl = PROXY_BASE + encodeURIComponent(TARGET_API);
                 
-                const res = await fetch(fullUrl);
+                const res = await fetch(safeUrl);
                 if (!res.ok) throw new Error(`Proxy Error: ${res.status}`);
                 
-                const wrapper = await res.json();
-                
-                // AllOrigins returns the actual data inside "contents" string
-                if (!wrapper.contents) throw new Error("Empty response from proxy");
-                
-                const data = JSON.parse(wrapper.contents);
+                const data = await res.json();
 
-                if(!data.tokens || data.tokens.length === 0) throw new Error("No items returned from API");
+                if(!data.tokens || data.tokens.length === 0) throw new Error("No data returned from API");
 
-                // 1. Filter: Keep only valid listings (price > 0)
+                // FILTER
                 const listedItems = data.tokens.filter(item => {
                     return item.market && 
                            item.market.floorAsk && 
@@ -152,14 +153,14 @@
                            item.market.floorAsk.price.amount.native > 0;
                 });
 
-                if(listedItems.length === 0) throw new Error("No active listings found.");
+                if(listedItems.length === 0) throw new Error("No listed items found.");
 
-                // 2. Slice: Take Top 3
+                // TOP 3
                 const top3 = listedItems.slice(0, 3);
 
                 loader.style.display = 'none';
 
-                // 3. Render
+                // RENDER
                 let rank = 1;
                 top3.forEach(item => {
                     const token = item.token;
@@ -178,7 +179,7 @@
                     const card = document.createElement('div');
                     card.className = 'nft-card';
                     card.innerHTML = `
-                        <div class="nft-rank">#${rank} Lowest</div>
+                        <div class="nft-rank">#${rank} Deal</div>
                         <div class="nft-img-container">
                             <img src="${imgUrl}" class="nft-img" alt="NFT" onerror="this.src='https://placehold.co/400x400?text=Err'">
                         </div>
@@ -191,7 +192,7 @@
                                 <div class="price-usd">$${priceUsd.toFixed(2)}</div>
                             </div>
 
-                            <a href="${openseaLink}" target="_blank" class="buy-btn">Buy on OpenSea</a>
+                            <a href="${openseaLink}" target="_blank" class="buy-btn">Buy on OpenSea ↗</a>
                         </div>
                     `;
                     grid.appendChild(card);
@@ -201,8 +202,8 @@
             } catch(e) {
                 console.error(e);
                 loader.style.display = 'none';
-                errorDiv.innerText = `⚠️ Ops: ${e.message}. Try reloading.`;
-                errorDiv.style.display = 'block';
+                errorText.innerText = `Ops: ${e.message}. Try reloading.`;
+                errorBox.style.display = 'block';
             }
         }
     </script>
