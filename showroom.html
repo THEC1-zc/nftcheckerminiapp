@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Showroom v1.7</title>
+    <title>Showroom v1.8</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -34,14 +34,14 @@
         .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
         .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
         
-        .container { background: var(--card-bg); padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 500px; box-sizing: border-box; text-align: center; }
+        .container { background: var(--card-bg); padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 500px; box-sizing: border-box; text-align: center; min-height: 400px; }
 
         h2 { margin: 0; font-weight: 900; color: #333; font-size: 1.6rem; margin-bottom: 5px; }
         .subtitle { color: #666; font-size: 0.9rem; margin-bottom: 30px; }
 
         .loading-spinner { 
             border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%;
-            width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 40px auto;
+            width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 60px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -51,7 +51,7 @@
             border: 1px solid #eee;
             border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.08);
             max-width: 340px;
             margin: 0 auto;
             position: relative;
@@ -67,7 +67,8 @@
         }
 
         .img-wrapper {
-            width: 100%; aspect-ratio: 1/1; background: #f8f9fa; position: relative; overflow: hidden;
+            width: 100%; aspect-ratio: 1/1; background: #f0f2f5; position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
         }
         .collection-img {
             width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;
@@ -84,8 +85,8 @@
             display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee;
         }
         .price-col { display: flex; flex-direction: column; }
-        .lbl { font-size: 0.7rem; font-weight: 700; color: #999; text-transform: uppercase; }
-        .eth-val { font-size: 1.3rem; font-weight: 900; color: var(--primary); }
+        .lbl { font-size: 0.65rem; font-weight: 700; color: #999; text-transform: uppercase; }
+        .eth-val { font-size: 1.4rem; font-weight: 900; color: var(--primary); }
         .usd-val { font-size: 1rem; font-weight: 600; color: #555; text-align: right; }
 
         .action-btn {
@@ -93,6 +94,7 @@
             background: #1a1a1a; color: white; text-decoration: none;
             font-weight: 700; text-align: center; font-size: 1rem;
             transition: background 0.2s, transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-sizing: border-box;
         }
         .action-btn:hover { background: var(--primary); transform: translateY(-2px); }
 
@@ -117,7 +119,7 @@
         <div id="card" class="deal-card">
             <div class="deal-badge">Current Floor</div>
             <div class="img-wrapper">
-                <img id="nftImg" class="collection-img" src="" alt="Collection Image">
+                <img id="nftImg" class="collection-img" src="" alt="NFT Image">
             </div>
             <div class="info-box">
                 <div id="collName" class="coll-name">Loading...</div>
@@ -138,7 +140,7 @@
             </div>
         </div>
         
-        <div class="version-tag">v1.7 (Smart Img)</div>
+        <div class="version-tag">v1.8 (Deep Scan Img)</div>
     </div>
 
     <script>
@@ -153,59 +155,66 @@
             const errorBox = document.getElementById('error');
 
             try {
-                // 1. ETH Price (Coinbase)
+                // 1. Get ETH Price (Coinbase)
                 const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
                 const priceJson = await priceRes.json();
                 const ethPrice = parseFloat(priceJson.data.amount);
 
-                // 2. Collection Metadata (Alchemy)
+                // 2. Metadata (Name & Image)
+                // We use two strategies here:
+                // A. Check Collection Metadata
+                // B. If no image, fetch the first existing NFT in the collection
+                
+                let collName = "Collection";
+                let imageUrl = "";
+
+                // Call A: Collection Metadata
                 const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${COLLECTION_ADDR}`;
                 const metaRes = await fetch(metaUrl);
                 const metaData = await metaRes.json();
+                
+                collName = metaData.name || "Unknown Collection";
+                if(metaData.openSea && metaData.openSea.imageUrl) {
+                    imageUrl = metaData.openSea.imageUrl;
+                }
 
-                // 3. Floor Price (Alchemy)
+                // Call B: Deep Scan if image is missing
+                if (!imageUrl) {
+                    try {
+                        // "getNftsForContract" with pageSize=1 returns the first actual NFT it finds
+                        const deepUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftsForContract?contractAddress=${COLLECTION_ADDR}&pageSize=1`;
+                        const deepRes = await fetch(deepUrl);
+                        const deepData = await deepRes.json();
+                        
+                        if(deepData.nfts && deepData.nfts.length > 0) {
+                            const nft = deepData.nfts[0];
+                            // Try all image fields
+                            imageUrl = nft.image.cachedUrl || nft.image.originalUrl || nft.image.pngUrl;
+                        }
+                    } catch(err) { console.warn("Deep scan failed"); }
+                }
+
+                // Final Fallback
+                if (!imageUrl) imageUrl = "https://placehold.co/600x600?text=No+Preview";
+
+                // 3. Floor Price
                 const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION_ADDR}`;
                 const floorRes = await fetch(floorUrl);
                 const floorData = await floorRes.json();
-
-                // --- SMART IMAGE LOGIC ---
-                let imageUrl = metaData.openSea?.imageUrl; // Try Collection Image first
-
-                // If Collection Image is missing, fetch Token #1 Image as fallback
-                if (!imageUrl) {
-                    try {
-                        // Fetch Token #1
-                        const nftUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftMetadata?contractAddress=${COLLECTION_ADDR}&tokenId=1`;
-                        const nftRes = await fetch(nftUrl);
-                        const nftData = await nftRes.json();
-                        
-                        // Try various image sources in order
-                        if(nftData.image) {
-                            imageUrl = nftData.image.cachedUrl || nftData.image.originalUrl || nftData.image.pngUrl;
-                        }
-                    } catch(err) {
-                        console.warn("Fallback image fetch failed");
-                    }
-                }
-                // Final Fallback if everything fails
-                if (!imageUrl) imageUrl = "https://placehold.co/600x600?text=No+Image";
-
-                // --- DATA PROCESSING ---
-                const collectionName = metaData.name || "Unknown Collection";
+                
                 const floorEth = floorData.openSea?.floorPrice || 0;
                 const floorUsd = floorEth * ethPrice;
 
-                // OpenSea Sorted Link
-                const osLink = `https://opensea.io/assets/base/${COLLECTION_ADDR}?search[sortAscending]=true&search[sortBy]=UNIT_PRICE`;
-
-                // --- RENDER ---
+                // --- UI UPDATE ---
                 document.getElementById('nftImg').src = imageUrl;
                 document.getElementById('nftImg').onerror = function() { this.src = 'https://placehold.co/600x600?text=Err'; };
                 
-                document.getElementById('collName').innerText = collectionName;
+                document.getElementById('collName').innerText = collName;
                 document.getElementById('priceEth').innerText = `${floorEth.toFixed(4)} Ξ`;
                 document.getElementById('priceUsd').innerText = `$${floorUsd.toFixed(2)}`;
-                document.getElementById('buyLink').href = osLink;
+                
+                // Sorted Link
+                document.getElementById('buyLink').href = `https://opensea.io/assets/base/${COLLECTION_ADDR}?search[sortAscending]=true&search[sortBy]=UNIT_PRICE`;
 
                 loader.style.display = 'none';
                 card.style.display = 'block';
@@ -213,7 +222,7 @@
             } catch(e) {
                 console.error(e);
                 loader.style.display = 'none';
-                errorBox.innerText = "Impossibile caricare i dati. Riprova.";
+                errorBox.innerText = "Impossibile recuperare i dati. Riprova più tardi.";
                 errorBox.style.display = 'block';
             }
         }
