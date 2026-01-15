@@ -34,7 +34,6 @@
         h2 { text-align: center; margin: 0 0 5px 0; font-weight: 900; font-size: 1.8rem; text-shadow: 0 2px 0 rgba(255,255,255,0.5); }
         .subtitle { text-align: center; color: #795548; font-size: 0.8rem; margin-bottom: 20px; font-weight: 600; opacity: 0.8; }
 
-        /* GRID SYSTEM per i 5 Box */
         .sniper-grid { display: flex; flex-direction: column; gap: 15px; }
 
         .sniper-card {
@@ -45,23 +44,13 @@
             transition: transform 0.2s;
         }
         
-        /* Badge Livello */
-        .level-indicator {
-            position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
-            background: #ccc; 
-        }
-        .lvl-1 { background: #bdc3c7; } /* Grey */
-        .lvl-2 { background: #2ecc71; } /* Green */
-        .lvl-3 { background: #3498db; } /* Blue */
-        .lvl-4 { background: #9b59b6; } /* Purple */
-        .lvl-5 { background: #f1c40f; } /* Gold */
+        .level-indicator { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; }
+        .lvl-1 { background: #bdc3c7; } .lvl-2 { background: #2ecc71; } .lvl-3 { background: #3498db; }
+        .lvl-4 { background: #9b59b6; } .lvl-5 { background: #f1c40f; }
 
-        .nft-thumb { 
-            width: 80px; height: 80px; border-radius: 12px; object-fit: cover; background: #eee; flex-shrink: 0; 
-        }
+        .nft-thumb { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; background: #eee; flex-shrink: 0; }
 
         .card-info { flex-grow: 1; }
-        
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
         .nft-name { font-weight: 800; font-size: 0.95rem; color: #222; }
         .nft-id { font-size: 0.7rem; color: #999; font-family: monospace; }
@@ -81,14 +70,10 @@
             white-space: nowrap;
         }
 
-        /* Empty State */
-        .empty-card { 
-            opacity: 0.6; filter: grayscale(1); pointer-events: none; 
-            border: 2px dashed #ccc; background: transparent; 
-        }
-
+        .empty-card { opacity: 0.6; filter: grayscale(1); pointer-events: none; border: 2px dashed #ccc; background: transparent; }
         .loading-text { text-align: center; margin: 40px; font-weight: 600; color: #888; }
         .version { text-align: center; margin-top: 30px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
+        .error-log { color: red; font-size: 0.7rem; text-align: center; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -99,55 +84,105 @@
 
     <div class="container">
         <h2>Smart Sniper</h2>
-        <div class="subtitle">Filtered by Neynar Score & Whales</div>
+        <div class="subtitle">Safe Listings (Score &ge; 0.69 or Whale)</div>
 
-        <div id="loader" class="loading-text">Hunting for deals...</div>
+        <div id="loader" class="loading-text">Scanning Market...</div>
+        <div id="errorLog" class="error-log"></div>
 
-        <div id="grid" class="sniper-grid" style="display: none;">
-            </div>
+        <div id="grid" class="sniper-grid" style="display: none;"></div>
 
-        <div class="version">v10.0 (Vercel Bridge)</div>
+        <div class="version">v11.0 (Standalone Proxy)</div>
     </div>
 
     <script>
-        // Indirizzo Collezione per Link OpenSea
         const COLLECTION_ADDR = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0";
+        // PROXY PUBBLICO per evitare blocchi CORS e Backend
+        const PROXY_URL = "https://api.allorigins.win/raw?url=";
+        const RESERVOIR_API = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=100&includeAttributes=true`;
 
         window.addEventListener('DOMContentLoaded', startSniper);
 
         async function startSniper() {
             const loader = document.getElementById('loader');
             const grid = document.getElementById('grid');
+            const errLog = document.getElementById('errorLog');
 
             try {
-                // 1. Chiama la nostra API su Vercel (Backend)
-                // Questa chiamata non fallisce per CORS e nasconde la logica complessa
-                const res = await fetch('/api/sniper');
-                const bestDeals = await res.json();
-
-                if (bestDeals.error) throw new Error(bestDeals.error);
-
-                // 2. Genera le 5 card
-                let html = "";
+                // 1. Fetch via Proxy Pubblico
+                const targetUrl = PROXY_URL + encodeURIComponent(RESERVOIR_API);
+                const res = await fetch(targetUrl);
                 
+                if (!res.ok) throw new Error("Connection Error");
+                const data = await res.json();
+                
+                const tokens = data.tokens || [];
+                const bestDeals = { 1: null, 2: null, 3: null, 4: null, 5: null };
+
+                // 2. FILTRARE I RISULTATI (Logica Golden Egg)
+                for (const item of tokens) {
+                    // Check listing price
+                    const price = item.market?.floorAsk?.price?.amount?.native;
+                    if (!price) continue;
+
+                    // Extract Traits
+                    const attrs = item.token.attributes || [];
+                    let level = -1;
+                    let neynarScore = 0;
+                    let maxChickenLevel = 0;
+
+                    for (const a of attrs) {
+                        const key = (a.key || "").toLowerCase();
+                        const val = parseFloat(a.value);
+                        
+                        if (key === 'level') level = val;
+                        // Cerchiamo qualsiasi variante del nome del tratto
+                        if (key.includes('neynar') && key.includes('score')) neynarScore = val;
+                        if (key.includes('max') && key.includes('chicken')) maxChickenLevel = val;
+                    }
+
+                    // Check Level 1-5
+                    if (level < 1 || level > 5) continue;
+
+                    // --- IL FILTRO DI SICUREZZA ---
+                    // Accetta se: Score >= 0.69 OPPURE MaxLevel >= 3
+                    const isSafe = (neynarScore >= 0.69) || (maxChickenLevel >= 3);
+                    if (!isSafe) continue;
+
+                    // Salva se è il primo (il più economico) che troviamo per questo livello
+                    if (!bestDeals[level]) {
+                        bestDeals[level] = {
+                            id: item.token.tokenId,
+                            image: item.token.image,
+                            priceEth: price,
+                            priceUsd: item.market.floorAsk.price.amount.usd,
+                            score: neynarScore,
+                            maxLvl: maxChickenLevel
+                        };
+                    }
+                }
+
+                // 3. RENDERIZZARE I RISULTATI
+                let html = "";
                 for (let i = 1; i <= 5; i++) {
                     const item = bestDeals[i];
                     
                     if (item) {
-                        // Abbiamo un listing valido!
-                        const reason = item.score >= 0.69 ? `Score: ${item.score}` : `Whale (Lvl ${item.maxLvl})`;
+                        const reason = item.score >= 0.69 ? `Score: ${item.score}` : `Whale (MaxLvl ${item.maxLvl})`;
                         const eth = parseFloat(item.priceEth).toFixed(4);
                         const usd = item.priceUsd ? `$${item.priceUsd.toFixed(2)}` : '---';
                         const link = `https://opensea.io/assets/base/${COLLECTION_ADDR}/${item.id}`;
                         
-                        // Fix immagine se arriva da IPFS
-                        let img = item.image || "https://placehold.co/100x100?text=No+Img";
-                        if(img.startsWith('ipfs://')) img = img.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                        // Fix Immagine
+                        let img = item.image || "l5.jpeg"; 
+                        if(img && img.startsWith('ipfs://')) img = img.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                        
+                        // Fallback su errore caricamento immagine
+                        const imgTag = `<img src="${img}" class="nft-thumb" onerror="this.src='l5.jpeg'">`;
 
                         html += `
                         <div class="sniper-card">
                             <div class="level-indicator lvl-${i}"></div>
-                            <img src="${img}" class="nft-thumb" onerror="this.src='https://placehold.co/100?text=Err'">
+                            ${imgTag}
                             
                             <div class="card-info">
                                 <div class="card-header">
@@ -164,29 +199,6 @@
                             <a href="${link}" target="_blank" class="buy-btn">BUY</a>
                         </div>`;
                     } else {
-                        // Nessun listing valido per questo livello
                         html += `
                         <div class="sniper-card empty-card">
-                            <div class="level-indicator lvl-${i}"></div>
-                            <div class="nft-thumb" style="display:flex;align-items:center;justify-content:center;font-size:2rem;">🚫</div>
-                            <div class="card-info">
-                                <div class="nft-name">Level ${i}</div>
-                                <div class="price-row"><span class="usd-price">No safe listing found</span></div>
-                            </div>
-                        </div>`;
-                    }
-                }
-
-                grid.innerHTML = html;
-                loader.style.display = 'none';
-                grid.style.display = 'flex';
-
-            } catch (e) {
-                console.error(e);
-                loader.innerText = "Error loading data via Bridge.";
-                loader.style.color = "red";
-            }
-        }
-    </script>
-</body>
-</html>
+                            <div class="level-indicator lvl
