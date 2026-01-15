@@ -96,26 +96,29 @@
 
     <div class="container">
         <h2>Chickenfish Market</h2>
-        <div class="subtitle">Best Price per Level (1-5)</div>
+        <div class="subtitle">Best Listing per Level (1-5)</div>
 
         <div id="loader" class="loading-container">
             <div class="loading-spinner"></div>
-            <div class="loading-text">Fetching Market Data...</div>
+            <div class="loading-text">Scanning Market Prices...</div>
         </div>
         
         <div id="error" class="error-msg"></div>
 
         <div id="list" class="nft-list"></div>
         
-        <div class="version-tag">v3.0 (Rarible Engine)</div>
+        <div class="version-tag">v3.1 (Direct API)</div>
     </div>
 
     <script>
-        const COLLECTION_ADDR = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0"; // Chickenfish Base
-        const RARIBLE_COLLECTION = `BASE:${COLLECTION_ADDR}`;
+        const COLLECTION_ADDR = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0";
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
+        
+        // RESERVOIR DIRECT (No Proxy, using Public Demo Key)
+        // This is the most robust way to get listings without 530/400 proxy errors
+        const BASE_API = "https://api-base.reservoir.tools/tokens/v6";
 
-        // State to track if we found a deal for each level
+        // State to track the BEST deal found for each level
         const bestDeals = { 1: null, 2: null, 3: null, 4: null, 5: null };
         let ethPrice = 0;
 
@@ -128,42 +131,52 @@
             const loadingText = document.querySelector('.loading-text');
 
             try {
-                // 1. Get ETH Price first
+                // 1. Get ETH Price
                 const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
                 const priceJson = await priceRes.json();
                 ethPrice = parseFloat(priceJson.data.amount);
 
-                // 2. Fetch Listings from Rarible (Sorted by Price Low -> High)
-                // We fetch 50 items to have a good sample size to filter from
-                loadingText.innerText = "Scanning Lowest Prices...";
-                const raribleUrl = `https://api.rarible.org/v0.1/items/byCollection?collection=${RARIBLE_COLLECTION}&sort=PRICE_LOW_TO_HIGH&size=50`;
+                // 2. Fetch Listings from Reservoir (Direct)
+                loadingText.innerText = "Finding Lowest Listings...";
                 
-                const res = await fetch(raribleUrl);
-                if(!res.ok) throw new Error("Market Data API Error");
+                // Construct URL
+                const params = new URLSearchParams({
+                    collection: COLLECTION_ADDR,
+                    sortBy: "floorAskPrice",
+                    limit: "50", // Analyze top 50 cheapest
+                    includeAttributes: "true",
+                    includeTopBid: "false"
+                });
+
+                const res = await fetch(`${BASE_API}?${params.toString()}`, {
+                    headers: {
+                        'x-api-key': 'demo-api-key', // Public key to avoid rate limits
+                        'accept': '*/*'
+                    }
+                });
+
+                if(!res.ok) throw new Error(`Market API Error: ${res.status}`);
                 const data = await res.json();
 
-                if(!data.items || data.items.length === 0) throw new Error("No listings found.");
+                if(!data.tokens || data.tokens.length === 0) throw new Error("No listings found on market.");
 
                 loadingText.innerText = "Analyzing Traits & Rep...";
 
                 // 3. Filter Logic
                 let foundCount = 0;
 
-                for (const item of data.items) {
-                    // Check if actually on sale (has a price)
-                    if (!item.bestSellOrder || !item.bestSellOrder.makePrice) continue;
+                for (const item of data.tokens) {
+                    // Skip if no price
+                    if (!item.market?.floorAsk?.price?.amount?.native) continue;
                     
-                    const priceNative = parseFloat(item.bestSellOrder.makePrice);
-                    const tokenId = item.tokenId;
+                    const priceNative = item.market.floorAsk.price.amount.native;
+                    const tokenId = item.token.tokenId;
                     
                     // --- TRAIT ANALYSIS ---
-                    // Try to get traits from Rarible metadata first
                     let level = -1;
                     let neynarScore = -1;
-                    const meta = item.meta || {};
-                    const attrs = meta.attributes || [];
+                    const attrs = item.token.attributes || [];
 
-                    // Look for traits in Rarible data
                     for (const a of attrs) {
                         const key = (a.key || "").toLowerCase();
                         const val = a.value;
@@ -171,31 +184,16 @@
                         if (key.includes("neynar") || key.includes("score")) neynarScore = parseFloat(val);
                     }
 
-                    // Fallback: Check Name if trait missing
-                    if (level === -1 && meta.name) {
-                        const m = meta.name.match(/Lvl\s?(\d+)/i) || meta.name.match(/Level\s?(\d+)/i);
+                    // Fallback: Check Name
+                    if (level === -1 && item.token.name) {
+                        const m = item.token.name.match(/Lvl\s?(\d+)/i) || item.token.name.match(/Level\s?(\d+)/i);
                         if (m) level = parseInt(m[1]);
-                    }
-
-                    // If critical data missing, fetch from Alchemy (Slower but accurate)
-                    if (level === -1) {
-                         try {
-                            const alcUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftMetadata?contractAddress=${COLLECTION_ADDR}&tokenId=${tokenId}`;
-                            const alcRes = await fetch(alcUrl);
-                            const alcData = await alcRes.json();
-                            const alcAttrs = alcData.raw?.metadata?.attributes || [];
-                            for (const a of alcAttrs) {
-                                const key = (a.trait_type || "").toLowerCase();
-                                if (key.includes("level")) level = parseInt(a.value);
-                                if (key.includes("neynar")) neynarScore = parseFloat(a.value);
-                            }
-                        } catch(e) {}
                     }
 
                     // --- FILTER 1: LEVEL 1-5 ---
                     if (level < 1 || level > 5) continue;
                     
-                    // If we already have a deal for this level, SKIP (because we sorted by low price, first is best)
+                    // If we already have a deal for this level, SKIP (First one is cheapest due to sort)
                     if (bestDeals[level]) continue;
 
                     // --- FILTER 2: REPUTATION ---
@@ -204,13 +202,11 @@
                         reason = `Rep Score ${neynarScore}`;
                     } else {
                         // Check Whale Seller via Alchemy
-                        const seller = item.bestSellOrder.maker;
-                        // Use slice to convert Rarible address format "TEZOS:..." or "ETHEREUM:..." to raw hex if needed
-                        // Usually Rarible returns "ETHEREUM:0x..." for Base too.
-                        const rawSeller = seller.split(":")[1] || seller;
+                        // NOTE: Reservoir gives us the "maker" (seller) address
+                        const seller = item.market.floorAsk.maker;
                         
-                        // Only check wallet if we really need this level
-                        const isWhale = await checkSellerWallet(rawSeller);
+                        // Async check only if needed
+                        const isWhale = await checkSellerWallet(seller);
                         if (isWhale) reason = "Whale Seller";
                     }
 
@@ -218,30 +214,36 @@
                     if (reason) {
                         bestDeals[level] = {
                             tokenId: tokenId,
-                            name: meta.name || `Chickenfish #${tokenId}`,
-                            image: (meta.content && meta.content[0]) ? meta.content[0].url : '',
+                            name: item.token.name || `Chickenfish #${tokenId}`,
+                            image: item.token.image || '',
                             price: priceNative,
                             reason: reason
                         };
                         foundCount++;
-                        // Render immediately
-                        renderCard(listDiv, bestDeals[level], level);
                     }
 
-                    // Optimization: stop if we found 1-5
                     if (foundCount >= 5) break;
                 }
 
                 loader.style.display = 'none';
+
                 if (foundCount === 0) {
-                    errorDiv.innerText = "No deals found matching Rep/Level criteria in top 50 listings.";
+                    errorDiv.innerText = "No deals found matching criteria in cheapest 50 items.";
                     errorDiv.style.display = 'block';
+                    return;
+                }
+
+                // 4. Render Available Levels (1-5)
+                for (let i = 1; i <= 5; i++) {
+                    if (bestDeals[i]) {
+                        renderCard(listDiv, bestDeals[i], i);
+                    }
                 }
 
             } catch (e) {
                 console.error(e);
                 loader.style.display = 'none';
-                errorDiv.innerText = `Error: ${e.message}`;
+                errorDiv.innerText = `Error: ${e.message}. Please reload.`;
                 errorDiv.style.display = 'block';
             }
         }
@@ -262,21 +264,18 @@
         }
 
         function renderCard(container, data, level) {
-            // Clean Image URL
             let imgUrl = data.image || 'https://placehold.co/150x150?text=No+Img';
-            if (imgUrl.startsWith('ipfs://')) imgUrl = imgUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+            // Simple IPFS fix for Reservoir URLs if needed
+            if (imgUrl.includes("ipfs") && !imgUrl.startsWith("http")) {
+                 imgUrl = `https://ipfs.io/ipfs/${imgUrl.replace("ipfs://", "")}`;
+            }
             
-            // Badge Style
             const badgeClass = data.reason.includes("Score") ? "rep-ok" : "rep-whale";
-            
-            // Price Calc
             const usdVal = data.price * ethPrice;
-
-            // Direct OpenSea Item Link
             const link = `https://opensea.io/assets/base/${COLLECTION_ADDR}/${data.tokenId}`;
 
             const html = `
-            <div class="nft-card" style="order: ${level};">
+            <div class="nft-card">
                 <div class="level-badge">LEVEL ${level}</div>
                 <img src="${imgUrl}" class="nft-img" onerror="this.src='https://placehold.co/150x150?text=Err'">
                 
