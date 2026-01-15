@@ -32,43 +32,34 @@
         .card {
             background: var(--card-bg); width: 100%; max-width: 400px;
             border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(62, 39, 35, 0.1);
-            text-align: center; padding-bottom: 20px;
+            text-align: center; padding-bottom: 30px;
         }
 
-        .img-wrapper { width: 100%; height: 300px; background: #eee; position: relative; }
+        /* Immagine Locale */
+        .img-wrapper { width: 100%; height: 320px; background: #eee; position: relative; }
         .coll-img { width: 100%; height: 100%; object-fit: cover; }
 
-        .info { padding: 20px; }
-        .main-title { font-size: 1.6rem; font-weight: 900; margin: 0 0 5px 0; color: #222; }
-        .subtitle { color: #888; font-size: 0.8rem; margin-bottom: 20px; }
+        .info { padding: 25px 20px; }
+        .main-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 5px 0; color: #222; }
+        .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 25px; }
 
+        /* Stats Grid */
         .stats-row { 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px;
         }
-        .stat-box { background: #f8f9fa; padding: 10px; border-radius: 12px; border: 1px solid #eee; }
-        .stat-val { font-size: 1.1rem; font-weight: 900; color: #3e2723; }
-        .stat-lbl { font-size: 0.65rem; color: #aaa; text-transform: uppercase; font-weight: 700; }
+        .stat-box { background: #f8f9fa; padding: 15px; border-radius: 16px; border: 1px solid #eee; }
+        .stat-val { font-size: 1.3rem; font-weight: 900; color: #3e2723; }
+        .stat-lbl { font-size: 0.7rem; color: #aaa; text-transform: uppercase; font-weight: 700; margin-top: 5px;}
 
-        .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; font-weight: 700; margin-bottom: 10px; display: block; }
-        
-        .links-grid { 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; 
-            padding: 0 20px; margin-bottom: 10px; 
-        }
-
-        .filter-btn {
-            background: #fff8e1; border: 1px solid #ffe082; color: #3e2723;
-            padding: 12px; border-radius: 12px; text-decoration: none;
-            font-weight: 700; font-size: 0.9rem; transition: background 0.2s;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .filter-btn:hover { background: #ffecb3; transform: translateY(-2px); }
-
+        /* Pulsante Unico */
         .main-btn {
-            display: block; margin: 10px 20px; padding: 15px;
-            background: #3e2723; color: white; border-radius: 14px;
-            text-decoration: none; font-weight: 700;
+            display: block; width: 100%; padding: 18px; 
+            background: #3e2723; color: white; border-radius: 16px;
+            text-decoration: none; font-weight: 700; font-size: 1.1rem;
+            box-shadow: 0 5px 15px rgba(62, 39, 35, 0.2);
+            transition: transform 0.2s; box-sizing: border-box;
         }
+        .main-btn:hover { background: #5d4037; transform: translateY(-2px); }
 
         .loading { margin: 50px auto; font-weight: 600; color: #aaa; }
         .version { margin-top: 30px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
@@ -80,16 +71,16 @@
         <a href="index.html" class="back-btn">⬅ Home</a>
     </div>
 
-    <div id="loader" class="loading">Loading Chickens...</div>
+    <div id="loader" class="loading">Loading Data...</div>
 
     <div id="content" class="card" style="display: none;">
         <div class="img-wrapper">
-            <img id="collImg" class="coll-img" src="" onerror="this.src='https://placehold.co/400x400?text=Chicken'">
+            <img class="coll-img" src="l5.jpg" onerror="this.src='https://placehold.co/400x400?text=Chicken'">
         </div>
         
         <div class="info">
-            <h2 id="collNameTitle">Chickens by $EGGS</h2>
-            <div class="subtitle">Base Network • Verified</div>
+            <h2 class="main-title">Chickens by $EGGS</h2>
+            <div class="subtitle">Base Network</div>
 
             <div class="stats-row">
                 <div class="stat-box">
@@ -102,80 +93,47 @@
                 </div>
             </div>
 
-            <span class="label">SNIPE BY LEVEL</span>
-            <div class="links-grid">
-                <a id="link1" href="#" target="_blank" class="filter-btn">Level 1 ⚡</a>
-                <a id="link2" href="#" target="_blank" class="filter-btn">Level 2 ⚡</a>
-                <a id="link3" href="#" target="_blank" class="filter-btn">Level 3 ⚡</a>
-                <a id="link4" href="#" target="_blank" class="filter-btn">Level 4 ⚡</a>
-            </div>
-            <a id="link5" href="#" target="_blank" class="main-btn">Find Level 5 (Rare) 💎</a>
+            <a href="https://opensea.io/collection/chickens-by-eggs" target="_blank" class="main-btn">Check on OpenSea 🌊</a>
         </div>
     </div>
 
-    <div class="version">v8.0 (Hardcoded Data Fix)</div>
+    <div class="version">v9.0 (Simple Hub)</div>
 
     <script>
         // CONFIG
         const COLLECTION = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0".toLowerCase();
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
-        
-        // OPENSEA SLUG CORRETTO (Hardcoded per sicurezza)
-        const OS_SLUG = "chickens-by-eggs"; 
 
         window.addEventListener('DOMContentLoaded', initApp);
 
         async function initApp() {
             try {
-                // 1. Fetch Specific Image (Token #8846) as requested
-                const tokenUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftMetadata?contractAddress=${COLLECTION}&tokenId=8846`;
-                
-                // 2. Fetch Floor Price & Stats
+                // Fetch Floor Price & Stats (Solo dati numerici, veloci e sicuri)
                 const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION}`;
                 const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${COLLECTION}`;
 
-                // Parallel Fetch
-                const [tokenRes, floorRes, metaRes] = await Promise.all([
-                    fetch(tokenUrl),
+                const [floorRes, metaRes] = await Promise.all([
                     fetch(floorUrl),
                     fetch(metaUrl)
                 ]);
 
-                const tokenData = await tokenRes.json();
                 const floorData = await floorRes.json();
                 const metaData = await metaRes.json();
 
-                // --- UI UPDATE ---
-                
-                // Image Handling
-                let imgUrl = tokenData.image?.cachedUrl || tokenData.image?.originalUrl;
-                if(imgUrl && imgUrl.startsWith('ipfs://')) imgUrl = imgUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
-                document.getElementById('collImg').src = imgUrl || "https://placehold.co/400x400?text=Chicken";
-
-                // Floor Price & Supply
+                // UI UPDATE
                 const floor = floorData.openSea?.floorPrice || 0;
                 document.getElementById('floorEth').innerText = `${floor.toFixed(4)} Ξ`;
                 document.getElementById('supply').innerText = metaData.totalSupply || "???";
 
-                // --- LINKS GENERATION ---
-                // Base URL with correct slug and query params for Traits + Buy Now
-                // Trait Name: "Level" (Capital L usually)
-                const baseUrl = `https://opensea.io/collection/${OS_SLUG}?search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=`;
-                const suffix = `&search[toggles][0]=BUY_NOW&search[sortAscending]=true&search[sortBy]=UNIT_PRICE`;
-
-                document.getElementById('link1').href = baseUrl + "1" + suffix;
-                document.getElementById('link2').href = baseUrl + "2" + suffix;
-                document.getElementById('link3').href = baseUrl + "3" + suffix;
-                document.getElementById('link4').href = baseUrl + "4" + suffix;
-                document.getElementById('link5').href = baseUrl + "5" + suffix;
-
+                // Show Content
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
 
             } catch (e) {
                 console.error(e);
-                document.getElementById('loader').innerText = "Load Failed.";
-                document.getElementById('loader').style.color = "red";
+                // In caso di errore API, mostriamo comunque la card con dati placeholder
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
             }
         }
     </script>
