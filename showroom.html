@@ -33,85 +33,76 @@
         
         .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
         .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
-        .wast-mini { font-weight: 900; font-size: 1rem; letter-spacing: 2px; color: var(--primary); margin-left: 10px; }
         
         .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; }
 
-        h2 { text-align: center; margin-top: 0; font-weight: 900; color: #333; }
+        h2 { text-align: center; margin-top: 0; font-weight: 900; color: #333; margin-bottom: 5px; }
         .subtitle { text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 20px; }
 
-        .loading-spinner { text-align: center; font-style: italic; color: #999; margin: 20px 0; }
+        .loading-spinner { text-align: center; font-style: italic; color: #999; margin: 40px 0; font-weight: 500; }
 
-        .nft-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .nft-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 500px) { .nft-grid { grid-template-columns: 1fr 1fr 1fr; } }
         
         .nft-card { 
-            background: #fff; border: 1px solid #eee; border-radius: 12px; overflow: hidden; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: transform 0.2s;
+            background: #fff; border: 1px solid #eee; border-radius: 16px; overflow: hidden; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s;
             display: flex; flex-direction: column;
+            position: relative;
         }
-        .nft-card:hover { transform: translateY(-2px); }
+        .nft-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
 
-        .nft-img-container { width: 100%; height: 200px; background: #f0f0f0; overflow: hidden; position: relative; }
-        .nft-img { width: 100%; height: 100%; object-fit: cover; }
+        .nft-rank {
+            position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white;
+            padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; z-index: 2;
+        }
+
+        .nft-img-container { width: 100%; aspect-ratio: 1/1; background: #f8f9fa; overflow: hidden; position: relative; }
+        .nft-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+        .nft-card:hover .nft-img { transform: scale(1.05); }
         
-        .nft-info { padding: 15px; display: flex; flex-direction: column; gap: 5px; }
-        .nft-name { font-weight: 800; font-size: 1rem; color: #333; }
-        .nft-id { font-size: 0.8rem; color: #999; font-weight: 600; }
+        .nft-info { padding: 15px; display: flex; flex-direction: column; gap: 4px; flex-grow: 1; }
+        
+        .collection-name { font-size: 0.7rem; color: #888; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .nft-name { font-weight: 800; font-size: 1rem; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         .nft-price-box { 
-            display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; 
-            background: #f8f9fa; padding: 10px; border-radius: 8px;
+            margin-top: auto; padding-top: 10px; border-top: 1px dashed #eee;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .price-label { font-size: 0.7rem; color: #666; font-weight: 600; text-transform: uppercase; }
-        .price-val { font-size: 1.2rem; font-weight: 900; color: var(--primary); }
+        
+        .price-val { font-size: 1.1rem; font-weight: 900; color: var(--primary); }
+        .price-usd { font-size: 0.8rem; color: #666; font-weight: 500; }
         
         .buy-btn { 
-            margin-top: 10px; text-decoration: none; background-color: var(--primary); color: white; 
-            text-align: center; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 0.9rem;
-            transition: opacity 0.2s; display: block;
+            margin-top: 12px; text-decoration: none; background-color: #1a1a1a; color: white; 
+            text-align: center; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 0.85rem;
+            transition: background 0.2s; display: block;
         }
-        .buy-btn:hover { opacity: 0.9; }
+        .buy-btn:hover { background-color: var(--primary); }
 
-        .collection-stats {
-            display: flex; justify-content: space-around; margin-bottom: 20px; 
-            background: #f0f2f5; padding: 10px; border-radius: 12px;
-        }
-        .stat-item { text-align: center; }
-        .stat-val { font-weight: 900; font-size: 1rem; display: block; }
-        .stat-lbl { font-size: 0.7rem; color: #666; text-transform: uppercase; font-weight: 600; }
-
-        .error-msg { color: var(--red); text-align: center; font-weight: 600; font-size: 0.9rem; display: none; }
+        .error-msg { color: var(--red); text-align: center; font-weight: 600; font-size: 0.9rem; display: none; padding: 20px; background: #fff5f5; border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div class="nav-header">
-        <a href="index.html" class="back-btn">⬅ Home <span class="wast-mini">WAST</span></a>
+        <a href="index.html" class="back-btn">⬅ Home</a>
     </div>
 
     <div class="container">
         <h2>Showroom</h2>
-        <div class="subtitle">Lowest Prices • Direct from OpenSea</div>
+        <div class="subtitle">Best Floor Deals (Lowest Listed)</div>
 
-        <div id="loading" class="loading-spinner">Scanning Marketplace...</div>
-        <div id="error" class="error-msg">⚠️ No listings found or API Error</div>
-
-        <div id="stats" class="collection-stats" style="display:none;">
-            <div class="stat-item">
-                <span class="stat-val" id="floorPrice">---</span>
-                <span class="stat-lbl">Floor</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-val" id="totalListed">---</span>
-                <span class="stat-lbl">Listed</span>
-            </div>
-        </div>
+        <div id="loading" class="loading-spinner">Scanning Listings...</div>
+        <div id="error" class="error-msg">⚠️ Unable to fetch listings.</div>
 
         <div id="grid" class="nft-grid"></div>
     </div>
 
     <script>
-        const COLLECTION_ADDR = "0x160650efd60032aa49bbec70920a870aacffdc39"; // Target Collection
+        // Target Collection
+        const COLLECTION_ADDR = "0x160650efd60032aa49bbec70920a870aacffdc39"; 
         
         window.addEventListener('DOMContentLoaded', fetchShowroom);
 
@@ -119,72 +110,78 @@
             const grid = document.getElementById('grid');
             const loading = document.getElementById('loading');
             const error = document.getElementById('error');
-            const stats = document.getElementById('stats');
 
             try {
-                // Fetch Listing from Reservoir (Public API for Base)
-                // limit=3, sortBy=floorAskPrice
-                const url = `https://api.base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=3&includeAttributes=false`;
+                // Fetch 20 items to ensure we find at least 3 valid listed ones
+                const url = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=20&includeAttributes=false`;
                 
-                const res = await fetch(url);
+                const res = await fetch(url, {
+                    headers: { 'x-api-key': 'demo-api-key', 'accept': '*/*' }
+                });
+
+                if (!res.ok) throw new Error("API Connection Failed");
                 const data = await res.json();
 
-                if(!data.tokens || data.tokens.length === 0) {
-                    loading.style.display = 'none';
-                    error.innerText = "No active listings found.";
-                    error.style.display = 'block';
-                    return;
-                }
+                if(!data.tokens || data.tokens.length === 0) throw new Error("No items found");
+
+                // FILTER: Exclude items NOT listed (where floorAsk price is missing or zero)
+                const listedItems = data.tokens.filter(item => {
+                    return item.market && 
+                           item.market.floorAsk && 
+                           item.market.floorAsk.price && 
+                           item.market.floorAsk.price.amount.native > 0;
+                });
+
+                if(listedItems.length === 0) throw new Error("No active listings found.");
+
+                // TAKE TOP 3
+                const top3 = listedItems.slice(0, 3);
 
                 loading.style.display = 'none';
-                stats.style.display = 'flex';
 
-                // Update Stats from first item (Floor)
-                const first = data.tokens[0];
-                const floor = first.market?.floorAsk?.price?.amount?.native || 0;
-                document.getElementById('floorPrice').innerText = `${floor.toFixed(4)} ETH`;
-                document.getElementById('totalListed').innerText = "3+"; // Reservoir page limit
-
-                // Render Cards
-                data.tokens.forEach(item => {
+                // RENDER
+                let rank = 1;
+                top3.forEach(item => {
                     const token = item.token;
                     const market = item.market;
                     
-                    const price = market.floorAsk?.price?.amount?.native || 0;
-                    const priceUsd = market.floorAsk?.price?.amount?.usd || 0;
-                    const img = token.image || 'https://placehold.co/400x400?text=No+Image';
+                    const priceEth = market.floorAsk.price.amount.native || 0;
+                    const priceUsd = market.floorAsk.price.amount.usd || 0;
+                    
+                    let imgUrl = token.image || 'https://placehold.co/400x400?text=No+Img';
+                    if (token.imageSmall) imgUrl = token.imageSmall; 
+
+                    const collName = token.collection?.name || "Collection";
                     const name = token.name || `Item #${token.tokenId}`;
                     const openseaLink = `https://opensea.io/assets/base/${COLLECTION_ADDR}/${token.tokenId}`;
 
                     const card = document.createElement('div');
                     card.className = 'nft-card';
                     card.innerHTML = `
+                        <div class="nft-rank">#${rank} Deal</div>
                         <div class="nft-img-container">
-                            <img src="${img}" class="nft-img" alt="${name}" onerror="this.src='https://placehold.co/400x400?text=Error'">
+                            <img src="${imgUrl}" class="nft-img" alt="${name}" onerror="this.src='https://placehold.co/400x400?text=Error'">
                         </div>
                         <div class="nft-info">
-                            <span class="nft-id">#${token.tokenId}</span>
+                            <div class="collection-name">${collName}</div>
                             <span class="nft-name">${name}</span>
                             
                             <div class="nft-price-box">
-                                <div>
-                                    <div class="price-label">Buy Now</div>
-                                    <div class="price-val">${price.toFixed(4)} ETH</div>
-                                </div>
-                                <div style="text-align:right; font-size:0.8rem; color:#999;">
-                                    $${priceUsd.toFixed(2)}
-                                </div>
+                                <div class="price-val">${priceEth.toFixed(4)} Ξ</div>
+                                <div class="price-usd">$${priceUsd.toFixed(2)}</div>
                             </div>
 
-                            <a href="${openseaLink}" target="_blank" class="buy-btn">Acquista su OpenSea</a>
+                            <a href="${openseaLink}" target="_blank" class="buy-btn">Buy on OpenSea ↗</a>
                         </div>
                     `;
                     grid.appendChild(card);
+                    rank++;
                 });
 
             } catch(e) {
                 console.error(e);
                 loading.style.display = 'none';
+                error.innerText = `⚠️ Error: ${e.message}`;
                 error.style.display = 'block';
             }
         }
