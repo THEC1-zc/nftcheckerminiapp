@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TYSM Leaderboard - WAST Hub</title>
+    
+    <!-- Farcaster Miniapp Metadata -->
+    <meta property="fc:frame" content="vNext">
+    <meta property="fc:frame:image" content="https://nftcheckerminiapp.vercel.app/icon.png">
+    <meta property="fc:frame:button:1" content="🚀 Open WAST">
+    <meta property="fc:frame:button:1:action" content="link">
+    <meta property="fc:frame:button:1:target" content="https://nftcheckerminiapp.vercel.app/TL.html">
+    <meta property="og:image" content="https://nftcheckerminiapp.vercel.app/icon.png">
+    <meta name="fc:frame:image:aspect_ratio" content="1:1">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a0e27, #1a1f3a);
+            color: #001F66;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('back.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            opacity: 0.25;
+            z-index: -2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(0,82,255,0.1), rgba(0,15,40,0.6));
+            z-index: -1;
+        }
+
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid #0052FF;
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: #0052FF;
+        }
+
+        /* Wallet Button */
+        .wallet-section {
+            position: relative;
+        }
+
+        .wallet-btn {
+            background: linear-gradient(135deg, #0052FF, #0080FF);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 15px rgba(0, 82, 255, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .wallet-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 82, 255, 0.5);
+        }
+
+        .wallet-btn.connected {
+            background: linear-gradient(135deg, #00D9A3, #00B87C);
+        }
+
+        .wallet-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border: 2px solid #0052FF;
+            border-radius: 12px;
+            padding: 12px;
+            min-width: 200px;
+            box-shadow: 0 8px 25px rgba(0, 82, 255, 0.3);
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .wallet-dropdown.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .wallet-info {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 82, 255, 0.2);
+            margin-bottom: 8px;
+        }
+
+        .wallet-address {
+            font-size: 0.85rem;
+            color: #003D99;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 8px;
+            background: #FF4757;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #e03e4a;
+        }
+
+        /* Error Message */
+        .error-message {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 71, 87, 0.95);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 1000;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Page Title */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 10px rgba(0, 82, 255, 0.5);
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+        }
+
+        /* Leaderboard Container */
+        .leaderboard-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 0;
+            box-shadow: 0 4px 20px rgba(0, 82, 255, 0.1);
+            overflow: hidden;
+            border: 2px solid rgba(0, 82, 255, 0.2);
+            animation: fadeInUp 0.8s ease-out;
+            margin-bottom: 30px;
+        }
+
+        .leaderboard-iframe {
+            width: 100%;
+            height: 800px;
+            border: none;
+            display: block;
+        }
+
+        /* Back Button */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #0052FF, #0080FF);
+            color: white;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 82, 255, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 0 auto;
+            display: table;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 82, 255, 0.5);
+        }
+
+        /* Version Tag */
+        .version-tag {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            color: #0052FF;
+            opacity: 0.6;
+            font-weight: 600;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 12px 16px;
+            }
+
+            .brand {
+                font-size: 1.2rem;
+                letter-spacing: 2px;
+            }
+
+            .logo {
+                width: 32px;
+                height: 32px;
+            }
+
+            .wallet-btn {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .container {
+                padding: 24px 16px;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+            }
+
+            .page-subtitle {
+                font-size: 0.95rem;
+            }
+
+            .leaderboard-iframe {
+                height: 600px;
+            }
+
+            .back-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .version-tag {
+                bottom: 10px;
+                right: 10px;
+                font-size: 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo-section">
+            <img src="icon.png" alt="WAST Logo" class="logo">
+            <div class="brand">WAST</div>
+        </div>
+        <div class="wallet-section">
+            <button id="walletBtn" class="wallet-btn">Connect Wallet</button>
+            <div id="walletDropdown" class="wallet-dropdown">
+                <div class="wallet-info">
+                    <div class="wallet-address" id="walletAddress"></div>
+                </div>
+                <button id="logoutBtn" class="logout-btn">Disconnect</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Error Message -->
+    <div id="errorMessage" class="error-message"></div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">🏆 TYSM Gratitude League</h1>
+            <p class="page-subtitle">The top gratitude leaders spreading thanks across the ecosystem</p>
+        </div>
+
+        <!-- Leaderboard Container -->
+        <div class="leaderboard-container">
+            <iframe 
+                src="https://tysm.wtf/league.html" 
+                class="leaderboard-iframe"
+                title="TYSM Gratitude League"
+                loading="lazy"
+            ></iframe>
+        </div>
+
+        <!-- Back Button -->
+        <a href="index.html" class="back-btn">
+            ← Back to Hub
+        </a>
+    </div>
+
+    <!-- Version Tag -->
+    <div class="version-tag">v1.0.0</div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+
+        let provider;
+        let connectedAddress = null;
+
+        // Initialize SDK
+        async function initSDK() {
+            try {
+                await sdk.actions.ready();
+                console.log('SDK ready');
+            } catch (error) {
+                console.error('SDK initialization error:', error);
+            }
+        }
+
+        // Get provider
+        async function getProvider() {
+            if (!provider) {
+                try {
+                    provider = await sdk.wallet.getEthereumProvider();
+                    console.log('Provider obtained');
+                } catch (error) {
+                    console.error('Provider error:', error);
+                    showError('Wallet provider not available');
+                }
+            }
+            return provider;
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        // Format address
+        function formatAddress(address) {
+            return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+        }
+
+        // Update UI
+        function updateUI(address) {
+            const walletBtn = document.getElementById('walletBtn');
+            const walletAddress = document.getElementById('walletAddress');
+            
+            if (address) {
+                walletBtn.textContent = formatAddress(address);
+                walletBtn.classList.add('connected');
+                walletAddress.textContent = formatAddress(address);
+            } else {
+                walletBtn.textContent = 'Connect Wallet';
+                walletBtn.classList.remove('connected');
+            }
+        }
+
+        // Connect wallet
+        async function connectWallet() {
+            try {
+                const walletProvider = await getProvider();
+                if (!walletProvider) {
+                    throw new Error('Wallet provider not available');
+                }
+
+                const accounts = await walletProvider.request({
+                    method: 'eth_requestAccounts'
+                });
+
+                if (accounts && accounts.length > 0) {
+                    connectedAddress = accounts[0];
+                    localStorage.setItem('tysm_wallet', connectedAddress);
+                    updateUI(connectedAddress);
+                    console.log('Wallet connected:', connectedAddress);
+                }
+            } catch (error) {
+                console.error('Connection error:', error);
+                if (error.code === 4001) {
+                    showError('Connection cancelled');
+                } else if (error.code === -32002) {
+                    showError('Request pending - check wallet');
+                } else {
+                    showError('Connection failed');
+                }
+            }
+        }
+
+        // Check for saved wallet
+        function checkSavedWallet() {
+            const savedWallet = localStorage.getItem('tysm_wallet');
+            if (savedWallet) {
+                connectedAddress = savedWallet;
+                updateUI(savedWallet);
+            }
+        }
+
+        // Logout
+        function logout() {
+            connectedAddress = null;
+            localStorage.removeItem('tysm_wallet');
+            updateUI(null);
+            document.getElementById('walletDropdown').classList.remove('show');
+        }
+
+        // Toggle dropdown
+        function toggleDropdown() {
+            const dropdown = document.getElementById('walletDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Event listeners
+        document.getElementById('walletBtn').addEventListener('click', () => {
+            if (connectedAddress) {
+                toggleDropdown();
+            } else {
+                connectWallet();
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+            const walletSection = document.querySelector('.wallet-section');
+            const dropdown = document.getElementById('walletDropdown');
+            if (!walletSection.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Initialize
+        initSDK();
+        checkSavedWallet();
+    </script>
+</body>
+</html>
