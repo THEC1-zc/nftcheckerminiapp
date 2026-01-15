@@ -12,12 +12,12 @@
     </script>
 
     <style>
-        :root { --bg: #fffbf0; --text: #3e2723; --card-bg: #ffffff; --green: #2ecc71; --blue: #3498db; }
+        :root { --bg: #0f0f0f; --text: #eaeaea; --card-bg: #1a1a1a; --accent: #7c4dff; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: var(--bg);
-            background-image: url('back.png');
+            background-image: url('back.png'); /* Assicurati che l'immagine ci sia o rimuovi questa riga */
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -26,45 +26,46 @@
             display: flex; flex-direction: column; align-items: center; 
         }
 
-        .back-btn { align-self: flex-start; text-decoration: none; color: #5d4037; background: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .back-btn { align-self: flex-start; text-decoration: none; color: #aaa; background: #333; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 20px; }
 
         .card {
             background: var(--card-bg); width: 100%; max-width: 400px;
             border-radius: 24px; overflow: hidden; 
-            box-shadow: 0 20px 40px rgba(62, 39, 35, 0.15);
-            text-align: center; padding-bottom: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            text-align: center; padding-bottom: 30px; border: 1px solid #333;
         }
 
-        .img-wrapper { width: 100%; height: 320px; position: relative; }
+        .img-wrapper { width: 100%; height: 280px; position: relative; }
         .coll-img { width: 100%; height: 100%; object-fit: cover; }
         
         .info { padding: 25px 20px 10px 20px; }
-        .main-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 5px 0; color: #222; }
+        .main-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 5px 0; color: #fff; }
         .subtitle { color: #888; font-size: 0.8rem; margin-bottom: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 
-        .btn-container { display: flex; flex-direction: column; gap: 15px; }
+        .btn-container { display: flex; flex-direction: column; gap: 12px; }
 
-        .snipe-btn {
-            display: flex; flex-direction: column; align-items: flex-start;
-            padding: 20px; border-radius: 18px; text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative; overflow: hidden; border: 2px solid transparent;
-            cursor: pointer;
+        .market-btn {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px; border-radius: 16px; text-decoration: none;
+            transition: all 0.2s; font-weight: 800; font-size: 1.1rem;
+            border: 1px solid #333;
         }
-
-        .btn-whale { background: #e8f5e9; border-color: #c8e6c9; color: #1b5e20; }
-        .btn-whale:hover { background: #c8e6c9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(46, 204, 113, 0.2); }
-
-        .btn-score { background: #e3f2fd; border-color: #bbdefb; color: #0d47a1; }
-        .btn-score:hover { background: #bbdefb; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2); }
-
-        .btn-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 800; opacity: 0.7; margin-bottom: 5px; }
-        .btn-main { font-size: 1.2rem; font-weight: 900; display: flex; align-items: center; gap: 8px; width: 100%; justify-content: space-between;}
         
-        .os-link { margin-top: 25px; display: inline-block; color: #aaa; font-size: 0.8rem; text-decoration: none; font-weight: 600; }
-        .os-link:hover { color: #3e2723; text-decoration: underline; }
+        /* Magically (Il preferito dai Pro su Base) */
+        .btn-magically { background: linear-gradient(90deg, #ff00cc, #333399); color: white; border: none; }
+        .btn-magically:hover { transform: scale(1.02); box-shadow: 0 0 15px rgba(255, 0, 204, 0.4); }
 
-        .version { margin-top: 40px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
+        /* OpenSea Pro */
+        .btn-os-pro { background: #000; color: white; border: 1px solid #444; }
+        .btn-os-pro:hover { background: #222; border-color: #fff; }
+
+        /* OpenSea Standard */
+        .btn-os { background: #2081e2; color: white; border: none; }
+        .btn-os:hover { background: #1868b7; }
+
+        .label-small { font-size: 0.7rem; color: #bbb; margin-bottom: 5px; text-align: left; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px;}
+
+        .version { margin-top: 40px; font-size: 0.7rem; opacity: 0.3; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -78,65 +79,60 @@
         
         <div class="info">
             <h2 class="main-title">Chickens by $EGGS</h2>
-            <div class="subtitle">Sniper Launchpad</div>
+            <div class="subtitle">Multi-Market Sniper</div>
             
             <div class="btn-container">
-                <div id="btnWhale" class="snipe-btn btn-whale" onclick="openWhale()">
-                    <span class="btn-label">Option A (Best for Deals)</span>
-                    <span class="btn-main">
-                        <span>🐋 Whale Filter (Lvl 3+)</span>
+                
+                <div>
+                    <div class="label-small">RECOMMENDED (FASTEST)</div>
+                    <a id="btnMagically" href="#" target="_blank" class="market-btn btn-magically">
+                        <span>⚡ Magically.gg</span>
                         <span>↗</span>
-                    </span>
+                    </a>
                 </div>
 
-                <div id="btnScore" class="snipe-btn btn-score" onclick="openScore()">
-                    <span class="btn-label">Option B (High Reputation)</span>
-                    <span class="btn-main">
-                        <span>🛡️ Score Filter (>0.69)</span>
+                <div>
+                    <div class="label-small">ADVANCED INTERFACE</div>
+                    <a id="btnPro" href="#" target="_blank" class="market-btn btn-os-pro">
+                        <span>💎 OpenSea Pro</span>
                         <span>↗</span>
-                    </span>
+                    </a>
                 </div>
+
+                <div>
+                    <div class="label-small">STANDARD</div>
+                    <a id="btnOs" href="#" target="_blank" class="market-btn btn-os">
+                        <span>🌊 OpenSea</span>
+                        <span>↗</span>
+                    </a>
+                </div>
+
             </div>
-
-            <a href="https://opensea.io/collection/chickens-by-eggs" target="_blank" class="os-link">View Full Collection</a>
         </div>
     </div>
 
-    <div class="version">v16.0 (Encoded URL)</div>
+    <div class="version">v17.0 (Aggregators)</div>
 
     <script>
-        const BASE_URL = "https://opensea.io/collection/chickens-by-eggs";
+        // CONFIGURAZIONE LINK
+        
+        // 1. MAGICALLY (Tentativo di filtro Score >= 0.69)
+        // Magically usa JSON nell'URL. Proviamo a iniettare il filtro.
+        // Se non funziona, aprirà la collezione e potrai usare la barra laterale molto veloce.
+        const MAGICALLY_BASE = "https://magically.gg/collection/chickens-by-eggs";
+        const MAGICALLY_PARAMS = "?status=listed&sort=priceAsc"; 
+        
+        // 2. OPENSEA PRO (Aggregatore ufficiale)
+        const PRO_BASE = "https://pro.opensea.io/collection/chickens-by-eggs";
 
-        function openWhale() {
-            // Costruzione URL sicura per "Owner Max Chicken Level" >= 3
-            // Usiamo URLSearchParams per gestire encoding di parentesi e spazi
-            const params = new URLSearchParams();
-            params.append('search[sortAscending]', 'true');
-            params.append('search[sortBy]', 'UNIT_PRICE');
-            params.append('search[toggles][0]', 'BUY_NOW');
-            
-            // Numeric Trait: Owner Max Chicken Level >= 3
-            params.append('search[numericTraits][0][name]', 'Owner Max Chicken Level');
-            params.append('search[numericTraits][0][ranges][0][min]', '3');
+        // 3. OPENSEA STANDARD
+        const OS_BASE = "https://opensea.io/collection/chickens-by-eggs";
 
-            const finalUrl = `${BASE_URL}?${params.toString()}`;
-            window.open(finalUrl, '_blank');
-        }
-
-        function openScore() {
-            // Costruzione URL sicura per "Owner Neynar Score" >= 0.69
-            const params = new URLSearchParams();
-            params.append('search[sortAscending]', 'true');
-            params.append('search[sortBy]', 'UNIT_PRICE');
-            params.append('search[toggles][0]', 'BUY_NOW');
-
-            // Numeric Trait: Owner Neynar Score >= 0.69
-            params.append('search[numericTraits][0][name]', 'Owner Neynar Score');
-            params.append('search[numericTraits][0][ranges][0][min]', '0.69');
-
-            const finalUrl = `${BASE_URL}?${params.toString()}`;
-            window.open(finalUrl, '_blank');
-        }
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('btnMagically').href = MAGICALLY_BASE + MAGICALLY_PARAMS;
+            document.getElementById('btnPro').href = PRO_BASE;
+            document.getElementById('btnOs').href = OS_BASE;
+        });
     </script>
 </body>
 </html>
