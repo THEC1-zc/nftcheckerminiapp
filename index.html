@@ -97,7 +97,7 @@
     .btn-logout:hover { background-color: #ffe5e5; color: var(--red); border-color: var(--red); }
     .btn-logout:focus { outline: 2px solid var(--red); outline-offset: 2px; }
 
-    /* TIP BUTTON - Hidden until implemented */
+    /* TIP BUTTON */
     .btn-tip { 
         background-color: #FF9800; 
         color: white; 
@@ -110,10 +110,10 @@
         margin-bottom: 30px; 
         box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3); 
         transition: transform 0.2s;
-        display: none; /* HIDDEN - Will be shown when tip feature is ready */
     }
-    .btn-tip:hover { transform: translateY(-2px); opacity: 0.9; }
+    .btn-tip:hover:not(:disabled) { transform: translateY(-2px); opacity: 0.9; }
     .btn-tip:focus { outline: 2px solid #FF9800; outline-offset: 2px; }
+    .btn-tip:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* ERROR MESSAGE */
     .error-message {
@@ -217,11 +217,16 @@
     </a>
 </div>
 
-<div class="version-tag">v1.2.0</div>
+<div class="version-tag">v1.3.0</div>
 
 <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
     const BASE_CHAIN_ID = '0x2105'; 
+    
+    // USDC Contract on Base Chain
+    const USDC_CONTRACT = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+    const TIP_RECIPIENT = '0xFd144C774582a450a3F578ae742502ff11Ff92Df';
+    const TIP_AMOUNT = '1000000'; // 1 USDC (6 decimals) 
 
     // Initialize SDK
     const run = async () => { 
@@ -384,9 +389,89 @@
     }
 
     if (btnTip) {
-        btnTip.addEventListener('click', () => {
-            alert("💡 Tip functionality coming soon! USDC payments will be available in v1.3.0");
-        });
+        btnTip.addEventListener('click', sendTip);
+    }
+
+    // --- TIP FUNCTIONALITY ---
+    async function sendTip() {
+        const btnTip = document.getElementById('btnTip');
+        const savedWallet = localStorage.getItem('tysm_wallet');
+
+        if (!savedWallet) {
+            showError('⚠️ Please connect your wallet first');
+            return;
+        }
+
+        if (!btnTip) return;
+
+        try {
+            hideError();
+            btnTip.disabled = true;
+            btnTip.innerHTML = '<span class="spinner"></span> Sending Tip...';
+
+            const provider = await sdk.wallet.getEthereumProvider();
+
+            // Ensure we're on Base Chain
+            try {
+                await provider.request({ 
+                    method: 'wallet_switchEthereumChain', 
+                    params: [{ chainId: BASE_CHAIN_ID }] 
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    showError('Please add Base Chain to your wallet');
+                    throw new Error('Chain not available');
+                }
+            }
+
+            // ERC-20 Transfer function signature
+            // transfer(address recipient, uint256 amount)
+            const transferData = '0xa9059cbb' + 
+                TIP_RECIPIENT.slice(2).padStart(64, '0') + 
+                parseInt(TIP_AMOUNT).toString(16).padStart(64, '0');
+
+            // Send transaction
+            const txHash = await provider.request({
+                method: 'eth_sendTransaction',
+                params: [{
+                    from: savedWallet,
+                    to: USDC_CONTRACT,
+                    data: transferData,
+                    value: '0x0'
+                }]
+            });
+
+            // Success!
+            btnTip.innerHTML = '✅ Tip Sent!';
+            btnTip.style.backgroundColor = '#2ecc71';
+            
+            // Show transaction hash
+            setTimeout(() => {
+                if (confirm(`Transaction sent! ✅\n\nTx Hash: ${txHash}\n\nView on BaseScan?`)) {
+                    window.open(`https://basescan.org/tx/${txHash}`, '_blank');
+                }
+                // Reset button
+                btnTip.innerHTML = '☕ Tip 1 USDC';
+                btnTip.style.backgroundColor = '#FF9800';
+                btnTip.disabled = false;
+            }, 2000);
+
+        } catch (error) {
+            console.error("Tip Error:", error);
+            btnTip.innerHTML = '☕ Tip 1 USDC';
+            btnTip.disabled = false;
+
+            // User-friendly error messages
+            if (error.code === 4001) {
+                showError('Tip cancelled');
+            } else if (error.message?.includes('insufficient funds')) {
+                showError('Insufficient USDC balance');
+            } else if (error.message?.includes('Chain not available')) {
+                // Already shown
+            } else {
+                showError('Tip failed. Please try again.');
+            }
+        }
     }
 </script>
 ```
