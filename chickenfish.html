@@ -42,7 +42,6 @@
         .main-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 5px 0; color: #222; }
         .subtitle { color: #888; font-size: 0.8rem; margin-bottom: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* PULSANTI */
         .btn-container { display: flex; flex-direction: column; gap: 15px; }
 
         .snipe-btn {
@@ -50,26 +49,18 @@
             padding: 20px; border-radius: 18px; text-decoration: none;
             transition: transform 0.2s, box-shadow 0.2s;
             position: relative; overflow: hidden; border: 2px solid transparent;
+            cursor: pointer;
         }
 
-        /* Stile Bottone Whale (Verde) */
-        .btn-whale {
-            background: #e8f5e9; border-color: #c8e6c9; color: #1b5e20;
-        }
+        .btn-whale { background: #e8f5e9; border-color: #c8e6c9; color: #1b5e20; }
         .btn-whale:hover { background: #c8e6c9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(46, 204, 113, 0.2); }
 
-        /* Stile Bottone Score (Blu) */
-        .btn-score {
-            background: #e3f2fd; border-color: #bbdefb; color: #0d47a1;
-        }
+        .btn-score { background: #e3f2fd; border-color: #bbdefb; color: #0d47a1; }
         .btn-score:hover { background: #bbdefb; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2); }
 
         .btn-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 800; opacity: 0.7; margin-bottom: 5px; }
         .btn-main { font-size: 1.2rem; font-weight: 900; display: flex; align-items: center; gap: 8px; width: 100%; justify-content: space-between;}
         
-        .arrow { font-size: 1.2rem; }
-
-        /* Link generico */
         .os-link { margin-top: 25px; display: inline-block; color: #aaa; font-size: 0.8rem; text-decoration: none; font-weight: 600; }
         .os-link:hover { color: #3e2723; text-decoration: underline; }
 
@@ -90,48 +81,62 @@
             <div class="subtitle">Sniper Launchpad</div>
             
             <div class="btn-container">
-                <a id="btnWhale" href="#" target="_blank" class="snipe-btn btn-whale">
+                <div id="btnWhale" class="snipe-btn btn-whale" onclick="openWhale()">
                     <span class="btn-label">Option A (Best for Deals)</span>
                     <span class="btn-main">
                         <span>🐋 Whale Filter (Lvl 3+)</span>
-                        <span class="arrow">↗</span>
+                        <span>↗</span>
                     </span>
-                </a>
+                </div>
 
-                <a id="btnScore" href="#" target="_blank" class="snipe-btn btn-score">
+                <div id="btnScore" class="snipe-btn btn-score" onclick="openScore()">
                     <span class="btn-label">Option B (High Reputation)</span>
                     <span class="btn-main">
                         <span>🛡️ Score Filter (>0.69)</span>
-                        <span class="arrow">↗</span>
+                        <span>↗</span>
                     </span>
-                </a>
+                </div>
             </div>
 
-            <a href="https://opensea.io/collection/chickens-by-eggs" target="_blank" class="os-link">View Full Collection on OpenSea</a>
+            <a href="https://opensea.io/collection/chickens-by-eggs" target="_blank" class="os-link">View Full Collection</a>
         </div>
     </div>
 
-    <div class="version">v14.0 (Dual Launchpad)</div>
+    <div class="version">v16.0 (Encoded URL)</div>
 
     <script>
-        // BASE URL
-        const BASE = "https://opensea.io/collection/chickens-by-eggs";
-        
-        // COMMON: Buy Now + Sort Low Price
-        const COMMON = "?search[toggles][0]=BUY_NOW&search[sortAscending]=true&search[sortBy]=UNIT_PRICE";
+        const BASE_URL = "https://opensea.io/collection/chickens-by-eggs";
 
-        // URL GENERATION
-        window.addEventListener('DOMContentLoaded', () => {
+        function openWhale() {
+            // Costruzione URL sicura per "Owner Max Chicken Level" >= 3
+            // Usiamo URLSearchParams per gestire encoding di parentesi e spazi
+            const params = new URLSearchParams();
+            params.append('search[sortAscending]', 'true');
+            params.append('search[sortBy]', 'UNIT_PRICE');
+            params.append('search[toggles][0]', 'BUY_NOW');
             
-            // 1. WHALE FILTER: Owner Max Chicken Level >= 3
-            // Nota: OpenSea usa range "min" per i filtri numerici
-            const whaleParams = "&search[numericTraits][0][name]=Owner%20Max%20Chicken%20Level&search[numericTraits][0][ranges][0][min]=3";
-            document.getElementById('btnWhale').href = BASE + COMMON + whaleParams;
+            // Numeric Trait: Owner Max Chicken Level >= 3
+            params.append('search[numericTraits][0][name]', 'Owner Max Chicken Level');
+            params.append('search[numericTraits][0][ranges][0][min]', '3');
 
-            // 2. SCORE FILTER: Owner Neynar Score >= 0.69
-            const scoreParams = "&search[numericTraits][0][name]=Owner%20Neynar%20Score&search[numericTraits][0][ranges][0][min]=0.69";
-            document.getElementById('btnScore').href = BASE + COMMON + scoreParams;
-        });
+            const finalUrl = `${BASE_URL}?${params.toString()}`;
+            window.open(finalUrl, '_blank');
+        }
+
+        function openScore() {
+            // Costruzione URL sicura per "Owner Neynar Score" >= 0.69
+            const params = new URLSearchParams();
+            params.append('search[sortAscending]', 'true');
+            params.append('search[sortBy]', 'UNIT_PRICE');
+            params.append('search[toggles][0]', 'BUY_NOW');
+
+            // Numeric Trait: Owner Neynar Score >= 0.69
+            params.append('search[numericTraits][0][name]', 'Owner Neynar Score');
+            params.append('search[numericTraits][0][ranges][0][min]', '0.69');
+
+            const finalUrl = `${BASE_URL}?${params.toString()}`;
+            window.open(finalUrl, '_blank');
+        }
     </script>
 </body>
 </html>
