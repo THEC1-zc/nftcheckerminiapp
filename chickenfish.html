@@ -67,6 +67,7 @@
         }
         .reason-high-score { background: var(--green); color: white; }
         .reason-whale { background: var(--purple); color: white; }
+        .reason-backup { background: #7f8c8d; color: white; }
 
         .nft-img-container { width: 100%; aspect-ratio: 1/1; background: #fff8e1; overflow: hidden; position: relative; }
         .nft-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
@@ -92,8 +93,12 @@
         }
         .buy-btn:hover { background-color: var(--accent); }
 
-        .error-msg { color: var(--red); text-align: center; font-weight: 600; font-size: 0.9rem; display: none; padding: 20px; background: #ffebee; border-radius: 10px; word-break: break-word;}
-        
+        .fallback-warning { 
+            background: #fff3cd; color: #856404; border: 1px solid #ffeeba; 
+            padding: 10px; border-radius: 10px; font-size: 0.8rem; text-align: center; 
+            margin-bottom: 20px; display: none; 
+        }
+
         .version-tag { text-align: center; font-size: 0.7rem; color: #8d6e63; margin-top: 25px; font-weight: 800; font-family: monospace; opacity: 0.6; }
     </style>
 </head>
@@ -109,160 +114,182 @@
 
         <div id="loader">
             <div class="loading-spinner"></div>
-            <div class="loading-text">Connecting to Market...</div>
+            <div class="loading-text">Scanning Market...</div>
         </div>
         
-        <div id="error" class="error-msg"></div>
+        <div id="fallbackMsg" class="fallback-warning">⚠️ Filters unavailable (Proxy blocked). Showing General Floor Price.</div>
 
         <div id="grid" class="nft-grid"></div>
         
-        <div class="version-tag">v2.2 (Universal Traits)</div>
+        <div class="version-tag">v2.3 (Resilience)</div>
     </div>
 
     <script>
         const COLLECTION_ADDR = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0".toLowerCase();
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
 
-        // New Proxy: CorsProxy.io handles params better than AllOrigins for this use case
-        const PROXY_BASE = "https://corsproxy.io/?";
+        // Strategy A: CodeTabs Proxy (Different from previous failing ones)
+        const PROXY_BASE = "https://api.codetabs.com/v1/proxy?quest=";
         const RESERVOIR_API = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=25&includeAttributes=true`;
 
-        window.addEventListener('DOMContentLoaded', fetchSmartShowroom);
+        window.addEventListener('DOMContentLoaded', initMarket);
+
+        async function initMarket() {
+            try {
+                // Try Advanced Filter First
+                await fetchSmartShowroom();
+            } catch (e) {
+                console.warn("Smart Filter Failed, switching to Alchemy Fallback:", e);
+                // If it fails, load the generic floor
+                await loadAlchemyFallback();
+            }
+        }
 
         async function fetchSmartShowroom() {
             const grid = document.getElementById('grid');
             const loader = document.getElementById('loader');
-            const errorDiv = document.getElementById('error');
             const loadingText = document.querySelector('.loading-text');
 
-            try {
-                // 1. Fetch Listings via Robust Proxy
-                const targetUrl = PROXY_BASE + encodeURIComponent(RESERVOIR_API);
-                const res = await fetch(targetUrl);
-                
-                if (!res.ok) throw new Error(`API Error: ${res.status}`);
-                const data = await res.json();
+            const targetUrl = PROXY_BASE + encodeURIComponent(RESERVOIR_API);
+            
+            // Set a timeout to fail fast if proxy hangs
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
 
-                if(!data.tokens || data.tokens.length === 0) throw new Error("No listings found (API returned empty)");
+            const res = await fetch(targetUrl, { signal: controller.signal });
+            clearTimeout(timeoutId);
 
-                const candidates = [];
-                let checkedCount = 0;
+            if (!res.ok) throw new Error(`Proxy Error: ${res.status}`);
+            const data = await res.json();
 
-                // 2. Filter Logic
-                for (const item of data.tokens) {
-                    checkedCount++;
-                    loadingText.innerText = `Analyzing Item ${checkedCount}...`;
+            if(!data.tokens || data.tokens.length === 0) throw new Error("Empty API Response");
 
-                    // Check basic listing validity
-                    if (!item.market?.floorAsk?.price?.amount?.native) continue;
+            const candidates = [];
+            let checkedCount = 0;
 
-                    const attributes = item.token.attributes || [];
-                    
-                    // --- UNIVERSAL TRAIT SEARCH ---
-                    // Don't assume keys. Search for any key containing "level" or "neynar"
-                    
-                    let level = -1; // Default -1 means "not found"
-                    let neynarScore = -1; // Default -1 means "not found"
+            for (const item of data.tokens) {
+                checkedCount++;
+                loadingText.innerText = `Analyzing Item ${checkedCount}...`;
 
-                    for (const attr of attributes) {
-                        const key = (attr.key || "").toLowerCase();
-                        const val = attr.value;
+                if (!item.market?.floorAsk?.price?.amount?.native) continue;
 
-                        // Hunt for LEVEL
-                        if (key.includes("level") || key.includes("lvl")) {
-                            const parsed = parseInt(val);
-                            if (!isNaN(parsed)) level = parsed;
-                        }
+                const attributes = item.token.attributes || [];
+                let level = -1; 
+                let neynarScore = -1; 
 
-                        // Hunt for NEYNAR SCORE
-                        if (key.includes("neynar") || key.includes("score") || key.includes("rep")) {
-                            const parsed = parseFloat(val);
-                            if (!isNaN(parsed)) neynarScore = parsed;
-                        }
-                    }
-
-                    // --- FILTER 1: LEVEL 1-5 ---
-                    // If level not found (-1), we assume it doesn't match criteria
-                    if (level < 1 || level > 5) continue;
-
-                    // --- FILTER 2: REPUTATION ---
-                    let approvedReason = null;
-
-                    // Condition A: High Score (> 0.69)
-                    // If score not found (-1), it fails this check naturally
-                    if (neynarScore > 0.69) {
-                        approvedReason = "high-score";
-                    } 
-                    // Condition B: Low Score OR Missing Score -> Check Wallet
-                    else {
-                        const seller = item.market.floorAsk.maker;
-                        // Limit wallet checks to avoid rate limits
-                        if (candidates.length < 3) {
-                            const isWhale = await checkSellerWallet(seller);
-                            if (isWhale) approvedReason = "whale-seller";
-                        }
-                    }
-
-                    if (approvedReason) {
-                        candidates.push({
-                            token: item.token,
-                            market: item.market,
-                            level: level,
-                            score: neynarScore === -1 ? "?" : neynarScore, // Display ? if not found
-                            reason: approvedReason
-                        });
-                    }
-
-                    if (candidates.length >= 3) break;
+                // Universal Trait Hunt
+                for (const attr of attributes) {
+                    const key = (attr.key || "").toLowerCase();
+                    const val = attr.value;
+                    if (key.includes("level") || key.includes("lvl")) level = parseInt(val) || -1;
+                    if (key.includes("neynar") || key.includes("score")) neynarScore = parseFloat(val) || -1;
                 }
 
-                if(candidates.length === 0) throw new Error("Listings found, but none passed the Filters (Lvl 1-5 + Rep/Whale).");
+                // Filter 1: Level 1-5
+                if (level < 1 || level > 5) continue;
 
-                loader.style.display = 'none';
+                // Filter 2: Reputation
+                let approvedReason = null;
+                if (neynarScore > 0.69) {
+                    approvedReason = "high-score";
+                } else {
+                    const seller = item.market.floorAsk.maker;
+                    if (candidates.length < 3) {
+                        const isWhale = await checkSellerWallet(seller);
+                        if (isWhale) approvedReason = "whale-seller";
+                    }
+                }
 
-                // 3. Render
-                let rank = 1;
-                candidates.forEach(item => {
-                    renderCard(grid, item, rank);
-                    rank++;
-                });
-
-            } catch(e) {
-                console.error(e);
-                loader.style.display = 'none';
-                errorDiv.innerText = `⚠️ Error: ${e.message}`;
-                errorDiv.style.display = 'block';
+                if (approvedReason) {
+                    candidates.push({
+                        token: item.token,
+                        market: item.market,
+                        level: level,
+                        score: neynarScore === -1 ? "?" : neynarScore,
+                        reason: approvedReason
+                    });
+                }
+                if (candidates.length >= 3) break;
             }
+
+            if(candidates.length === 0) throw new Error("No items matched criteria");
+
+            loader.style.display = 'none';
+            let rank = 1;
+            candidates.forEach(item => {
+                renderCard(grid, item, rank);
+                rank++;
+            });
+        }
+
+        // FALLBACK: If Proxy fails, use Alchemy to show at least the floor
+        async function loadAlchemyFallback() {
+            const grid = document.getElementById('grid');
+            const loader = document.getElementById('loader');
+            const fallbackMsg = document.getElementById('fallbackMsg');
+            
+            fallbackMsg.style.display = 'block';
+
+            // 1. Get Metadata
+            const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${COLLECTION_ADDR}`;
+            const metaRes = await fetch(metaUrl);
+            const metaData = await metaRes.json();
+            
+            // 2. Get Floor Price
+            const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION_ADDR}`;
+            const floorRes = await fetch(floorUrl);
+            const floorData = await floorRes.json();
+
+            // 3. Get ETH Price
+            const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
+            const priceJson = await priceRes.json();
+            const ethPrice = parseFloat(priceJson.data.amount);
+
+            const floorEth = floorData.openSea?.floorPrice || 0;
+            const floorUsd = floorEth * ethPrice;
+            const imgUrl = metaData.openSea?.imageUrl || "https://placehold.co/400x400?text=Floor";
+
+            loader.style.display = 'none';
+
+            // Render a Generic Floor Card
+            const html = `
+            <div class="nft-card">
+                <div class="badge-container">
+                    <div class="rank-badge">General Floor</div>
+                    <div class="reason-badge reason-backup">⚠️ Filter Offline</div>
+                </div>
+                <div class="nft-img-container">
+                    <img src="${imgUrl}" class="nft-img">
+                </div>
+                <div class="nft-info">
+                    <div class="nft-name">${metaData.name || "Collection"}</div>
+                    <div class="trait-info">
+                        <span>Check details on OpenSea</span>
+                    </div>
+                    <div class="nft-price-box">
+                        <div class="price-val">${floorEth.toFixed(4)} Ξ</div>
+                        <div class="price-usd">$${floorUsd.toFixed(2)}</div>
+                    </div>
+                    <a href="https://opensea.io/collection/chickenfish?search[sortAscending]=true&search[sortBy]=UNIT_PRICE" target="_blank" class="buy-btn">View Collection ↗</a>
+                </div>
+            </div>`;
+            
+            grid.innerHTML = html;
         }
 
         async function checkSellerWallet(walletAddr) {
             try {
-                // Alchemy: Get NFTs for Owner
                 const url = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNFTsForOwner?owner=${walletAddr}&contractAddresses[]=${COLLECTION_ADDR}&withMetadata=true`;
                 const res = await fetch(url);
                 const data = await res.json();
-                
                 if (!data.ownedNfts) return false;
-
-                // Look for Level >= 3 in wallet
                 for (const nft of data.ownedNfts) {
                     const attrs = nft.raw.metadata.attributes || [];
-                    
-                    // Search for level trait using same loose logic
-                    const lvlAttr = attrs.find(a => 
-                        a.trait_type && (a.trait_type.toLowerCase().includes("level") || a.trait_type.toLowerCase().includes("lvl"))
-                    );
-                    
-                    if (lvlAttr) {
-                        const lvl = parseInt(lvlAttr.value);
-                        if (lvl >= 3) return true; 
-                    }
+                    const lvlAttr = attrs.find(a => a.trait_type && (a.trait_type.toLowerCase().includes("level")));
+                    if (lvlAttr && parseInt(lvlAttr.value) >= 3) return true; 
                 }
                 return false;
-            } catch (err) {
-                console.warn("Wallet check warning:", err);
-                return false; 
-            }
+            } catch (err) { return false; }
         }
 
         function renderCard(container, data, rank) {
@@ -270,19 +297,15 @@
             const market = data.market;
             const priceEth = market.floorAsk.price.amount.native;
             const priceUsd = market.floorAsk.price.amount.usd;
+            const imgUrl = token.image || 'https://placehold.co/400x400?text=No+Img';
             
-            let imgUrl = token.image || 'https://placehold.co/400x400?text=No+Img';
-            
-            let reasonBadge = "";
-            if (data.reason === 'high-score') {
-                reasonBadge = `<div class="reason-badge reason-high-score">✅ Rep Score ${data.score}</div>`;
-            } else {
-                reasonBadge = `<div class="reason-badge reason-whale">🟣 Whale Seller</div>`;
-            }
+            let reasonBadge = data.reason === 'high-score' 
+                ? `<div class="reason-badge reason-high-score">✅ Rep Score ${data.score}</div>`
+                : `<div class="reason-badge reason-whale">🟣 Whale Seller</div>`;
 
             const openseaLink = `https://opensea.io/assets/base/${COLLECTION_ADDR}/${token.tokenId}`;
 
-            const html = `
+            container.innerHTML += `
             <div class="nft-card">
                 <div class="badge-container">
                     <div class="rank-badge">#${rank} Deal</div>
@@ -294,7 +317,7 @@
                 <div class="nft-info">
                     <div class="nft-name">${token.name || `#${token.tokenId}`}</div>
                     <div class="trait-info">
-                        <span>Level: <b>${data.level}</b></span>
+                        <span>Lvl: <b>${data.level}</b></span>
                         <span>Score: <b>${data.score}</b></span>
                     </div>
                     <div class="nft-price-box">
@@ -304,8 +327,6 @@
                     <a href="${openseaLink}" target="_blank" class="buy-btn">Buy on OpenSea ↗</a>
                 </div>
             </div>`;
-            
-            container.innerHTML += html;
         }
     </script>
 </body>
