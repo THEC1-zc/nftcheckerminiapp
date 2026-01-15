@@ -17,7 +17,6 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: var(--bg);
-            /* Optional: Add a themed background if you have one */
             color: var(--text); 
             padding: 15px; 
             margin: 0; 
@@ -93,7 +92,7 @@
         }
         .buy-btn:hover { background-color: var(--accent); }
 
-        .error-msg { color: var(--red); text-align: center; font-weight: 600; font-size: 0.9rem; display: none; padding: 20px; background: #ffebee; border-radius: 10px; }
+        .error-msg { color: var(--red); text-align: center; font-weight: 600; font-size: 0.9rem; display: none; padding: 20px; background: #ffebee; border-radius: 10px; word-break: break-word;}
         
         .version-tag { text-align: center; font-size: 0.7rem; color: #8d6e63; margin-top: 25px; font-weight: 800; font-family: monospace; opacity: 0.6; }
     </style>
@@ -110,22 +109,23 @@
 
         <div id="loader">
             <div class="loading-spinner"></div>
-            <div class="loading-text">Scanning Traits & Checking Wallets...</div>
+            <div class="loading-text">Connecting to Market...</div>
         </div>
         
         <div id="error" class="error-msg"></div>
 
         <div id="grid" class="nft-grid"></div>
         
-        <div class="version-tag">v2.0 (Reputation Engine)</div>
+        <div class="version-tag">v2.1 (Proxy Fix)</div>
     </div>
 
     <script>
         const COLLECTION_ADDR = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0".toLowerCase();
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
 
-        // Reservoir API (Public) for Listings + Traits
-        const RESERVOIR_API = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=30&includeAttributes=true`;
+        // Use Proxy to avoid CORS errors on mobile/web
+        const PROXY_BASE = "https://api.allorigins.win/raw?url=";
+        const RESERVOIR_API = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=25&includeAttributes=true`;
 
         window.addEventListener('DOMContentLoaded', fetchSmartShowroom);
 
@@ -136,55 +136,59 @@
             const loadingText = document.querySelector('.loading-text');
 
             try {
-                // 1. Fetch Listings from Reservoir
-                // We fetch 30 to have enough buffer after filtering
-                const res = await fetch(RESERVOIR_API);
-                if (!res.ok) throw new Error("API Connection Failed");
+                // 1. Fetch Listings via Proxy
+                const targetUrl = PROXY_BASE + encodeURIComponent(RESERVOIR_API);
+                const res = await fetch(targetUrl);
+                
+                if (!res.ok) throw new Error(`API Error: ${res.status}`);
                 const data = await res.json();
 
-                if(!data.tokens || data.tokens.length === 0) throw new Error("No listings found");
+                if(!data.tokens || data.tokens.length === 0) throw new Error("No listings found (API returned empty)");
 
                 const candidates = [];
                 let checkedCount = 0;
 
-                // 2. Filter Logic Loop
-                // We use a for...of loop to handle async await inside
+                // 2. Filter Logic
                 for (const item of data.tokens) {
                     checkedCount++;
-                    loadingText.innerText = `Analyzing Item ${checkedCount}/30...`;
+                    loadingText.innerText = `Analyzing Item ${checkedCount}...`;
 
-                    // Basic Check: Is listed?
+                    // Basic Check
                     if (!item.market?.floorAsk?.price?.amount?.native) continue;
 
-                    // Extract Traits
+                    // Extract Traits (Case Insensitive)
                     const attributes = item.token.attributes || [];
+                    
                     const levelTrait = attributes.find(a => a.key.toLowerCase().includes("level"));
-                    const scoreTrait = attributes.find(a => a.key.toLowerCase().includes("neynar")); // Adjust key based on exact metadata name
+                    const scoreTrait = attributes.find(a => a.key.toLowerCase().includes("neynar"));
 
-                    // Parse Values
-                    const level = levelTrait ? parseInt(levelTrait.value) : 0;
-                    const neynarScore = scoreTrait ? parseFloat(scoreTrait.value) : 0;
+                    // Parse Values (Default to safe values if missing)
+                    let level = levelTrait ? parseInt(levelTrait.value) : 0;
+                    if(isNaN(level)) level = 0;
+
+                    let neynarScore = scoreTrait ? parseFloat(scoreTrait.value) : 0;
+                    if(isNaN(neynarScore)) neynarScore = 0;
 
                     // --- FILTER 1: LEVEL 1-5 ---
                     if (level < 1 || level > 5) continue;
 
-                    // --- FILTER 2: REPUTATION LOGIC ---
+                    // --- FILTER 2: REPUTATION ---
                     let approvedReason = null;
 
-                    // Condition A: High Score (> 0.69)
+                    // A: High Score (> 0.69)
                     if (neynarScore > 0.69) {
                         approvedReason = "high-score";
                     } 
-                    // Condition B: Low Score (< 0.69) but owns another Lvl 3+
+                    // B: Low Score -> Check Wallet
                     else {
                         const seller = item.market.floorAsk.maker;
-                        const isWhale = await checkSellerWallet(seller); // Async call to Alchemy
-                        if (isWhale) {
-                            approvedReason = "whale-seller";
+                        // Only check wallet if we haven't already filled our spots to save API calls
+                        if (candidates.length < 3) {
+                            const isWhale = await checkSellerWallet(seller);
+                            if (isWhale) approvedReason = "whale-seller";
                         }
                     }
 
-                    // If passed one of the conditions, add to candidates
                     if (approvedReason) {
                         candidates.push({
                             token: item.token,
@@ -195,15 +199,14 @@
                         });
                     }
 
-                    // Optimization: Stop if we found top 3
                     if (candidates.length >= 3) break;
                 }
 
-                if(candidates.length === 0) throw new Error("No items found matching the strict criteria.");
+                if(candidates.length === 0) throw new Error("Found listings, but none matched the Score/Level criteria.");
 
                 loader.style.display = 'none';
 
-                // 3. Render Top 3
+                // 3. Render
                 let rank = 1;
                 candidates.forEach(item => {
                     renderCard(grid, item, rank);
@@ -213,41 +216,36 @@
             } catch(e) {
                 console.error(e);
                 loader.style.display = 'none';
-                errorDiv.innerText = `⚠️ ${e.message}`;
+                errorDiv.innerText = `⚠️ Error: ${e.message}`;
                 errorDiv.style.display = 'block';
             }
         }
 
-        // Helper: Check Seller Wallet for other Chickenfish Lvl >= 3
         async function checkSellerWallet(walletAddr) {
             try {
-                // Alchemy: Get NFTs for Owner for this collection
+                // Alchemy: Get NFTs for Owner
                 const url = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNFTsForOwner?owner=${walletAddr}&contractAddresses[]=${COLLECTION_ADDR}&withMetadata=true`;
                 const res = await fetch(url);
                 const data = await res.json();
                 
                 if (!data.ownedNfts) return false;
 
-                // Look for at least one OTHER item (count > 1 implies he has the one for sale + others, or we check ID)
-                // To be safe, we just look for ANY item with Level >= 3 in his wallet.
-                // Even if it's the one he is selling? The prompt says "at least ONE OTHER item".
-                // Since we don't know the exact Token ID in this specific Alchemy call easily without iterating,
-                // we assume if he holds a Level 3+ and he is selling a low score item (likely low level too?), it's a valid backup.
-                
+                // Look for Level >= 3 in wallet
                 for (const nft of data.ownedNfts) {
-                    // Check attributes inside Alchemy response
                     const attrs = nft.raw.metadata.attributes || [];
-                    const lvlAttr = attrs.find(a => a.trait_type === "Level" || a.trait_type === "level");
+                    const lvlAttr = attrs.find(a => 
+                        a.trait_type && a.trait_type.toLowerCase() === "level"
+                    );
                     
                     if (lvlAttr) {
                         const lvl = parseInt(lvlAttr.value);
-                        if (lvl >= 3) return true; // Found a strong item in wallet
+                        if (lvl >= 3) return true; 
                     }
                 }
                 return false;
             } catch (err) {
-                console.warn("Wallet check failed", err);
-                return false; // Fail safe
+                console.warn("Wallet check warning:", err);
+                return false; 
             }
         }
 
@@ -259,7 +257,6 @@
             
             let imgUrl = token.image || 'https://placehold.co/400x400?text=No+Img';
             
-            // Badge Logic
             let reasonBadge = "";
             if (data.reason === 'high-score') {
                 reasonBadge = `<div class="reason-badge reason-high-score">✅ Rep Score ${data.score}</div>`;
@@ -275,24 +272,19 @@
                     <div class="rank-badge">#${rank} Deal</div>
                     ${reasonBadge}
                 </div>
-                
                 <div class="nft-img-container">
                     <img src="${imgUrl}" class="nft-img" onerror="this.src='https://placehold.co/400x400?text=Err'">
                 </div>
-                
                 <div class="nft-info">
                     <div class="nft-name">${token.name || `#${token.tokenId}`}</div>
-                    
                     <div class="trait-info">
                         <span>Level: <b>${data.level}</b></span>
                         <span>Score: <b>${data.score}</b></span>
                     </div>
-                    
                     <div class="nft-price-box">
                         <div class="price-val">${priceEth.toFixed(4)} Ξ</div>
                         <div class="price-usd">$${priceUsd.toFixed(2)}</div>
                     </div>
-
                     <a href="${openseaLink}" target="_blank" class="buy-btn">Buy on OpenSea ↗</a>
                 </div>
             </div>`;
