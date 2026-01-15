@@ -35,9 +35,11 @@
             text-align: center; padding-bottom: 30px;
         }
 
-        /* Immagine Hero Principale (es. l5.jpeg) */
-        .img-wrapper { width: 100%; height: 280px; position: relative; }
-        .coll-img { width: 100%; height: 100%; object-fit: cover; }
+        /* Box contenitore dell'immagine */
+        .img-wrapper { width: 100%; height: 280px; position: relative; background: #f8f8f8; }
+        
+        /* MODIFICA QUI: 'contain' adatta l'immagine intera nel box */
+        .coll-img { width: 100%; height: 100%; object-fit: contain; }
         
         .info { padding: 30px 20px; }
         .main-title { font-size: 2rem; font-weight: 900; margin: 0 0 10px 0; color: #222; }
@@ -78,7 +80,7 @@
 
     <div class="card">
         <div class="img-wrapper">
-            <img src="l5.jpeg" class="coll-img" onerror="this.src='https://placehold.co/400x400?text=Chicken+Cover'">
+            <img src="l5.jpeg" class="coll-img" onerror="this.src='https://placehold.co/400x280?text=Chicken+Cover&font=roboto'">
         </div>
         
         <div class="info">
@@ -100,7 +102,7 @@
         </div>
     </div>
 
-    <div class="version">v25.0 (Essential Hub)</div>
+    <div class="version">v25.1 (Image Resized)</div>
 
 </body>
 </html>
