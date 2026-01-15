@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chickenfish Sniper</title>
+    <title>Chickenfish Hub</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -12,7 +12,7 @@
     </script>
 
     <style>
-        :root { --bg: #fffbf0; --text: #3e2723; --card-bg: #ffffff; --green: #2ecc71; --btn: #3e2723; }
+        :root { --bg: #fffbf0; --text: #3e2723; --card-bg: #ffffff; --green: #2ecc71; --red-bg: #ffebee; --red-text: #c62828; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -31,49 +31,45 @@
         .card {
             background: var(--card-bg); width: 100%; max-width: 400px;
             border-radius: 24px; overflow: hidden; 
-            box-shadow: 0 15px 30px rgba(62, 39, 35, 0.1);
-            text-align: center; padding-bottom: 20px;
+            box-shadow: 0 20px 40px rgba(62, 39, 35, 0.15);
+            text-align: center; padding-bottom: 30px;
         }
 
+        /* Immagine Hero Principale (es. l5.jpeg) */
         .img-wrapper { width: 100%; height: 280px; position: relative; }
         .coll-img { width: 100%; height: 100%; object-fit: cover; }
         
-        .info { padding: 20px; }
-        .main-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 5px 0; color: #222; }
-        .subtitle { color: #888; font-size: 0.8rem; margin-bottom: 25px; font-weight: 700; text-transform: uppercase; }
+        .info { padding: 30px 20px; }
+        .main-title { font-size: 2rem; font-weight: 900; margin: 0 0 10px 0; color: #222; }
+        .subtitle { color: #888; font-size: 1rem; margin-bottom: 30px; font-weight: 500; }
 
-        .scan-btn {
-            background: var(--btn); color: white; border: none;
-            width: 100%; padding: 18px; border-radius: 16px;
-            font-size: 1rem; font-weight: 800; cursor: pointer;
-            transition: transform 0.2s; box-shadow: 0 5px 15px rgba(62, 39, 35, 0.2);
+        /* Bottone Principale */
+        .main-btn {
             display: flex; justify-content: center; align-items: center; gap: 10px;
+            background: var(--green); color: white; text-decoration: none;
+            padding: 20px; border-radius: 18px; font-weight: 800; font-size: 1.2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+            margin-bottom: 30px;
         }
-        .scan-btn:hover { background: #5d4037; transform: translateY(-2px); }
-        .scan-btn:disabled { background: #ccc; cursor: wait; transform: none; box-shadow: none; }
+        .main-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(46, 204, 113, 0.4); background: #27ae60; }
 
-        .results-grid { display: none; flex-direction: column; gap: 10px; margin-top: 20px; text-align: left; }
-        
-        .result-item {
-            background: #f9f9f9; padding: 12px; border-radius: 12px;
-            display: flex; justify-content: space-between; align-items: center;
-            border: 1px solid #eee; text-decoration: none; color: inherit;
-            transition: background 0.2s;
+        /* Box Disclaimer Rosso */
+        .disclaimer-box {
+            background: var(--red-bg); border: 2px solid #ffcdd2;
+            border-radius: 16px; padding: 15px;
+            display: flex; align-items: center; gap: 15px;
+            text-align: left; color: var(--red-text);
         }
-        .result-item:hover { background: #f0f0f0; border-color: #ddd; }
 
-        .res-left { display: flex; flex-direction: column; }
-        .res-lvl { font-weight: 800; font-size: 0.9rem; }
-        .res-reason { font-size: 0.65rem; color: var(--green); background: #e8f5e9; padding: 2px 6px; border-radius: 4px; align-self: flex-start; margin-top: 4px; font-weight: 700;}
-        
-        .res-right { text-align: right; }
-        .res-price { font-weight: 900; color: #3e2723; font-size: 1rem; }
-        .res-id { font-size: 0.7rem; color: #aaa; font-family: monospace; }
+        .disclaimer-img {
+            width: 60px; height: 60px; border-radius: 12px; border: 2px solid #e57373; object-fit: cover;
+        }
 
-        .loader { display: none; margin-top: 15px; color: #888; font-size: 0.8rem; }
-        .error-log { display: none; margin-top: 15px; color: #e74c3c; font-size: 0.7rem; background: #ffebee; padding: 10px; border-radius: 8px;}
+        .disclaimer-text { font-size: 0.9rem; line-height: 1.4; }
+        .disclaimer-title { font-weight: 900; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 4px; display: block;}
 
-        .version { margin-top: 30px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
+        .version { margin-top: 40px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -82,146 +78,29 @@
 
     <div class="card">
         <div class="img-wrapper">
-            <img src="l5.jpeg" class="coll-img" onerror="this.src='https://placehold.co/400x400?text=Chicken'">
+            <img src="l5.jpeg" class="coll-img" onerror="this.src='https://placehold.co/400x400?text=Chicken+Cover'">
         </div>
         
         <div class="info">
-            <h2 class="main-title">Chickens by $EGGS</h2>
-            <div class="subtitle">Sniper Bot (Rarible Engine)</div>
+            <h2 class="main-title">Get your Chicken!</h2>
+            <div class="subtitle">Join the coop on Base network.</div>
             
-            <button id="scanBtn" class="scan-btn" onclick="runSniper()">
-                <span>🔎 Scan Market</span>
-            </button>
-            
-            <div id="loader" class="loader">Fetching from Rarible API...</div>
-            <div id="errorLog" class="error-log"></div>
+            <a href="https://opensea.io/collection/chickens-by-eggs" target="_blank" class="main-btn">
+                <span>Buy you a Chicken 🐔</span>
+            </a>
 
-            <div id="results" class="results-grid"></div>
+            <div class="disclaimer-box">
+                <img src="l0.png" class="disclaimer-img" onerror="this.src='https://placehold.co/60x60/ff0000/ffffff?text=RED'">
+                <div class="disclaimer-text">
+                    <span class="disclaimer-title">⚠️ Important Warning</span>
+                    Don't buy <strong>RED ones</strong> (like this), they aren't productive!
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <div class="version">v23.0 (Rarible Source)</div>
+    <div class="version">v25.0 (Essential Hub)</div>
 
-    <script>
-        // RARIBLE API CONFIG
-        // Rarible usa il formato "NETWORK:ADDRESS"
-        const COLLECTION_ID = "BASE:0x84eea2be67b17698b0e09b57eeeda47aa921bbf0";
-        // Richiediamo 50 item della collezione
-        const API_URL = `https://api.rarible.org/v0.1/items/byCollection?collection=${COLLECTION_ID}&size=50`;
-
-        async function runSniper() {
-            const btn = document.getElementById('scanBtn');
-            const loader = document.getElementById('loader');
-            const results = document.getElementById('results');
-            const errLog = document.getElementById('errorLog');
-
-            btn.disabled = true;
-            loader.style.display = 'block';
-            results.style.display = 'none';
-            errLog.style.display = 'none';
-
-            try {
-                // 1. Chiamata diretta all'API pubblica di Rarible (CORS Friendly)
-                const response = await fetch(API_URL);
-                
-                if (!response.ok) throw new Error(`Rarible API Error: ${response.status}`);
-                
-                const data = await response.json();
-                const items = data.items || [];
-                
-                // 2. FILTRAGGIO
-                const bestDeals = {};
-                let foundAny = false;
-
-                for (const item of items) {
-                    // Check se è in vendita (bestSellOrder deve esistere)
-                    const sellOrder = item.bestSellOrder;
-                    if (!sellOrder) continue;
-
-                    // Estrazione Prezzo (Rarible restituisce il valore "makePrice")
-                    const priceVal = parseFloat(sellOrder.makePrice);
-                    if (isNaN(priceVal)) continue;
-
-                    // Estrazione Tratti (Sono dentro item.meta.attributes)
-                    const attrs = item.meta?.attributes || [];
-                    let level = -1;
-                    let neynarScore = 0;
-                    let maxChickenLevel = 0;
-
-                    for (const a of attrs) {
-                        const key = (a.key || "").toLowerCase();
-                        const val = parseFloat(a.value);
-
-                        if (key === 'level') level = val;
-                        // Rarible potrebbe formattare i nomi diversamente, controlliamo substrings
-                        if (key.includes('neynar') && key.includes('score')) neynarScore = val;
-                        if (key.includes('max') && key.includes('chicken')) maxChickenLevel = val;
-                    }
-
-                    // Filtra solo Level 1-5
-                    if (level < 1 || level > 5) continue;
-
-                    // LOGICA GOLDEN EGG: Score >= 0.69 OR MaxLvl >= 3
-                    const isSafe = (neynarScore >= 0.69) || (maxChickenLevel >= 3);
-
-                    if (!isSafe) continue; // Scarta
-
-                    // Trovato! Salva se è il primo (Rarible non ordina sempre per prezzo, quindi controlliamo)
-                    if (!bestDeals[level] || priceVal < bestDeals[level].price) {
-                        foundAny = true;
-                        // L'ID Rarible è "BASE:0x...:TOKENID", estraiamo solo l'ID numerico
-                        const tokenId = item.tokenId; 
-                        
-                        bestDeals[level] = {
-                            id: tokenId,
-                            price: priceVal,
-                            reason: (neynarScore >= 0.69) ? `Score ${neynarScore}` : `Whale (Lvl ${maxChickenLevel})`
-                        };
-                    }
-                }
-
-                // 3. RENDER
-                let html = "";
-                if (!foundAny) {
-                    html = `<div style="color:#666;font-size:0.9rem;margin-top:10px;">No safe deals found in API sample.</div>`;
-                } else {
-                    // Ordina per livello 1-5
-                    for (let i = 1; i <= 5; i++) {
-                        const deal = bestDeals[i];
-                        if (deal) {
-                            const price = deal.price.toFixed(4);
-                            // Linkiamo a OpenSea per l'acquisto (più familiare)
-                            const link = `https://opensea.io/assets/base/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0/${deal.id}`;
-
-                            html += `
-                            <a href="${link}" target="_blank" class="result-item">
-                                <div class="res-left">
-                                    <span class="res-lvl">Level ${i}</span>
-                                    <span class="res-reason">✅ ${deal.reason}</span>
-                                </div>
-                                <div class="res-right">
-                                    <div class="res-price">${price} Ξ</div>
-                                    <div class="res-id">#${deal.id}</div>
-                                </div>
-                            </a>`;
-                        }
-                    }
-                }
-
-                results.innerHTML = html;
-                results.style.display = 'flex';
-                btn.innerText = "🔄 Scan Again";
-
-            } catch (e) {
-                console.error(e);
-                errLog.innerText = `Error: ${e.message}`;
-                errLog.style.display = 'block';
-                btn.innerText = "⚠️ Retry";
-            } finally {
-                btn.disabled = false;
-                loader.style.display = 'none';
-            }
-        }
-    </script>
 </body>
 </html>
