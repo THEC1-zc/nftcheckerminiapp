@@ -12,7 +12,7 @@
     </script>
 
     <style>
-        :root { --bg: #fffbf0; --text: #3e2723; --card-bg: #ffffff; --green: #2ecc71; --orange: #ff9f43; }
+        :root { --bg: #fffbf0; --text: #3e2723; --card-bg: #ffffff; --green: #2ecc71; --btn: #3e2723; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -31,37 +31,51 @@
         .card {
             background: var(--card-bg); width: 100%; max-width: 400px;
             border-radius: 24px; overflow: hidden; 
-            box-shadow: 0 20px 40px rgba(62, 39, 35, 0.15);
-            text-align: center; padding-bottom: 30px;
+            box-shadow: 0 15px 30px rgba(62, 39, 35, 0.1);
+            text-align: center; padding-bottom: 20px;
         }
 
-        .img-wrapper { width: 100%; height: 320px; position: relative; }
+        .img-wrapper { width: 100%; height: 280px; position: relative; }
         .coll-img { width: 100%; height: 100%; object-fit: cover; }
         
-        .info { padding: 25px 20px 10px 20px; }
+        .info { padding: 20px; }
         .main-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 5px 0; color: #222; }
-        .subtitle { color: #888; font-size: 0.8rem; margin-bottom: 25px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .subtitle { color: #888; font-size: 0.8rem; margin-bottom: 25px; font-weight: 700; text-transform: uppercase; }
 
-        .btn-container { display: flex; flex-direction: column; gap: 12px; }
-
-        .snipe-btn {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 18px; border-radius: 16px; text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-weight: 800; font-size: 1rem; border: 1px solid transparent;
-            cursor: pointer;
+        /* AZIONI */
+        .scan-btn {
+            background: var(--btn); color: white; border: none;
+            width: 100%; padding: 18px; border-radius: 16px;
+            font-size: 1rem; font-weight: 800; cursor: pointer;
+            transition: transform 0.2s; box-shadow: 0 5px 15px rgba(62, 39, 35, 0.2);
+            display: flex; justify-content: center; align-items: center; gap: 10px;
         }
+        .scan-btn:hover { background: #5d4037; transform: translateY(-2px); }
+        .scan-btn:disabled { background: #ccc; cursor: wait; transform: none; box-shadow: none; }
 
-        /* OPENSEA (Verde) */
-        .btn-os { background: #e8f5e9; border-color: #c8e6c9; color: #1b5e20; }
-        .btn-os:hover { background: #c8e6c9; transform: translateY(-2px); }
+        /* RISULTATI */
+        .results-grid { display: none; flex-direction: column; gap: 10px; margin-top: 20px; text-align: left; }
+        
+        .result-item {
+            background: #f9f9f9; padding: 12px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #eee; text-decoration: none; color: inherit;
+            transition: background 0.2s;
+        }
+        .result-item:hover { background: #f0f0f0; border-color: #ddd; }
 
-        /* BLUR (Arancione) */
-        .btn-blur { background: #fff3e0; border-color: #ffe0b2; color: #e65100; }
-        .btn-blur:hover { background: #ffe0b2; transform: translateY(-2px); }
+        .res-left { display: flex; flex-direction: column; }
+        .res-lvl { font-weight: 800; font-size: 0.9rem; }
+        .res-reason { font-size: 0.65rem; color: var(--green); background: #e8f5e9; padding: 2px 6px; border-radius: 4px; align-self: flex-start; margin-top: 4px; font-weight: 700;}
+        
+        .res-right { text-align: right; }
+        .res-price { font-weight: 900; color: #3e2723; font-size: 1rem; }
+        .res-id { font-size: 0.7rem; color: #aaa; font-family: monospace; }
 
-        .note { margin-top: 20px; font-size: 0.7rem; color: #aaa; padding: 0 20px; font-style: italic; }
-        .version { margin-top: 40px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
+        .loader { display: none; margin-top: 15px; color: #888; font-size: 0.8rem; }
+        .error-log { display: none; margin-top: 15px; color: #e74c3c; font-size: 0.7rem; background: #ffebee; padding: 10px; border-radius: 8px;}
+
+        .version { margin-top: 30px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -75,71 +89,88 @@
         
         <div class="info">
             <h2 class="main-title">Chickens by $EGGS</h2>
-            <div class="subtitle">Direct Access</div>
+            <div class="subtitle">Sniper Bot (Server-Side)</div>
             
-            <div class="btn-container">
-                
-                <div onclick="openOpenSea()" class="snipe-btn btn-os">
-                    <span>🌊 OpenSea (Smart Filter)</span>
-                    <span>↗</span>
+            <button id="scanBtn" class="scan-btn" onclick="runSniper()">
+                <span>🔎 Scan Market</span>
+            </button>
+            
+            <div id="loader" class="loader">Scanning listings... please wait...</div>
+            <div id="errorLog" class="error-log"></div>
+
+            <div id="results" class="results-grid">
                 </div>
-
-                <a href="https://blur.io/collection/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0" 
-                   target="_blank" class="snipe-btn btn-blur">
-                    <span>⚡ Blur (Contract View)</span>
-                    <span>↗</span>
-                </a>
-
-            </div>
-
-            <div class="note">
-                *Blur usa il Contract Address. OpenSea usa un nuovo formato URL.
-            </div>
         </div>
     </div>
 
-    <div class="version">v19.0 (Contract & JSON Fix)</div>
+    <div class="version">v20.0 (Server Sniper)</div>
 
     <script>
-        function openOpenSea() {
-            // Costruiamo l'URL usando il formato JSON stringify che OpenSea preferisce per le query complesse
-            // Questo aggira i problemi di parentesi quadre
-            
-            const baseUrl = "https://opensea.io/collection/chickens-by-eggs";
-            
-            // Definiamo i parametri in un oggetto JS pulito
-            const queryParams = {
-                search: {
-                    sortAscending: true,
-                    sortBy: "UNIT_PRICE",
-                    toggles: ["BUY_NOW"],
-                    numericTraits: [
-                        {
-                            name: "Owner Max Chicken Level",
-                            ranges: [{ min: 3 }]
-                        }
-                    ]
+        async function runSniper() {
+            const btn = document.getElementById('scanBtn');
+            const loader = document.getElementById('loader');
+            const results = document.getElementById('results');
+            const errLog = document.getElementById('errorLog');
+
+            // Reset UI
+            btn.disabled = true;
+            btn.innerText = "Scanning...";
+            loader.style.display = 'block';
+            results.style.display = 'none';
+            errLog.style.display = 'none';
+
+            try {
+                // CHIAMATA AL TUO SERVER VERCEL
+                const response = await fetch('/api/sniper');
+                
+                if (!response.ok) throw new Error("Server Scan Failed");
+                
+                const data = await response.json();
+                
+                // Genera HTML
+                let html = "";
+                let foundAny = false;
+
+                for (let i = 1; i <= 5; i++) {
+                    const deal = data[i];
+                    
+                    if (deal) {
+                        foundAny = true;
+                        const price = parseFloat(deal.price).toFixed(4);
+                        // Link diretto all'asset (Infallibile)
+                        const link = `https://opensea.io/assets/base/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0/${deal.id}`;
+
+                        html += `
+                        <a href="${link}" target="_blank" class="result-item">
+                            <div class="res-left">
+                                <span class="res-lvl">Level ${i}</span>
+                                <span class="res-reason">✅ ${deal.reason}</span>
+                            </div>
+                            <div class="res-right">
+                                <div class="res-price">${price} Ξ</div>
+                                <div class="res-id">#${deal.id}</div>
+                            </div>
+                        </a>`;
+                    }
                 }
-            };
 
-            // Trasformiamo l'oggetto in una stringa URL compatibile
-            // Esempio risultato: ?search[numericTraits][0][name]=... ma gestito meglio dal browser
-            const params = new URLSearchParams();
-            
-            // Aggiungiamo manualmente i parametri per sicurezza massima
-            params.append('search[toggles][0]', 'BUY_NOW');
-            params.append('search[sortAscending]', 'true');
-            params.append('search[sortBy]', 'UNIT_PRICE');
-            
-            // "Owner Max Chicken Level" >= 3
-            // Usiamo il nome ESATTO visto nello screenshot
-            params.append('search[numericTraits][0][name]', 'Owner Max Chicken Level');
-            params.append('search[numericTraits][0][ranges][0][min]', '3');
+                if (!foundAny) {
+                    html = `<div style="color:#888;font-size:0.9rem;margin-top:10px;">No safe deals found in top 50 listings.</div>`;
+                }
 
-            const finalUrl = `${baseUrl}?${params.toString()}`;
-            
-            // Debug (opzionale): console.log(finalUrl);
-            window.open(finalUrl, '_blank');
+                results.innerHTML = html;
+                results.style.display = 'flex';
+                btn.innerText = "🔄 Scan Again";
+
+            } catch (e) {
+                console.error(e);
+                errLog.innerText = "Error: Could not fetch data. Try again later.";
+                errLog.style.display = 'block';
+                btn.innerText = "⚠️ Retry";
+            } finally {
+                btn.disabled = false;
+                loader.style.display = 'none';
+            }
         }
     </script>
 </body>
