@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chickenfish Sniper</title>
+    <title>Chickenfish Hub</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -12,7 +12,7 @@
     </script>
 
     <style>
-        :root { --bg: #fffbf0; --text: #3e2723; --accent: #FFC107; --card-bg: #ffffff; --green: #2ecc71; }
+        :root { --bg: #fffbf0; --text: #3e2723; --accent: #FFC107; --card-bg: #ffffff; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -26,18 +26,9 @@
             display: flex; flex-direction: column; align-items: center; 
         }
 
-        .nav-header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .nav-header { width: 100%; max-width: 400px; display: flex; margin-bottom: 20px; }
         .back-btn { text-decoration: none; color: #5d4037; background: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* NEYNAR SCORE BOX */
-        .neynar-box { 
-            background: #222; color: #fff; padding: 5px 12px; border-radius: 20px; 
-            font-size: 0.75rem; font-weight: 700; display: none; align-items: center; gap: 5px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-        .neynar-icon { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; }
-
-        /* MAIN CARD */
         .card {
             background: var(--card-bg); width: 100%; max-width: 400px;
             border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(62, 39, 35, 0.1);
@@ -48,10 +39,9 @@
         .coll-img { width: 100%; height: 100%; object-fit: cover; }
 
         .info { padding: 20px; }
-        .main-title { font-size: 1.5rem; font-weight: 900; margin: 0 0 5px 0; color: #222; }
+        .main-title { font-size: 1.6rem; font-weight: 900; margin: 0 0 5px 0; color: #222; }
         .subtitle { color: #888; font-size: 0.8rem; margin-bottom: 20px; }
 
-        /* STATS GRID */
         .stats-row { 
             display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px;
         }
@@ -59,7 +49,6 @@
         .stat-val { font-size: 1.1rem; font-weight: 900; color: #3e2723; }
         .stat-lbl { font-size: 0.65rem; color: #aaa; text-transform: uppercase; font-weight: 700; }
 
-        /* ACTION GRID */
         .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; font-weight: 700; margin-bottom: 10px; display: block; }
         
         .links-grid { 
@@ -89,21 +78,17 @@
 
     <div class="nav-header">
         <a href="index.html" class="back-btn">⬅ Home</a>
-        <div id="neynarBadge" class="neynar-box">
-            <span class="neynar-icon"></span>
-            Neynar: <span id="myScore" style="margin-left:4px">Checking...</span>
-        </div>
     </div>
 
-    <div id="loader" class="loading">Fetching Data...</div>
+    <div id="loader" class="loading">Loading Chickens...</div>
 
     <div id="content" class="card" style="display: none;">
         <div class="img-wrapper">
-            <img id="collImg" class="coll-img" src="" onerror="this.src='https://placehold.co/400x400?text=No+Image'">
+            <img id="collImg" class="coll-img" src="" onerror="this.src='https://placehold.co/400x400?text=Chicken'">
         </div>
         
         <div class="info">
-            <h2 id="collNameTitle">Loading...</h2>
+            <h2 id="collNameTitle">Chickens by $EGGS</h2>
             <div class="subtitle">Base Network • Verified</div>
 
             <div class="stats-row">
@@ -117,7 +102,7 @@
                 </div>
             </div>
 
-            <span class="label">SNIPE BY LEVEL (BUY NOW)</span>
+            <span class="label">SNIPE BY LEVEL</span>
             <div class="links-grid">
                 <a id="link1" href="#" target="_blank" class="filter-btn">Level 1 ⚡</a>
                 <a id="link2" href="#" target="_blank" class="filter-btn">Level 2 ⚡</a>
@@ -128,60 +113,54 @@
         </div>
     </div>
 
-    <div class="version">v7.1 (Neynar Integrated)</div>
+    <div class="version">v8.0 (Hardcoded Data Fix)</div>
 
     <script>
         // CONFIG
         const COLLECTION = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0".toLowerCase();
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
         
-        // 🔑 NEYNAR API KEY INTEGRATA
-        const NEYNAR_KEY = 'DD21E376-E7B8-4ED4-BEE9-6D56A55412A7'; 
+        // OPENSEA SLUG CORRETTO (Hardcoded per sicurezza)
+        const OS_SLUG = "chickens-by-eggs"; 
 
         window.addEventListener('DOMContentLoaded', initApp);
 
         async function initApp() {
             try {
-                // 1. Get Contract Metadata (To find Slug)
+                // 1. Fetch Specific Image (Token #8846) as requested
+                const tokenUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftMetadata?contractAddress=${COLLECTION}&tokenId=8846`;
+                
+                // 2. Fetch Floor Price & Stats
+                const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION}`;
                 const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${COLLECTION}`;
-                const metaRes = await fetch(metaUrl);
+
+                // Parallel Fetch
+                const [tokenRes, floorRes, metaRes] = await Promise.all([
+                    fetch(tokenUrl),
+                    fetch(floorUrl),
+                    fetch(metaUrl)
+                ]);
+
+                const tokenData = await tokenRes.json();
+                const floorData = await floorRes.json();
                 const metaData = await metaRes.json();
 
-                // 2. Fix Image: If Collection Image is missing, fetch Token #1
-                let imgUrl = metaData.openSea?.imageUrl || metaData.imageUrl;
+                // --- UI UPDATE ---
                 
-                if (!imgUrl) {
-                    try {
-                        const tokenUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftMetadata?contractAddress=${COLLECTION}&tokenId=1`;
-                        const tokenRes = await fetch(tokenUrl);
-                        const tokenData = await tokenRes.json();
-                        imgUrl = tokenData.image?.cachedUrl || tokenData.image?.originalUrl;
-                    } catch(err) { console.log("Token fetch failed"); }
-                }
-                
-                // IPFS Cleanup
+                // Image Handling
+                let imgUrl = tokenData.image?.cachedUrl || tokenData.image?.originalUrl;
                 if(imgUrl && imgUrl.startsWith('ipfs://')) imgUrl = imgUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
-                
-                // 3. Get Floor Price
-                const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION}`;
-                const floorRes = await fetch(floorUrl);
-                const floorData = await floorRes.json();
+                document.getElementById('collImg').src = imgUrl || "https://placehold.co/400x400?text=Chicken";
 
-                // --- UI POPULATION ---
-                document.getElementById('collImg').src = imgUrl || "https://placehold.co/400x400?text=Chickenfish";
-                document.getElementById('collNameTitle').innerText = metaData.name || "Chickenfish";
-                
+                // Floor Price & Supply
                 const floor = floorData.openSea?.floorPrice || 0;
                 document.getElementById('floorEth').innerText = `${floor.toFixed(4)} Ξ`;
                 document.getElementById('supply').innerText = metaData.totalSupply || "???";
 
-                // --- LINK GENERATION ---
-                // We use the "slug" from Alchemy if available, otherwise fallback to "chickenfish"
-                let slug = metaData.openSea?.collectionName || "chickenfish"; 
-                slug = slug.toLowerCase().replace(/\s+/g, '-');
-
-                // OpenSea Filter Params
-                const baseUrl = `https://opensea.io/collection/${slug}?search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=`;
+                // --- LINKS GENERATION ---
+                // Base URL with correct slug and query params for Traits + Buy Now
+                // Trait Name: "Level" (Capital L usually)
+                const baseUrl = `https://opensea.io/collection/${OS_SLUG}?search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=`;
                 const suffix = `&search[toggles][0]=BUY_NOW&search[sortAscending]=true&search[sortBy]=UNIT_PRICE`;
 
                 document.getElementById('link1').href = baseUrl + "1" + suffix;
@@ -190,54 +169,13 @@
                 document.getElementById('link4').href = baseUrl + "4" + suffix;
                 document.getElementById('link5').href = baseUrl + "5" + suffix;
 
-                // --- NEYNAR CHECK ---
-                // Recupera il wallet salvato dalla home page
-                const wallet = localStorage.getItem('tysm_wallet');
-                if (wallet) {
-                    checkNeynarScore(wallet);
-                } else {
-                    document.getElementById('neynarBadge').style.display = 'none';
-                }
-
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
 
             } catch (e) {
                 console.error(e);
-                document.getElementById('loader').innerText = "Load Failed. Check Console.";
+                document.getElementById('loader').innerText = "Load Failed.";
                 document.getElementById('loader').style.color = "red";
-            }
-        }
-
-        async function checkNeynarScore(address) {
-            try {
-                // Mostra il badge
-                document.getElementById('neynarBadge').style.display = "flex";
-
-                // Fetch User by Address
-                const url = `https://api.neynar.com/v2/farcaster/user/bulk-by-address?addresses=${address}`;
-                const res = await fetch(url, {
-                    headers: { 
-                        'accept': 'application/json',
-                        'api_key': NEYNAR_KEY
-                    }
-                });
-                const data = await res.json();
-                
-                if (data[address] && data[address].length > 0) {
-                    // Utente trovato su Farcaster
-                    const user = data[address][0];
-                    // Se vuoi mostrare uno score specifico, puoi aggiungerlo qui.
-                    // Per ora mostriamo "Active" per confermare che l'API funziona e l'utente esiste.
-                    document.getElementById('myScore').innerText = "Active"; 
-                    document.getElementById('myScore').style.color = "#2ecc71";
-                } else {
-                    document.getElementById('myScore').innerText = "Not Found";
-                    document.getElementById('myScore').style.color = "#ff9f43";
-                }
-            } catch (e) {
-                console.log("Neynar check failed", e);
-                document.getElementById('myScore').innerText = "Error";
             }
         }
     </script>
