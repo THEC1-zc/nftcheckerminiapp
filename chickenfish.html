@@ -12,7 +12,7 @@
     </script>
 
     <style>
-        :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --green: #2ecc71; --red: #ff4757; }
+        :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --green: #2ecc71; --orange: #ff9f43; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -23,79 +23,69 @@
             background-repeat: no-repeat;
             background-attachment: fixed;
             color: var(--text); 
-            padding: 15px; 
+            padding: 20px; 
             margin: 0; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            overflow-x: hidden; 
         }
+
+        .nav-header { width: 100%; max-width: 400px; display: flex; margin-bottom: 15px; }
+        .back-btn { text-decoration: none; color: #555; background: rgba(255,255,255,0.8); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; backdrop-filter: blur(4px); }
+
+        /* CARD */
+        .card {
+            background: var(--card-bg); width: 100%; max-width: 400px;
+            border-radius: 24px; overflow: hidden; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center; display: none; /* Hidden on load */
+        }
+
+        .img-wrapper { 
+            width: 100%; height: 300px; background: #eee; 
+            display: flex; align-items: center; justify-content: center;
+        }
+        .coll-img { width: 100%; height: 100%; object-fit: cover; }
+
+        .info-box { padding: 25px 20px; }
         
-        .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
-        .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
+        .coll-name { text-transform: uppercase; font-size: 0.75rem; color: #888; letter-spacing: 1px; font-weight: 700; margin-bottom: 4px; }
+        .main-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 20px 0; color: #222; }
+
+        /* PRICE BOX */
+        .price-row { 
+            display: flex; justify-content: center; align-items: baseline; gap: 10px; 
+            background: #f8f9fa; padding: 15px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #eee;
+        }
+        .eth-val { font-size: 1.6rem; font-weight: 900; color: var(--primary); }
+        .usd-val { font-size: 1rem; color: #666; font-weight: 500; }
+
+        /* BUTTONS GRID */
+        .section-label { font-size: 0.7rem; font-weight: 800; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* CARD PRINCIPALE */
-        .container { 
-            background: var(--card-bg); 
-            padding: 0; /* Padding rimosso per far toccare l'immagine ai bordi */
-            border-radius: 24px; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.08); 
-            width: 100%; 
-            max-width: 400px; 
-            overflow: hidden; /* Importante per i bordi arrotondati dell'immagine */
-            text-align: center; 
-            display: none; /* Nascosto finché non carica */
+        .grid-links { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; 
         }
 
-        /* IMMAGINE */
-        .img-wrapper {
-            width: 100%; 
-            aspect-ratio: 1/1; 
-            background: #f0f2f5; 
-            position: relative; 
-            overflow: hidden;
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
+        .filter-btn {
+            background: #fff; border: 2px solid #eee; color: #333;
+            padding: 12px; border-radius: 14px; text-decoration: none;
+            font-weight: 700; font-size: 0.9rem; transition: all 0.2s;
+            display: flex; justify-content: center; align-items: center;
         }
-        .collection-img {
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            transition: transform 0.5s ease;
-        }
-        
-        /* INFO BOX */
-        .info-box { padding: 25px; text-align: left; }
+        .filter-btn:hover { border-color: var(--primary); color: var(--primary); background: #f0f7ff; transform: translateY(-2px); }
 
-        .coll-name { font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px; }
-        .main-title { font-size: 1.6rem; font-weight: 900; color: #1a1a1a; margin-bottom: 20px; line-height: 1.2; }
-
-        /* PREZZI */
-        .price-container { 
-            background: #f8f9fa; border-radius: 16px; padding: 15px 20px; margin-bottom: 20px; 
-            display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee;
+        .main-btn {
+            display: block; width: 100%; padding: 14px; margin-top: 10px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); 
+            color: white; border-radius: 14px; text-decoration: none; font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s;
         }
-        .price-col { display: flex; flex-direction: column; }
-        .lbl { font-size: 0.65rem; font-weight: 700; color: #999; text-transform: uppercase; }
-        .eth-val { font-size: 1.5rem; font-weight: 900; color: var(--primary); }
-        .usd-val { font-size: 1rem; font-weight: 600; color: #555; text-align: right; }
+        .main-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
 
-        /* BOTTONE */
-        .action-btn {
-            display: block; width: 100%; padding: 16px; border-radius: 14px;
-            background: #1a1a1a; color: white; text-decoration: none;
-            font-weight: 700; text-align: center; font-size: 1rem;
-            transition: background 0.2s, transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            box-sizing: border-box;
-        }
-        .action-btn:hover { background: var(--primary); transform: translateY(-2px); }
+        .note { font-size: 0.7rem; color: #bbb; margin-top: 15px; font-style: italic; }
 
-        /* LOADER */
-        .loading-spinner { 
-            border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%;
-            width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 60px auto;
-        }
+        .loader { margin-top: 50px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 30px; font-weight: 800; font-family: monospace; opacity: 0.6; }
@@ -107,91 +97,96 @@
         <a href="index.html" class="back-btn">⬅ Home</a>
     </div>
 
-    <div id="loader" class="loading-spinner"></div>
+    <div id="loader" class="loader"></div>
 
-    <div id="card" class="container">
+    <div id="content" class="card">
         <div class="img-wrapper">
-            <img id="collImg" class="collection-img" src="" alt="Collection Image">
+            <img id="collImg" class="coll-img" src="" onerror="this.src='https://placehold.co/600x600?text=No+Image'">
         </div>
         
         <div class="info-box">
             <div class="coll-name">Base Network</div>
             <div id="collNameTitle" class="main-title">Loading...</div>
-            
-            <div class="price-container">
-                <div class="price-col">
-                    <span class="lbl">Floor Price (ETH)</span>
-                    <span id="priceEth" class="eth-val">---</span>
-                </div>
-                <div class="price-col">
-                    <span class="lbl">Value (USD)</span>
-                    <span id="priceUsd" class="usd-val">---</span>
-                </div>
+
+            <div class="price-row">
+                <span id="priceEth" class="eth-val">---</span>
+                <span id="priceUsd" class="usd-val">---</span>
             </div>
 
-            <a id="osLink" href="#" target="_blank" class="action-btn">View Collection ↗</a>
+            <div class="section-label">Find on OpenSea (Filtered)</div>
+            
+            <div class="grid-links">
+                <a id="link1" href="#" target="_blank" class="filter-btn">Level 1 ↗</a>
+                <a id="link2" href="#" target="_blank" class="filter-btn">Level 2 ↗</a>
+                <a id="link3" href="#" target="_blank" class="filter-btn">Level 3 ↗</a>
+                <a id="link4" href="#" target="_blank" class="filter-btn">Level 4 ↗</a>
+            </div>
+            
+            <a id="link5" href="#" target="_blank" class="main-btn">Find Level 5 (Rare) 💎</a>
+
+            <div class="note">* Filtra per 'Level'. Controlla manualmente il Neynar Score.</div>
         </div>
     </div>
 
-    <div class="version-tag">Step 1: Collection Base</div>
+    <div class="version-tag">v1.1 (Hub & Smart Links)</div>
 
     <script>
-        // CONFIGURAZIONE
         const COLLECTION = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0".toLowerCase();
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
 
-        window.addEventListener('DOMContentLoaded', loadStepOne);
+        window.addEventListener('DOMContentLoaded', loadData);
 
-        async function loadStepOne() {
-            const loader = document.getElementById('loader');
-            const card = document.getElementById('card');
-
+        async function loadData() {
             try {
-                // 1. Dati Collezione (Nome, Immagine)
+                // 1. Fetch Metadata (Alchemy)
                 const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${COLLECTION}`;
                 const metaRes = await fetch(metaUrl);
                 const metaData = await metaRes.json();
 
-                // 2. Floor Price (Alchemy)
+                // 2. Fetch Floor Price (Alchemy)
                 const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION}`;
                 const floorRes = await fetch(floorUrl);
                 const floorData = await floorRes.json();
 
-                // 3. Prezzo ETH (Coinbase)
+                // 3. Fetch ETH Price (Coinbase)
                 const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
                 const priceJson = await priceRes.json();
                 const ethRate = parseFloat(priceJson.data.amount);
 
-                // --- LOGICA DATI ---
-                
-                // Nome
+                // --- DATA PROCESSING ---
                 const name = metaData.name || "Chickenfish";
                 
-                // Immagine (Cerchiamo in vari campi per sicurezza)
-                let imgUrl = metaData.openSea?.imageUrl || metaData.imageUrl || "https://placehold.co/600x600?text=No+Image";
-                if (imgUrl.startsWith('ipfs://')) imgUrl = imgUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                // Image Logic (OpenSea > Metadata > Fallback)
+                let imgUrl = metaData.openSea?.imageUrl || metaData.imageUrl || "https://placehold.co/600x600?text=Chickenfish";
+                if(imgUrl.startsWith('ipfs://')) imgUrl = imgUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
 
-                // Prezzi
                 const floorEth = floorData.openSea?.floorPrice || 0;
                 const floorUsd = floorEth * ethRate;
 
-                // --- AGGIORNAMENTO UI ---
+                // --- UI UPDATE ---
                 document.getElementById('collImg').src = imgUrl;
                 document.getElementById('collNameTitle').innerText = name;
                 document.getElementById('priceEth').innerText = `${floorEth.toFixed(4)} Ξ`;
                 document.getElementById('priceUsd').innerText = `$${floorUsd.toFixed(2)}`;
-                
-                // Link OpenSea Genrico
-                document.getElementById('osLink').href = `https://opensea.io/assets/base/${COLLECTION}`;
 
-                // Mostra tutto
-                loader.style.display = 'none';
-                card.style.display = 'block';
+                // --- SMART LINKS SETUP ---
+                // OpenSea URL params for Trait Filtering: search[stringTraits][0][name]=TraitName&search[stringTraits][0][values][0]=Value
+                const baseUrl = `https://opensea.io/assets/base/${COLLECTION}?search[sortAscending]=true&search[sortBy]=UNIT_PRICE&search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=`;
+
+                document.getElementById('link1').href = baseUrl + "1";
+                document.getElementById('link2').href = baseUrl + "2";
+                document.getElementById('link3').href = baseUrl + "3";
+                document.getElementById('link4').href = baseUrl + "4";
+                document.getElementById('link5').href = baseUrl + "5";
+
+                // Show Content
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
 
             } catch (e) {
                 console.error(e);
-                loader.style.display = 'none';
-                alert("Errore nel caricamento dati base.");
+                document.getElementById('loader').style.display = 'none';
+                alert("Errore caricamento dati. Riprova.");
             }
         }
     </script>
