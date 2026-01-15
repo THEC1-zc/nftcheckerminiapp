@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Showroom v1.13</title>
+    <title>Showroom v1.14</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -56,6 +56,7 @@
             margin: 0 auto;
             position: relative;
             display: none; 
+            padding-bottom: 0;
         }
 
         .deal-badge {
@@ -66,15 +67,16 @@
             text-transform: uppercase; letter-spacing: 1px;
         }
 
-        /* DEAL ALERT (Under 2$) */
+        /* DEAL ALERT (Bottom & Bigger) */
         .deal-alert {
             display: none; /* Hidden by default */
             background-color: var(--orange); color: white;
-            font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
-            padding: 8px; width: 100%; box-sizing: border-box;
+            font-size: 0.9rem; font-weight: 800; text-transform: uppercase;
+            padding: 12px; width: 100%; box-sizing: border-box;
             animation: pulse 2s infinite;
+            letter-spacing: 1px;
         }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.85; } 100% { opacity: 1; } }
 
         .img-wrapper {
             width: 100%; aspect-ratio: 1/1; background: #f0f2f5; position: relative; overflow: hidden;
@@ -85,13 +87,13 @@
         }
         .deal-card:hover .collection-img { transform: scale(1.05); }
 
-        .info-box { padding: 25px; text-align: left; }
+        .info-box { padding: 25px 25px 20px 25px; text-align: left; position: relative; }
         
         .coll-name { font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px; }
         .item-label { font-size: 1.4rem; font-weight: 900; color: #1a1a1a; margin-bottom: 15px; line-height: 1.2; }
 
         .price-container { 
-            background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 20px; 
+            background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 5px; 
             display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee;
         }
         .price-col { display: flex; flex-direction: column; }
@@ -104,12 +106,12 @@
             background: #1a1a1a; color: white; text-decoration: none;
             font-weight: 700; text-align: center; font-size: 1rem;
             transition: background 0.2s, transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            box-sizing: border-box;
+            box-sizing: border-box; margin-bottom: 10px;
         }
         .action-btn:hover { background: var(--primary); transform: translateY(-2px); }
         
         /* Fallback Mint Button Style */
-        .mint-mode { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+        .mint-mode { background: linear-gradient(135deg, #8e2de2, #4a00e0); box-shadow: 0 5px 20px rgba(142, 45, 226, 0.4); }
 
         .error-box { display: none; color: var(--red); font-weight: 600; margin-top: 20px; padding: 15px; background: #fff5f5; border-radius: 10px; }
 
@@ -132,11 +134,10 @@
         <div id="card" class="deal-card">
             <div class="deal-badge" id="badgeText">Current Floor</div>
             
-            <div id="dealAlert" class="deal-alert">🔥 Buy lower than mint price</div>
-
             <div class="img-wrapper">
                 <img id="nftImg" class="collection-img" src="" alt="NFT Image">
             </div>
+            
             <div class="info-box">
                 <div id="collName" class="coll-name">Loading...</div>
                 <div class="item-label" id="itemLabel">Best Market Price</div>
@@ -154,9 +155,11 @@
 
                 <a id="buyLink" href="#" target="_blank" class="action-btn">View on OpenSea ↗</a>
             </div>
+
+            <div id="dealAlert" class="deal-alert">🔥 Buy lower than mint price</div>
         </div>
         
-        <div class="version-tag">v1.13 (Fix Logic &lt; 2$)</div>
+        <div class="version-tag">v1.14 (UX Polish & Mint Push)</div>
     </div>
 
     <script>
@@ -179,75 +182,62 @@
                 const priceJson = await priceRes.json();
                 const ethPrice = parseFloat(priceJson.data.amount);
 
-                // 2. Metadata (Name & Default Img)
+                // 2. Metadata
                 const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${COLLECTION_ADDR}`;
                 const metaRes = await fetch(metaUrl);
                 const metaData = await metaRes.json();
                 const collName = metaData.name || "Unknown Collection";
                 
-                // --- IMAGE LOGIC (Meta -> Deep -> Owner -> Fallback to Mint) ---
+                // --- IMAGE LOGIC ---
                 let finalImage = "";
                 let isOwnedImage = false;
                 let isMintFallback = false;
 
-                // A: Collection Metadata Image
-                if(metaData.openSea && metaData.openSea.imageUrl) {
-                    finalImage = metaData.openSea.imageUrl;
-                }
+                // A: Collection Meta
+                if(metaData.openSea && metaData.openSea.imageUrl) finalImage = metaData.openSea.imageUrl;
 
-                // B: Deep Scan (if no image)
+                // B: Deep Scan
                 if (!finalImage || finalImage.includes("placehold")) {
                     try {
                         const deepUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftsForContract?contractAddress=${COLLECTION_ADDR}&pageSize=10`;
                         const deepRes = await fetch(deepUrl);
                         const deepData = await deepRes.json();
-                        
                         if(deepData.nfts) {
                             for (const nft of deepData.nfts) {
                                 let candidate = nft.image?.cachedUrl || nft.image?.originalUrl || nft.image?.pngUrl;
-                                if (candidate && candidate.length > 5) {
-                                    finalImage = candidate;
-                                    break; 
-                                }
+                                if (candidate && candidate.length > 5) { finalImage = candidate; break; }
                             }
                         }
                     } catch(err) {}
                 }
 
-                // C: Owner Check (Overrides previous)
+                // C: Owner Check
                 if (targetWallet) {
                     try {
                         const ownerUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNFTsForOwner?owner=${targetWallet}&contractAddresses[]=${COLLECTION_ADDR}&pageSize=1`;
                         const ownerRes = await fetch(ownerUrl);
                         const ownerData = await ownerRes.json();
-
                         if (ownerData.ownedNfts && ownerData.ownedNfts.length > 0) {
                             const myNft = ownerData.ownedNfts[0];
                             let candidate = myNft.image?.cachedUrl || myNft.image?.originalUrl || myNft.image?.pngUrl;
-                            if(candidate) {
-                                finalImage = candidate;
-                                isOwnedImage = true; 
-                            }
+                            if(candidate) { finalImage = candidate; isOwnedImage = true; }
                         }
                     } catch(err) {}
                 }
 
-                // D: Mint Fallback (If STILL no image)
+                // D: Mint Fallback (New Text)
                 if (!finalImage || finalImage.includes("placehold")) {
-                    finalImage = "https://placehold.co/600x600/8e2de2/ffffff?text=MINT+AN+HOWLER"; 
+                    // Use %0A for new line in placeholder URL
+                    finalImage = "https://placehold.co/600x600/8e2de2/ffffff?text=YOU+SHOULD%0AMINT+AN+HOWLER"; 
                     isMintFallback = true;
                 }
 
-                // Cleanup IPFS
-                if(finalImage && finalImage.startsWith('ipfs://')) {
-                    finalImage = finalImage.replace('ipfs://', 'https://ipfs.io/ipfs/');
-                }
+                if(finalImage && finalImage.startsWith('ipfs://')) finalImage = finalImage.replace('ipfs://', 'https://ipfs.io/ipfs/');
 
                 // 3. Floor Price
                 const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION_ADDR}`;
                 const floorRes = await fetch(floorUrl);
                 const floorData = await floorRes.json();
-                
                 const floorEth = floorData.openSea?.floorPrice || 0;
                 const floorUsd = floorEth * ethPrice;
 
@@ -259,19 +249,28 @@
                 
                 const buyBtn = document.getElementById('buyLink');
                 const label = document.getElementById('itemLabel');
+                const infoBox = document.querySelector('.info-box');
+                const priceContainer = document.querySelector('.price-container');
 
-                // Logic to switch between Buy and Mint
+                // Logic to switch between Buy and Mint AND move button
                 if (isMintFallback) {
                     buyBtn.innerText = "Mint on Farcaster 🎩";
                     buyBtn.href = MINT_LINK;
                     buyBtn.classList.add("mint-mode");
                     label.innerText = "No listing image found";
+                    // MOVE BUTTON UP (Before Price)
+                    infoBox.insertBefore(buyBtn, priceContainer);
+                    buyBtn.style.marginBottom = "20px";
                 } else {
                     buyBtn.innerText = "View on OpenSea ↗";
                     buyBtn.href = `https://opensea.io/assets/base/${COLLECTION_ADDR}?search[sortAscending]=true&search[sortBy]=UNIT_PRICE`;
+                    buyBtn.classList.remove("mint-mode");
+                    // MOVE BUTTON DOWN (To bottom of info box)
+                    infoBox.appendChild(buyBtn);
+                    buyBtn.style.marginBottom = "10px";
                 }
 
-                // Badge Logic (Owned)
+                // Badge Logic
                 if (isOwnedImage) {
                     const badge = document.getElementById('badgeText');
                     badge.innerText = "YOUR ASSET";
@@ -281,6 +280,8 @@
                 // Deal Alert Logic (< $2)
                 if (floorUsd < 2.00) {
                     document.getElementById('dealAlert').style.display = "block";
+                } else {
+                    document.getElementById('dealAlert').style.display = "none";
                 }
 
                 loader.style.display = 'none';
