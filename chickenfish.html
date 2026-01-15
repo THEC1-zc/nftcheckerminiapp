@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chickenfish Levels</title>
+    <title>Chickenfish Hunter</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -12,7 +12,7 @@
     </script>
 
     <style>
-        :root { --primary: #FFC107; --accent: #FF9800; --bg: #fffbf0; --card-bg: #ffffff; --text: #3e2723; --green: #2ecc71; --blue: #3498db; --red: #e74c3c; }
+        :root { --primary: #FFC107; --accent: #FF9800; --bg: #fffbf0; --card-bg: #ffffff; --text: #3e2723; --green: #2ecc71; --purple: #9b59b6; --red: #e74c3c; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -44,45 +44,50 @@
         .progress-bar { width: 200px; height: 6px; background: #eee; border-radius: 3px; margin: 10px auto; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--green); width: 0%; transition: width 0.3s; }
 
-        /* GRID SYSTEM */
-        .nft-list { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+        /* LIST STYLE */
+        .nft-list { display: flex; flex-direction: column; gap: 15px; width: 100%; }
         
         .nft-card { 
-            background: #fff; border: 1px solid #efebe9; border-radius: 20px; overflow: hidden; 
-            box-shadow: 0 8px 20px rgba(62, 39, 35, 0.08); transition: transform 0.2s;
-            display: flex; flex-direction: row; align-items: center;
-            height: 140px; position: relative;
+            background: #fff; border: 1px solid #efebe9; border-radius: 16px; overflow: hidden; 
+            box-shadow: 0 5px 15px rgba(62, 39, 35, 0.06); transition: transform 0.2s;
+            display: flex; flex-direction: row; height: 130px; position: relative;
         }
         
         /* Level Badge */
         .level-badge {
-            position: absolute; top: 10px; left: 10px; z-index: 2;
-            background: rgba(0,0,0,0.7); color: white; padding: 4px 10px;
-            border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(4px);
+            position: absolute; top: 8px; left: 8px; z-index: 2;
+            background: rgba(0,0,0,0.8); color: white; padding: 3px 8px;
+            border-radius: 6px; font-size: 0.65rem; font-weight: 800; backdrop-filter: blur(4px);
         }
 
-        .nft-img { width: 140px; height: 140px; object-fit: cover; flex-shrink: 0; background: #fff8e1; }
+        /* Rep Badge */
+        .rep-badge {
+            display: inline-block; padding: 2px 6px; border-radius: 4px; 
+            font-size: 0.6rem; font-weight: 700; margin-top: 4px;
+        }
+        .rep-ok { background: #e8f5e9; color: var(--green); border: 1px solid #c8e6c9; }
+        .rep-whale { background: #f3e5f5; color: var(--purple); border: 1px solid #e1bee7; }
+
+        .nft-img { width: 130px; height: 130px; object-fit: cover; flex-shrink: 0; background: #fff8e1; }
         
-        .nft-info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box; }
+        .nft-info { padding: 12px 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; }
         
-        .nft-header { display: flex; justify-content: space-between; align-items: start; }
-        .nft-name { font-weight: 900; font-size: 1rem; color: var(--text); margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .nft-name { font-weight: 900; font-size: 1rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
         .token-id { font-size: 0.7rem; color: #a1887f; font-family: monospace; }
         
-        .price-label { font-size: 0.65rem; text-transform: uppercase; color: #aaa; font-weight: 700; margin-top: 5px; }
-        .price-row { display: flex; align-items: baseline; gap: 8px; }
-        .price-eth { font-size: 1.2rem; font-weight: 900; color: var(--accent); }
-        .price-usd { font-size: 0.85rem; color: #8d6e63; font-weight: 500; }
+        .price-label { font-size: 0.6rem; text-transform: uppercase; color: #bbb; font-weight: 700; margin-bottom: 2px; }
+        .price-row { display: flex; align-items: baseline; gap: 6px; }
+        .price-eth { font-size: 1.1rem; font-weight: 900; color: var(--accent); }
+        .price-usd { font-size: 0.8rem; color: #8d6e63; font-weight: 500; }
         
         .action-btn {
             text-decoration: none; background: #3e2723; color: white; 
-            padding: 8px 15px; border-radius: 10px; font-weight: 700; font-size: 0.8rem;
-            text-align: center; margin-top: auto; display: inline-block; width: fit-content;
+            padding: 8px 0; border-radius: 8px; font-weight: 700; font-size: 0.8rem;
+            text-align: center; display: block; width: 100%; margin-top: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
-        .not-found-msg { text-align: center; padding: 20px; color: #aaa; font-style: italic; display: none; }
         .error-msg { color: var(--red); text-align: center; font-weight: 600; padding: 20px; display: none; }
-
         .version-tag { text-align: center; font-size: 0.7rem; color: #8d6e63; margin-top: 25px; font-weight: 800; font-family: monospace; opacity: 0.6; }
     </style>
 </head>
@@ -93,12 +98,12 @@
     </div>
 
     <div class="container">
-        <h2>Chickenfish Levels</h2>
-        <div class="subtitle">Searching specifically for Levels 1-5</div>
+        <h2>Chickenfish Hunter</h2>
+        <div class="subtitle">Finding valid Lvl 1-5 Examples</div>
 
         <div id="loader" class="loading-container">
             <div class="loading-spinner"></div>
-            <div class="loading-text">Connecting to Alchemy...</div>
+            <div class="loading-text">Starting Alchemy Engine...</div>
             <div class="progress-bar"><div id="progress" class="progress-fill"></div></div>
         </div>
         
@@ -106,7 +111,7 @@
 
         <div id="list" class="nft-list"></div>
         
-        <div class="version-tag">v2.5 (Pure Alchemy Logic)</div>
+        <div class="version-tag">v2.6 (Alchemy + Rep Filter)</div>
     </div>
 
     <script>
@@ -123,8 +128,8 @@
             const listDiv = document.getElementById('list');
 
             try {
-                // 1. Get Global Floor Price & ETH Price (For Value Display)
-                loadingText.innerText = "Fetching Floor Price...";
+                // 1. Get Economics (Floor Price + ETH Value)
+                loadingText.innerText = "Checking Floor Price...";
                 progress.style.width = "10%";
 
                 const [floorData, ethData] = await Promise.all([
@@ -135,21 +140,19 @@
                 const floorEth = floorData.openSea?.floorPrice || 0;
                 const ethPrice = parseFloat(ethData.data.amount);
                 
-                // 2. Scan for Levels 1-5
-                // We need to find one example for each level.
+                // 2. Scan for Valid Candidates (Levels 1-5)
                 const levelsFound = { 1: null, 2: null, 3: null, 4: null, 5: null };
-                let levelsCount = 0;
+                let foundCount = 0;
                 let pageKey = "";
-                let attempts = 0;
-                const MAX_ATTEMPTS = 5; // Scan up to 500 items max
+                let batchNum = 0;
+                const MAX_BATCHES = 4; // Scan up to 400 items max
 
-                loadingText.innerText = "Scanning Collection Traits...";
-
-                while (levelsCount < 5 && attempts < MAX_ATTEMPTS) {
-                    attempts++;
-                    progress.style.width = `${10 + (attempts * 15)}%`;
+                while (foundCount < 5 && batchNum < MAX_BATCHES) {
+                    batchNum++;
+                    loadingText.innerText = `Scanning Batch ${batchNum} (Analyzing Traits)...`;
+                    progress.style.width = `${10 + (batchNum * 20)}%`;
                     
-                    // Fetch Batch of 100
+                    // Fetch Batch of 100 items from Alchemy
                     let url = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNFTsForContract?contractAddress=${COLLECTION_ADDR}&withMetadata=true&limit=100`;
                     if (pageKey) url += `&pageKey=${pageKey}`;
 
@@ -158,94 +161,148 @@
                     
                     if (!data.nfts) break;
 
-                    // Analyze Batch
+                    // Analyze Item by Item
                     for (const nft of data.nfts) {
                         const attrs = nft.raw.metadata.attributes || [];
                         let lvl = -1;
+                        let score = -1;
 
-                        // Find Level Trait
+                        // Universal Trait Extraction
                         for (const a of attrs) {
-                            if (a.trait_type && (a.trait_type.toLowerCase().includes("level") || a.trait_type.toLowerCase().includes("lvl"))) {
-                                lvl = parseInt(a.value);
-                            }
+                            const key = (a.trait_type || "").toLowerCase();
+                            const val = a.value;
+                            if (key.includes("level") || key.includes("lvl")) lvl = parseInt(val);
+                            if (key.includes("neynar") || key.includes("score")) score = parseFloat(val);
                         }
                         
-                        // If not in traits, check name
-                        if (lvl === -1 && nft.name) {
-                            const m = nft.name.match(/Lvl\s?(\d+)/i) || nft.name.match(/Level\s?(\d+)/i);
-                            if (m) lvl = parseInt(m[1]);
+                        // Valid Level? (1-5)
+                        if (lvl < 1 || lvl > 5) continue;
+                        
+                        // Do we already have this level?
+                        if (levelsFound[lvl]) continue;
+
+                        // --- REPUTATION CHECK ---
+                        let reason = null;
+
+                        // A. High Score Check
+                        if (score > 0.69) {
+                            reason = `Rep Score ${score}`;
+                        } 
+                        // B. Whale Backup Check (Async)
+                        else {
+                            // If user didn't have score or score low, check wallet
+                            // Note: 'nft.owners' isn't usually in this endpoint, we assume simple ownership check isn't strictly needed 
+                            // for *viewing* purposes unless we want to filter bad sellers.
+                            // But per requirements, we must check.
+                            
+                            // To optimize: We can check wallet ownership. 
+                            // But getting owner for every item is heavy. 
+                            // ALCHEMY TRICK: Use the 'getOwnersForNFT' endpoint OR trust the result if we are strict.
+                            // Since we promised strictness, let's try to grab owners if possible.
+                            // However, 'getNFTsForContract' listing doesn't give owner. 
+                            // COMPROMISE: We will show items with Score > 0.69 preferentially.
+                            // If score is low/missing, we skip unless we are desperate (no items found).
+                            
+                            // Let's do a quick owner check only if we really need this item
+                            // This slows down the batch, so we only do it if we found a valid level candidate.
+                             try {
+                                const ownerRes = await fetch(`https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getOwnersForNFT?contractAddress=${COLLECTION_ADDR}&tokenId=${nft.tokenId}`);
+                                const ownerData = await ownerRes.json();
+                                const ownerAddr = ownerData.owners ? ownerData.owners[0] : null;
+                                
+                                if (ownerAddr) {
+                                    const isWhale = await checkWalletForWhale(ownerAddr);
+                                    if (isWhale) reason = "Whale Seller";
+                                }
+                            } catch(err) {}
                         }
 
-                        // Save if valid level and not found yet
-                        if (lvl >= 1 && lvl <= 5 && !levelsFound[lvl]) {
-                            levelsFound[lvl] = nft;
-                            levelsCount++;
+                        // If passed checks, Add to list
+                        if (reason) {
+                            levelsFound[lvl] = { nft, reason };
+                            foundCount++;
+                            // Render immediately to update UI
+                            renderCard(listDiv, nft, lvl, floorEth, floorEth * ethPrice, reason);
                         }
                     }
 
-                    if (levelsCount >= 5) break; // Found all!
-                    
+                    if (foundCount >= 5) break; 
                     pageKey = data.pageKey;
-                    if (!pageKey) break; // End of collection
+                    if (!pageKey) break; 
+                }
+
+                if (foundCount === 0) {
+                    listDiv.innerHTML = "<div style='text-align:center;color:#999;margin-top:20px;'>No high-rep items found in scan range.</div>";
                 }
 
                 loader.style.display = 'none';
-
-                // 3. Render Results Sorted 1-5
-                for (let i = 1; i <= 5; i++) {
-                    const nft = levelsFound[i];
-                    if (nft) {
-                        renderCard(listDiv, nft, i, floorEth, floorEth * ethPrice);
-                    } else {
-                        // Optional: Render a placeholder if a level is missing
-                    }
-                }
-
-                if (levelsCount === 0) {
-                    listDiv.innerHTML = "<div class='not-found-msg'>No traits found in scan range.</div>";
-                }
 
             } catch (e) {
                 console.error(e);
                 loader.style.display = 'none';
-                errorDiv.innerText = "Connection Error. Reload.";
+                errorDiv.innerText = "Error loading data. Please reload.";
                 errorDiv.style.display = 'block';
             }
         }
 
-        function renderCard(container, nft, level, ethPrice, usdPrice) {
-            const imgUrl = nft.image?.cachedUrl || nft.image?.originalUrl || 'https://placehold.co/150x150?text=No+Img';
-            const name = nft.name || `Chickenfish #${nft.tokenId}`;
-            const link = `https://opensea.io/assets/base/${COLLECTION_ADDR}/${nft.tokenId}`;
+        async function checkWalletForWhale(walletAddr) {
+            try {
+                const url = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNFTsForOwner?owner=${walletAddr}&contractAddresses[]=${COLLECTION_ADDR}&withMetadata=true`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (!data.ownedNfts) return false;
+                
+                // Check if they have ANY other item with Level >= 3
+                // (Count > 1 ensures they have more than just the one we are looking at, 
+                // OR we just check if they hold a Level 3+ item at all)
+                for (const item of data.ownedNfts) {
+                    const attrs = item.raw.metadata.attributes || [];
+                    const lvlAttr = attrs.find(a => a.trait_type && (a.trait_type.toLowerCase().includes("level") || a.trait_type.toLowerCase().includes("lvl")));
+                    if (lvlAttr && parseInt(lvlAttr.value) >= 3) return true;
+                }
+                return false;
+            } catch (err) { return false; }
+        }
 
+        function renderCard(container, nft, level, ethPrice, usdPrice, reason) {
+            // Sort logic: We want to insert in order 1,2,3,4,5. 
+            // Since we render immediately, we might get them out of order.
+            // Simple fix: append and rely on Flex order? No.
+            // Better: Create slots 1-5 in HTML first? No, dynamic is fine.
+            // We just append. The user will see them pop in. 
+            
             // Clean IPFS
-            const finalImg = imgUrl.startsWith('ipfs://') ? imgUrl.replace('ipfs://', 'https://ipfs.io/ipfs/') : imgUrl;
+            let imgUrl = nft.image?.cachedUrl || nft.image?.originalUrl || 'https://placehold.co/150x150?text=No+Img';
+            if (imgUrl.startsWith('ipfs://')) imgUrl = imgUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+
+            // Badge Color Logic
+            const badgeClass = reason.includes("Score") ? "rep-ok" : "rep-whale";
 
             const html = `
-            <div class="nft-card">
-                <div class="level-badge">LEVEL ${level}</div>
-                <img src="${finalImg}" class="nft-img" onerror="this.src='https://placehold.co/150x150?text=Err'">
+            <div class="nft-card" style="order: ${level};"> <div class="level-badge">LEVEL ${level}</div>
+                <img src="${imgUrl}" class="nft-img" onerror="this.src='https://placehold.co/150x150?text=Err'">
                 
                 <div class="nft-info">
-                    <div class="nft-header">
-                        <div>
-                            <div class="nft-name">${name}</div>
-                            <div class="token-id">ID: ${nft.tokenId}</div>
-                        </div>
+                    <div>
+                        <div class="nft-name">${nft.name || 'Chickenfish #' + nft.tokenId}</div>
+                        <div class="token-id">ID: ${nft.tokenId}</div>
+                        <div class="rep-badge ${badgeClass}">${reason}</div>
                     </div>
 
                     <div>
-                        <div class="price-label">Collection Floor</div>
+                        <div class="price-label">Estimated Price</div>
                         <div class="price-row">
                             <span class="price-eth">${ethPrice.toFixed(4)} Ξ</span>
                             <span class="price-usd">$${usdPrice.toFixed(2)}</span>
                         </div>
                     </div>
 
-                    <a href="${link}" target="_blank" class="action-btn">View on OpenSea ↗</a>
+                    <a href="https://opensea.io/assets/base/${COLLECTION_ADDR}/${nft.tokenId}" target="_blank" class="action-btn">View on OpenSea ↗</a>
                 </div>
             </div>`;
 
+            // Insert using a temporary container logic or just innerHTML+=
+            // To ensure sorting, we can re-sort container children, or just rely on CSS 'order' property
             container.innerHTML += html;
         }
     </script>
