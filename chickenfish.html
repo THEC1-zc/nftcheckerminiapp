@@ -114,33 +114,31 @@
 
         <div id="loader">
             <div class="loading-spinner"></div>
-            <div class="loading-text">Scanning Market...</div>
+            <div class="loading-text">Deep Scanning (50 items)...</div>
         </div>
         
-        <div id="fallbackMsg" class="fallback-warning">⚠️ Filters unavailable (Proxy blocked). Showing General Floor Price.</div>
+        <div id="fallbackMsg" class="fallback-warning">⚠️ Filters unavailable. Showing General Floor.</div>
 
         <div id="grid" class="nft-grid"></div>
         
-        <div class="version-tag">v2.3 (Resilience)</div>
+        <div class="version-tag">v2.4 (Deep Scan 50)</div>
     </div>
 
     <script>
         const COLLECTION_ADDR = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0".toLowerCase();
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
 
-        // Strategy A: CodeTabs Proxy (Different from previous failing ones)
+        // INCREASED LIMIT TO 50 to find matching traits
         const PROXY_BASE = "https://api.codetabs.com/v1/proxy?quest=";
-        const RESERVOIR_API = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=25&includeAttributes=true`;
+        const RESERVOIR_API = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=50&includeAttributes=true`;
 
         window.addEventListener('DOMContentLoaded', initMarket);
 
         async function initMarket() {
             try {
-                // Try Advanced Filter First
                 await fetchSmartShowroom();
             } catch (e) {
-                console.warn("Smart Filter Failed, switching to Alchemy Fallback:", e);
-                // If it fails, load the generic floor
+                console.warn("Smart Filter Failed:", e);
                 await loadAlchemyFallback();
             }
         }
@@ -152,9 +150,9 @@
 
             const targetUrl = PROXY_BASE + encodeURIComponent(RESERVOIR_API);
             
-            // Set a timeout to fail fast if proxy hangs
+            // Timeout 8s (longer because fetching 50 items)
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
 
             const res = await fetch(targetUrl, { signal: controller.signal });
             clearTimeout(timeoutId);
@@ -167,9 +165,10 @@
             const candidates = [];
             let checkedCount = 0;
 
+            // Loop through up to 50 items
             for (const item of data.tokens) {
                 checkedCount++;
-                loadingText.innerText = `Analyzing Item ${checkedCount}...`;
+                if(checkedCount % 5 === 0) loadingText.innerText = `Analyzing Item ${checkedCount}/50...`;
 
                 if (!item.market?.floorAsk?.price?.amount?.native) continue;
 
@@ -177,24 +176,43 @@
                 let level = -1; 
                 let neynarScore = -1; 
 
-                // Universal Trait Hunt
+                // UNIVERSAL TRAIT HUNT
                 for (const attr of attributes) {
                     const key = (attr.key || "").toLowerCase();
                     const val = attr.value;
-                    if (key.includes("level") || key.includes("lvl")) level = parseInt(val) || -1;
-                    if (key.includes("neynar") || key.includes("score")) neynarScore = parseFloat(val) || -1;
+                    
+                    // Look for Level
+                    if (key.includes("level") || key.includes("lvl")) {
+                        const parsed = parseInt(val);
+                        if(!isNaN(parsed)) level = parsed;
+                    }
+
+                    // Look for Neynar
+                    if (key.includes("neynar") || key.includes("score")) {
+                        const parsed = parseFloat(val);
+                        if(!isNaN(parsed)) neynarScore = parsed;
+                    }
                 }
 
-                // Filter 1: Level 1-5
+                // If Level wasn't found in traits, check name (e.g., "Chicken #123 (Lvl 1)")
+                if (level === -1 && item.token.name) {
+                    const nameMatch = item.token.name.match(/Lvl\s?(\d+)/i) || item.token.name.match(/Level\s?(\d+)/i);
+                    if (nameMatch) level = parseInt(nameMatch[1]);
+                }
+
+                // --- FILTER 1: LEVEL 1-5 ---
                 if (level < 1 || level > 5) continue;
 
-                // Filter 2: Reputation
+                // --- FILTER 2: REPUTATION ---
                 let approvedReason = null;
+                
+                // If Score exists and is high
                 if (neynarScore > 0.69) {
                     approvedReason = "high-score";
                 } else {
-                    const seller = item.market.floorAsk.maker;
+                    // Check Whale status only if we need more candidates
                     if (candidates.length < 3) {
+                        const seller = item.market.floorAsk.maker;
                         const isWhale = await checkSellerWallet(seller);
                         if (isWhale) approvedReason = "whale-seller";
                     }
@@ -212,7 +230,7 @@
                 if (candidates.length >= 3) break;
             }
 
-            if(candidates.length === 0) throw new Error("No items matched criteria");
+            if(candidates.length === 0) throw new Error("No items matched criteria in top 50");
 
             loader.style.display = 'none';
             let rank = 1;
@@ -222,7 +240,6 @@
             });
         }
 
-        // FALLBACK: If Proxy fails, use Alchemy to show at least the floor
         async function loadAlchemyFallback() {
             const grid = document.getElementById('grid');
             const loader = document.getElementById('loader');
@@ -230,17 +247,14 @@
             
             fallbackMsg.style.display = 'block';
 
-            // 1. Get Metadata
             const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${COLLECTION_ADDR}`;
             const metaRes = await fetch(metaUrl);
             const metaData = await metaRes.json();
             
-            // 2. Get Floor Price
             const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION_ADDR}`;
             const floorRes = await fetch(floorUrl);
             const floorData = await floorRes.json();
 
-            // 3. Get ETH Price
             const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
             const priceJson = await priceRes.json();
             const ethPrice = parseFloat(priceJson.data.amount);
@@ -251,7 +265,6 @@
 
             loader.style.display = 'none';
 
-            // Render a Generic Floor Card
             const html = `
             <div class="nft-card">
                 <div class="badge-container">
