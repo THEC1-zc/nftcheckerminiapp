@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAST Analyzer 12.1 (Anti-Block)</title>
+    <title>WAST Analyzer 12.2 (Unstoppable)</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -125,7 +125,7 @@
 
     <div class="container">
         <h2 style="text-align:center; margin-top:0;">Master Analyzer</h2>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: v12.1 Anti-Block</p>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Logic: v12.2 Unstoppable</p>
         
         <div class="input-group">
             <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -174,14 +174,28 @@
                 <div class="stat-line"><span>Curr $:</span> <strong id="sellCurr" class="val-curr">$0.00</strong></div>
             </div>
             <div class="stat-card">
-                <div class="stat-title t-in">RECEIVE (IN)</div>
-                <div class="stat-line"><span>Tokens:</span> <strong id="recvTokens">0</strong></div>
-                <div class="stat-line"><span>Hist $:</span> <strong id="recvHist" class="val-hist">---</strong></div>
+                <div class="stat-title t-stake">STREAM STAKE (SUPERFLUID)</div>
+                <div class="stat-line"><span>Tokens:</span> <strong id="stakeTokens">0</strong></div>
+                <div class="stat-line"><span>Hist $:</span> <strong id="stakeHist" class="val-hist">---</strong></div>
+                <div class="stat-line"><span>Curr $:</span> <strong id="stakeCurr" class="val-curr">$0.00</strong></div>
             </div>
             <div class="stat-card">
-                <div class="stat-title t-out">SEND (OUT)</div>
+                <div class="stat-title t-unstake">STREAM UNSTAKE (SUPERFLUID)</div>
+                <div class="stat-line"><span>Tokens:</span> <strong id="unstakeTokens">0</strong></div>
+                <div class="stat-line"><span>Hist $:</span> <strong id="unstakeHist" class="val-hist">---</strong></div>
+                <div class="stat-line"><span>Curr $:</span> <strong id="unstakeCurr" class="val-curr">$0.00</strong></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title t-in">RECEIVE (P2P / AIRDROP)</div>
+                <div class="stat-line"><span>Tokens:</span> <strong id="recvTokens">0</strong></div>
+                <div class="stat-line"><span>Hist $:</span> <strong id="recvHist" class="val-hist">---</strong></div>
+                <div class="stat-line"><span>Curr $:</span> <strong id="recvCurr" class="val-curr">$0.00</strong></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title t-out">SEND (P2P / BURN)</div>
                 <div class="stat-line"><span>Tokens:</span> <strong id="sendTokens">0</strong></div>
                 <div class="stat-line"><span>Hist $:</span> <strong id="sendHist" class="val-hist">---</strong></div>
+                <div class="stat-line"><span>Curr $:</span> <strong id="sendCurr" class="val-curr">$0.00</strong></div>
             </div>
         </div>
 
@@ -189,10 +203,12 @@
             <label>Filter Transactions:</label>
             <select id="txFilter" class="filter-select">
                 <option value="ALL">Show All</option>
-                <option value="BUY">🟢 Buys Only</option>
-                <option value="SELL">🔴 Sells Only</option>
-                <option value="RECEIVE">🟣 Receives Only</option>
-                <option value="SEND">🟠 Sends Only</option>
+                <option value="BUY">🟢 Buys</option>
+                <option value="SELL">🔴 Sells</option>
+                <option value="STAKE">🔵 Stream Stakes</option>
+                <option value="UNSTAKE">🟣 Stream Unstakes</option>
+                <option value="RECEIVE">🟣 Receives</option>
+                <option value="SEND">🟠 Sends</option>
             </select>
         </div>
 
@@ -207,8 +223,8 @@
             <button id="btnNext" class="page-btn">Next</button>
         </div>
 
-        <div class="wip-tag">🚧 v12.1 ANTI-BLOCK 🚧</div>
-        <div class="version-tag">v12.1</div>
+        <div class="wip-tag">🚧 v12.2 UNSTOPPABLE 🚧</div>
+        <div class="version-tag">v12.2</div>
     </div>
 
     <script>
@@ -224,15 +240,24 @@
         
         let currentPage = 1;
         const rowsPerPage = 50;
-        const BATCH_SIZE = 10; // Reduced for safety
+        const BATCH_SIZE = 5; // Reduced to 5 to avoid Rate Limits
 
-        const MAJOR_TOKENS = {
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": { sym: "USDC", dec: 6 },
-            "0x4200000000000000000000000000000000000006": { sym: "WETH", dec: 18 }
-        };
-        const ETH_PSEUDO = "0x0000000000000000000000000000000000000000"; 
+        const LIQUID_ASSETS = [
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", 
+            "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a", 
+            "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", 
+            "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca", 
+            "0x4200000000000000000000000000000000000006", 
+            "0x0000000000000000000000000000000000000000"
+        ];
+
         const USDC_BASE = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
+        const ETH_PSEUDO = "0x0000000000000000000000000000000000000000"; 
         const WETH_ADDR = "0x4200000000000000000000000000000000000006";
+
+        const EVT_UPGRADE = "0x49755b9e9d962892997c0da9e7b243403a6094366c3c43494793db64f4347781";
+        const EVT_DOWNGRADE = "0x24a737475a242040b2f0c74906f36934c264a4066922df674603946006e23293";
+        const EVT_TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
         window.addEventListener('DOMContentLoaded', () => {
             const myIdentity = localStorage.getItem('tysm_wallet');
@@ -260,7 +285,6 @@
         document.getElementById('btnPrev').addEventListener('click', () => { if(currentPage>1) {currentPage--; renderTable();} });
         document.getElementById('btnNext').addEventListener('click', () => { currentPage++; renderTable(); });
 
-        // --- SORTED DROPDOWN ---
         async function loadUserTokens(walletAddr) {
             const select = document.getElementById('tokenSelect');
             const loading = document.getElementById('loadingTokens');
@@ -356,7 +380,6 @@
             const wallet = document.getElementById('walletInput').value.trim().toLowerCase();
             currentTokenCA = isCustomTokenMode ? document.getElementById('tokenInput').value.trim().toLowerCase() : document.getElementById('tokenSelect').value.trim().toLowerCase();
             
-            // RESET
             document.getElementById('dashboard').style.display='none';
             document.getElementById('txTable').style.display='none';
             document.getElementById('tokenHeader').style.display='none';
@@ -425,6 +448,7 @@
             document.getElementById('paginationContainer').style.display='flex';
             document.getElementById('deepStatus').style.display='block';
             
+            // SHOW BUTTONS IMMEDIATELY
             if(globalEvents.length > 0) {
                 document.getElementById('btnHistory').style.display='flex';
                 document.getElementById('btnMoralis').style.display='flex';
@@ -452,12 +476,9 @@
                     const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody)});
                     if(res.ok) {
                         const json = await res.json();
-                        if(Array.isArray(json)) {
-                            responses = json;
-                            batchSuccess = true;
-                        }
+                        if(Array.isArray(json)) { responses = json; batchSuccess = true; }
                     }
-                } catch(e) { console.warn("Batch fail"); }
+                } catch(e) {}
 
                 if (batchSuccess && responses) {
                     processReceipts(responses, i, wallet, tokenCA);
@@ -473,8 +494,7 @@
                         await new Promise(r => setTimeout(r, 50));
                     }
                 }
-                
-                await new Promise(r => setTimeout(r, 200)); 
+                await new Promise(r => setTimeout(r, 300)); // Safer Delay
                 recalcAllTotals(); 
             }
 
@@ -493,25 +513,34 @@
                 const logs = r.result.logs;
                 const evt = globalEvents[evtIndex];
                 const myWallet = wallet.toLowerCase().replace("0x", "");
-                const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+                
+                let sentLiquid = false;
+                let receivedLiquid = false;
+                let isSF_Upgrade = false;
+                let isSF_Downgrade = false;
 
-                let newType = evt.isIncoming ? 'RECEIVE' : 'SEND'; 
+                logs.forEach(log => {
+                    if (log.topics[0] === EVT_UPGRADE) isSF_Upgrade = true;
+                    if (log.topics[0] === EVT_DOWNGRADE) isSF_Downgrade = true;
 
-                if (evt.isIncoming) {
-                    for(const log of logs) {
-                        if(log.topics[0] !== TRANSFER) continue;
-                        const contract = log.address.toLowerCase();
+                    if (log.topics[0] === EVT_TRANSFER) {
+                        const contractAddr = log.address.toLowerCase();
                         const fromMe = log.topics[1] && log.topics[1].toLowerCase().includes(myWallet);
-                        if (fromMe && contract !== tokenCA) { newType = 'BUY'; break; }
-                    }
-                } else {
-                    for(const log of logs) {
-                        if(log.topics[0] !== TRANSFER) continue;
-                        const contract = log.address.toLowerCase();
                         const toMe = log.topics[2] && log.topics[2].toLowerCase().includes(myWallet);
-                        if (toMe && contract !== tokenCA) { newType = 'SELL'; break; }
+
+                        if (LIQUID_ASSETS.includes(contractAddr)) {
+                            if (fromMe) sentLiquid = true;
+                            if (toMe) receivedLiquid = true;
+                        }
                     }
-                }
+                });
+
+                let newType = 'UNKNOWN';
+                if (isSF_Upgrade) { newType = 'STAKE'; }
+                else if (isSF_Downgrade) { newType = 'UNSTAKE'; }
+                else if (evt.isIncoming) { if (sentLiquid) newType = 'BUY'; else newType = 'RECEIVE'; }
+                else { if (receivedLiquid) newType = 'SELL'; else newType = 'SEND'; }
+
                 globalEvents[evtIndex].type = newType;
             });
         }
@@ -527,12 +556,15 @@
         }
 
         function recalcAllTotals() {
-            let t = { buy:0, sell:0, recv:0, send:0, buyV:0, sellV:0, recvV:0, sendV:0 };
+            let t = { buy:0, sell:0, stake:0, unstake:0, recv:0, send:0, 
+                      buyV:0, sellV:0, stakeV:0, unstakeV:0, recvV:0, sendV:0 };
             
             globalEvents.forEach(evt => {
                 const val = evt.histVal || 0; 
                 if(evt.type === 'BUY') { t.buy += evt.amount; t.buyV += val; }
                 else if(evt.type === 'SELL') { t.sell += evt.amount; t.sellV += val; }
+                else if(evt.type === 'STAKE') { t.stake += evt.amount; t.stakeV += val; }
+                else if(evt.type === 'UNSTAKE') { t.unstake += evt.amount; t.unstakeV += val; }
                 else if(evt.type === 'RECEIVE') { t.recv += evt.amount; t.recvV += val; }
                 else if(evt.type === 'SEND') { t.send += evt.amount; t.sendV += val; }
             });
@@ -543,6 +575,8 @@
 
             document.getElementById('buyTokens').innerText = fmt(t.buy); document.getElementById('buyCurr').innerText = fmtU(t.buy); document.getElementById('buyHist').innerText = t.buyV ? fmtH(t.buyV) : "---";
             document.getElementById('sellTokens').innerText = fmt(t.sell); document.getElementById('sellCurr').innerText = fmtU(t.sell); document.getElementById('sellHist').innerText = t.sellV ? fmtH(t.sellV) : "---";
+            document.getElementById('stakeTokens').innerText = fmt(t.stake); document.getElementById('stakeCurr').innerText = fmtU(t.stake); document.getElementById('stakeHist').innerText = t.stakeV ? fmtH(t.stakeV) : "---";
+            document.getElementById('unstakeTokens').innerText = fmt(t.unstake); document.getElementById('unstakeCurr').innerText = fmtU(t.unstake); document.getElementById('unstakeHist').innerText = t.unstakeV ? fmtH(t.unstakeV) : "---";
             document.getElementById('recvTokens').innerText = fmt(t.recv); document.getElementById('recvCurr').innerText = fmtU(t.recv); document.getElementById('recvHist').innerText = t.recvV ? fmtH(t.recvV) : "---";
             document.getElementById('sendTokens').innerText = fmt(t.send); document.getElementById('sendCurr').innerText = fmtU(t.send); document.getElementById('sendHist').innerText = t.sendV ? fmtH(t.sendV) : "---";
         }
@@ -556,6 +590,8 @@
                 if (filter === 'ALL') return true;
                 if (filter === 'BUY' && (evt.type === 'BUY' || evt.type === 'IN (Pend)')) return true;
                 if (filter === 'SELL' && (evt.type === 'SELL' || evt.type === 'OUT (Pend)')) return true;
+                if (filter === 'STAKE' && evt.type === 'STAKE') return true;
+                if (filter === 'UNSTAKE' && evt.type === 'UNSTAKE') return true;
                 if (filter === 'RECEIVE' && (evt.type === 'RECEIVE' || evt.type === 'IN (Pend)')) return true;
                 if (filter === 'SEND' && (evt.type === 'SEND' || evt.type === 'OUT (Pend)')) return true;
                 return false;
@@ -574,6 +610,8 @@
                 let badge = 'bg-pending';
                 if(evt.type==='BUY') badge='bg-buy';
                 else if(evt.type==='SELL') badge='bg-sell';
+                else if(evt.type==='STAKE') badge='bg-stake';
+                else if(evt.type==='UNSTAKE') badge='bg-unstake';
                 else if(evt.type==='RECEIVE') badge='bg-receive';
                 else if(evt.type==='SEND') badge='bg-send';
 
@@ -683,7 +721,7 @@
             
             let processed = 0;
             for(const evt of globalEvents) {
-                if (evt.histPrice !== null && !evt.isRecentFallback) continue; 
+                if (evt.histPrice !== null && !evt.isRecentFallback) continue; // SKIP
 
                 try {
                     status.innerText = `Moralis Check ${processed+1}...`;
