@@ -70,6 +70,8 @@
         .icon { font-size: 28px; background: #eff4ff; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
         .title { font-weight: 700; font-size: 18px; display: block; }
         .desc { font-size: 13px; color: #888; display: block; margin-top: 2px; }
+
+        .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 30px; font-weight: 800; font-family: monospace; opacity: 0.6; }
     </style>
 </head>
 <body>
@@ -112,10 +114,20 @@
             <div class="icon">🛒</div>
             <div>
                 <span class="title">Showroom</span>
-                <span class="desc">Floor Sweeper (OpenSea)</span>
+                <span class="desc">Howlers Floor Price</span>
+            </div>
+        </a>
+
+        <a href="chickenfish.html" id="linkChicken" class="menu-card">
+            <div class="icon">🐔</div>
+            <div>
+                <span class="title">Chickenfish</span>
+                <span class="desc">Smart Rep Sweeper</span>
             </div>
         </a>
     </div>
+
+    <div class="version-tag">Home v1.1</div>
 
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -132,7 +144,7 @@
 
             btnText.innerHTML = `✅ ${address.slice(0,2)}...${address.slice(-4)}`;
             btn.classList.add('connected');
-            logoutBtn.style.display = 'block'; // Show Logout
+            logoutBtn.style.display = 'block'; 
             
             localStorage.setItem('tysm_wallet', address);
             
@@ -144,6 +156,7 @@
             document.getElementById('linkScanner').href = `scanner.html${param}`;
             document.getElementById('linkTxs').href = `txs.html${param}`;
             document.getElementById('linkShowroom').href = `showroom.html${param}`;
+            document.getElementById('linkChicken').href = `chickenfish.html${param}`;
         }
 
         // --- EVENTS ---
@@ -170,17 +183,16 @@
             } catch (error) {
                 console.error("Login Error:", error);
                 document.getElementById('btnText').innerText = "❌ Error";
-                // Reset after 2 seconds
                 setTimeout(() => { 
                     document.getElementById('btnText').innerText = "Connect Wallet";
                 }, 2000);
             }
         }
 
-        // NUCLEAR LOGOUT (Reliable)
+        // NUCLEAR LOGOUT
         function performLogout() {
             localStorage.removeItem('tysm_wallet');
-            location.reload(); // Hard Refresh to clear state
+            location.reload(); 
         }
 
         document.getElementById('btnConnect').addEventListener('click', connectWallet);
