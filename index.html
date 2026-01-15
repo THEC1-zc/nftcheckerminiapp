@@ -1,206 +1,395 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WAST Hub</title>
+
+```
+<meta property="og:image" content="https://nftcheckerminiapp.vercel.app/icon.png" />
+<meta name="fc:miniapp" content='{"version": "1", "imageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "button": { "title": "🚀 Open WAST", "action": { "type": "launch_miniapp", "name": "WAST Hub", "url": "https://nftcheckerminiapp.vercel.app", "splashImageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "splashBackgroundColor": "#0052FF" } } }' />
+
+<style>
+    :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --red: #ff4757; }
     
-    <meta property="og:image" content="https://nftcheckerminiapp.vercel.app/icon.png" />
-    <meta name="fc:miniapp" content='{"version": "1", "imageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "button": { "title": "🚀 Open WAST", "action": { "type": "launch_miniapp", "name": "WAST Hub", "url": "https://nftcheckerminiapp.vercel.app", "splashImageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "splashBackgroundColor": "#0052FF" } } }' />
+    body { 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+        background-color: var(--bg); 
+        background-image: url('back.png'); 
+        background-size: cover; 
+        background-position: center; 
+        background-repeat: no-repeat; 
+        background-attachment: fixed; 
+        color: var(--text); 
+        padding: 40px 20px; 
+        margin: 0; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        min-height: 100vh; 
+    }
     
-    <script type="module">
-        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-        const run = async () => { await sdk.actions.ready(); };
-        run();
-    </script>
+    .header { text-align: center; margin-bottom: 20px; background: rgba(255,255,255,0.9); padding: 25px; border-radius: 20px; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    .logo { width: 80px; height: 80px; background: white; border-radius: 20px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); object-fit: contain; }
+    
+    .wast-brand { font-weight: 900; font-size: 1.5rem; letter-spacing: 3px; color: var(--primary); display: block; margin-bottom: 5px; }
+    
+    h1 { margin: 0; font-size: 20px; letter-spacing: -0.5px; font-weight: 700; }
+    p { color: #666; margin-top: 5px; font-size: 0.9rem; }
+    
+    /* WALLET CONTROLS */
+    .wallet-box { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 25px; width: 100%; max-width: 300px; }
 
-    <style>
-        :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --red: #ff4757; }
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: var(--bg); 
-            background-image: url('back.png'); 
-            background-size: cover; 
-            background-position: center; 
-            background-repeat: no-repeat; 
-            background-attachment: fixed; 
-            color: var(--text); 
-            padding: 40px 20px; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100vh; 
-        }
-        
-        .header { text-align: center; margin-bottom: 20px; background: rgba(255,255,255,0.9); padding: 25px; border-radius: 20px; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .logo { width: 80px; height: 80px; background: white; border-radius: 20px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); object-fit: contain; }
-        
-        .wast-brand { font-weight: 900; font-size: 1.5rem; letter-spacing: 3px; color: var(--primary); display: block; margin-bottom: 5px; }
-        
-        h1 { margin: 0; font-size: 20px; letter-spacing: -0.5px; font-weight: 700; }
-        p { color: #666; margin-top: 5px; font-size: 0.9rem; }
-        
-        /* WALLET CONTROLS */
-        .wallet-box { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 25px; width: 100%; max-width: 300px; }
+    .btn-connect { 
+        background-color: #1a1a1a; 
+        color: white; 
+        padding: 14px 24px; 
+        font-size: 1rem; 
+        font-weight: 600; 
+        border-radius: 12px; 
+        cursor: pointer; 
+        border: none; 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+        transition: transform 0.2s, background-color 0.2s; 
+        width: 100%; 
+        justify-content: center;
+        position: relative;
+    }
+    .btn-connect:active { transform: scale(0.98); }
+    .btn-connect:hover:not(.connected) { background-color: #333; }
+    .btn-connect:focus { outline: 3px solid #0052FF; outline-offset: 2px; }
+    .btn-connect.connected { background-color: #2ecc71; cursor: default; }
+    .btn-connect:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .btn-connect { background-color: #1a1a1a; color: white; padding: 14px 24px; font-size: 1rem; font-weight: 600; border-radius: 12px; cursor: pointer; border: none; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s, background-color 0.2s; width: 100%; justify-content: center; }
-        .btn-connect:active { transform: scale(0.98); }
-        .btn-connect:hover { background-color: #333; }
-        .btn-connect.connected { background-color: #2ecc71; cursor: default; }
+    /* Spinner animation */
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
 
-        /* LOGOUT BUTTON */
-        .btn-logout { 
-            background: #fff; border: 1px solid #ddd; color: #666; 
-            padding: 8px 20px; font-size: 0.8rem; font-weight: 700; border-radius: 20px; 
-            cursor: pointer; transition: all 0.2s; display: none; /* Hidden by default */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .btn-logout:hover { background-color: #ffe5e5; color: var(--red); border-color: var(--red); }
+    /* LOGOUT BUTTON */
+    .btn-logout { 
+        background: #fff; 
+        border: 1px solid #ddd; 
+        color: #666; 
+        padding: 8px 20px; 
+        font-size: 0.8rem; 
+        font-weight: 700; 
+        border-radius: 20px; 
+        cursor: pointer; 
+        transition: all 0.2s; 
+        display: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .btn-logout:hover { background-color: #ffe5e5; color: var(--red); border-color: var(--red); }
+    .btn-logout:focus { outline: 2px solid var(--red); outline-offset: 2px; }
 
-        /* TIP BUTTON */
-        .btn-tip { background-color: #FF9800; color: white; padding: 10px 20px; font-size: 0.9rem; font-weight: 700; border-radius: 20px; cursor: pointer; border: none; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3); transition: transform 0.2s; }
-        .btn-tip:hover { transform: translateY(-2px); opacity: 0.9; }
+    /* TIP BUTTON - Hidden until implemented */
+    .btn-tip { 
+        background-color: #FF9800; 
+        color: white; 
+        padding: 10px 20px; 
+        font-size: 0.9rem; 
+        font-weight: 700; 
+        border-radius: 20px; 
+        cursor: pointer; 
+        border: none; 
+        margin-bottom: 30px; 
+        box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3); 
+        transition: transform 0.2s;
+        display: none; /* HIDDEN - Will be shown when tip feature is ready */
+    }
+    .btn-tip:hover { transform: translateY(-2px); opacity: 0.9; }
+    .btn-tip:focus { outline: 2px solid #FF9800; outline-offset: 2px; }
 
-        /* MENU GRID */
-        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
-        .menu-card { background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 16px; text-decoration: none; color: var(--text); box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 15px; border: 2px solid transparent; }
-        .menu-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,82,255,0.15); border-color: var(--primary); }
-        .icon { font-size: 28px; background: #eff4ff; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
-        .title { font-weight: 700; font-size: 18px; display: block; }
-        .desc { font-size: 13px; color: #888; display: block; margin-top: 2px; }
+    /* ERROR MESSAGE */
+    .error-message {
+        background: #ffe5e5;
+        color: var(--red);
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        margin-bottom: 15px;
+        display: none;
+        text-align: center;
+        border: 1px solid #ffcccc;
+        max-width: 300px;
+        width: 100%;
+    }
 
-        .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 30px; font-weight: 800; font-family: monospace; opacity: 0.6; }
-    </style>
+    /* MENU GRID */
+    .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
+    .menu-card { 
+        background: rgba(255, 255, 255, 0.95); 
+        padding: 25px; 
+        border-radius: 16px; 
+        text-decoration: none; 
+        color: var(--text); 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        transition: transform 0.2s, box-shadow 0.2s; 
+        display: flex; 
+        align-items: center; 
+        gap: 15px; 
+        border: 2px solid transparent; 
+    }
+    .menu-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,82,255,0.15); border-color: var(--primary); }
+    .menu-card:focus { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .icon { font-size: 28px; background: #eff4ff; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+    .title { font-weight: 700; font-size: 18px; display: block; }
+    .desc { font-size: 13px; color: #888; display: block; margin-top: 2px; }
+
+    .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 30px; font-weight: 800; font-family: monospace; opacity: 0.6; }
+</style>
+```
+
 </head>
 <body>
 
-    <div class="header">
-        <img src="icon.png" class="logo" alt="Logo">
-        <span class="wast-brand">WAST</span>
-        <h1>WALLET AUTO STAT TRACKER</h1>
-        <p>Select a tool to start</p>
-    </div>
+```
+<div class="header">
+    <img src="icon.png" class="logo" alt="WAST Hub Logo - Wallet Auto Stat Tracker">
+    <span class="wast-brand">WAST</span>
+    <h1>WALLET AUTO STAT TRACKER</h1>
+    <p>Select a tool to start</p>
+</div>
 
-    <div class="wallet-box">
-        <button id="btnConnect" class="btn-connect">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
-            <span id="btnText">Connect Wallet</span>
-        </button>
-        <button id="btnLogout" class="btn-logout">Logout ❌</button>
-    </div>
+<div class="wallet-box">
+    <div id="errorMessage" class="error-message" role="alert"></div>
+    
+    <button id="btnConnect" class="btn-connect" aria-label="Connect wallet to Base Chain">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/>
+            <path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/>
+            <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/>
+        </svg>
+        <span id="btnText">Connect Wallet</span>
+    </button>
+    
+    <button id="btnLogout" class="btn-logout" aria-label="Disconnect wallet and logout">Logout ❌</button>
+</div>
 
-    <button id="btnTip" class="btn-tip">☕ Tip 1 USDC</button>
+<button id="btnTip" class="btn-tip" aria-label="Send 1 USDC tip">☕ Tip 1 USDC</button>
 
-    <div class="menu-grid">
-        <a href="scanner.html" id="linkScanner" class="menu-card">
-            <div class="icon">💎</div>
-            <div>
-                <span class="title">TYSM NFTs</span>
-                <span class="desc">Check your NFT Holdings</span>
-            </div>
-        </a>
+<div class="menu-grid">
+    <a href="scanner.html" id="linkScanner" class="menu-card" aria-label="Check your NFT holdings">
+        <div class="icon" aria-hidden="true">💎</div>
+        <div>
+            <span class="title">TYSM NFTs</span>
+            <span class="desc">Check your NFT Holdings</span>
+        </div>
+    </a>
 
-        <a href="txs.html" id="linkTxs" class="menu-card">
-            <div class="icon">🧾</div>
-            <div>
-                <span class="title">Check your TXs</span>
-                <span class="desc">Analyze wallet history</span>
-            </div>
-        </a>
+    <a href="txs.html" id="linkTxs" class="menu-card" aria-label="Analyze wallet transaction history">
+        <div class="icon" aria-hidden="true">🧾</div>
+        <div>
+            <span class="title">Check your TXs</span>
+            <span class="desc">Analyze wallet history</span>
+        </div>
+    </a>
 
-        <a href="showroom.html" id="linkShowroom" class="menu-card">
-            <div class="icon">🛒</div>
-            <div>
-                <span class="title">Showroom</span>
-                <span class="desc">Howlers Floor Price</span>
-            </div>
-        </a>
+    <a href="showroom.html" id="linkShowroom" class="menu-card" aria-label="View Howlers floor price">
+        <div class="icon" aria-hidden="true">🛒</div>
+        <div>
+            <span class="title">Showroom</span>
+            <span class="desc">Howlers Floor Price</span>
+        </div>
+    </a>
 
-        <a href="chickenfish.html" id="linkChicken" class="menu-card">
-            <div class="icon">🐔</div>
-            <div>
-                <span class="title">Chickenfish</span>
-                <span class="desc">Smart Rep Sweeper</span>
-            </div>
-        </a>
-    </div>
+    <a href="chickenfish.html" id="linkChicken" class="menu-card" aria-label="Access Chickenfish smart rep sweeper">
+        <div class="icon" aria-hidden="true">🐔</div>
+        <div>
+            <span class="title">Chickenfish</span>
+            <span class="desc">Smart Rep Sweeper</span>
+        </div>
+    </a>
+</div>
 
-    <div class="version-tag">Home v1.1</div>
+<div class="version-tag">v1.2.0</div>
 
-    <script type="module">
-        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-        const BASE_CHAIN_ID = '0x2105'; 
+<script type="module">
+    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+    const BASE_CHAIN_ID = '0x2105'; 
 
-        const run = async () => { await sdk.actions.ready(); };
-        run();
+    // Initialize SDK
+    const run = async () => { 
+        await sdk.actions.ready(); 
+    };
+    run();
 
-        // --- STATE MANAGEMENT ---
-        function setConnectedState(address) {
-            const btn = document.getElementById('btnConnect');
-            const btnText = document.getElementById('btnText');
-            const logoutBtn = document.getElementById('btnLogout');
+    // --- STATE MANAGEMENT ---
+    function setConnectedState(address) {
+        const btn = document.getElementById('btnConnect');
+        const btnText = document.getElementById('btnText');
+        const logoutBtn = document.getElementById('btnLogout');
 
-            btnText.innerHTML = `✅ ${address.slice(0,2)}...${address.slice(-4)}`;
-            btn.classList.add('connected');
-            logoutBtn.style.display = 'block'; 
-            
-            localStorage.setItem('tysm_wallet', address);
-            
-            updateLinks(address);
+        if (!btn || !btnText || !logoutBtn) {
+            console.error('Required UI elements not found');
+            return;
         }
 
-        function updateLinks(address) {
-            const param = address ? `?wallet=${address}` : "";
-            document.getElementById('linkScanner').href = `scanner.html${param}`;
-            document.getElementById('linkTxs').href = `txs.html${param}`;
-            document.getElementById('linkShowroom').href = `showroom.html${param}`;
-            document.getElementById('linkChicken').href = `chickenfish.html${param}`;
-        }
-
-        // --- EVENTS ---
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedWallet = localStorage.getItem('tysm_wallet');
-            if(savedWallet) {
-                setConnectedState(savedWallet);
-            }
-        });
-
-        async function connectWallet() {
-            const btn = document.getElementById('btnConnect');
-            if(btn.classList.contains('connected')) return;
-
-            try {
-                document.getElementById('btnText').innerText = "Connecting...";
-                const provider = await sdk.wallet.getEthereumProvider();
-                await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_CHAIN_ID }] });
-                const accounts = await provider.request({ method: 'eth_requestAccounts' });
-                
-                if(accounts.length > 0) {
-                    setConnectedState(accounts[0]);
-                }
-            } catch (error) {
-                console.error("Login Error:", error);
-                document.getElementById('btnText').innerText = "❌ Error";
-                setTimeout(() => { 
-                    document.getElementById('btnText').innerText = "Connect Wallet";
-                }, 2000);
-            }
-        }
-
-        // NUCLEAR LOGOUT
-        function performLogout() {
-            localStorage.removeItem('tysm_wallet');
-            location.reload(); 
-        }
-
-        document.getElementById('btnConnect').addEventListener('click', connectWallet);
-        document.getElementById('btnLogout').addEventListener('click', performLogout);
+        btnText.innerHTML = `✅ ${address.slice(0,4)}...${address.slice(-4)}`;
+        btn.classList.add('connected');
+        btn.disabled = true;
+        logoutBtn.style.display = 'block'; 
         
-        document.getElementById('btnTip').addEventListener('click', () => {
-            alert("Tip functionality coming soon!"); 
+        localStorage.setItem('tysm_wallet', address);
+        updateLinks(address);
+        hideError();
+    }
+
+    function setDisconnectedState() {
+        const btn = document.getElementById('btnConnect');
+        const btnText = document.getElementById('btnText');
+        const logoutBtn = document.getElementById('btnLogout');
+
+        if (!btn || !btnText || !logoutBtn) return;
+
+        btnText.innerText = "Connect Wallet";
+        btn.classList.remove('connected');
+        btn.disabled = false;
+        logoutBtn.style.display = 'none';
+        
+        updateLinks(null);
+    }
+
+    function updateLinks(address) {
+        const param = address ? `?wallet=${address}` : "";
+        const links = [
+            { id: 'linkScanner', page: 'scanner.html' },
+            { id: 'linkTxs', page: 'txs.html' },
+            { id: 'linkShowroom', page: 'showroom.html' },
+            { id: 'linkChicken', page: 'chickenfish.html' }
+        ];
+
+        links.forEach(({ id, page }) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.href = `${page}${param}`;
+            }
         });
-    </script>
+    }
+
+    // --- ERROR HANDLING ---
+    function showError(message) {
+        const errorDiv = document.getElementById('errorMessage');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(hideError, 5000);
+        }
+    }
+
+    function hideError() {
+        const errorDiv = document.getElementById('errorMessage');
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+        }
+    }
+
+    // --- WALLET CONNECTION ---
+    async function connectWallet() {
+        const btn = document.getElementById('btnConnect');
+        const btnText = document.getElementById('btnText');
+        
+        if (!btn || !btnText) return;
+        if (btn.classList.contains('connected')) return;
+
+        try {
+            hideError();
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="spinner"></span> Connecting...';
+
+            const provider = await sdk.wallet.getEthereumProvider();
+            
+            // Switch to Base Chain
+            try {
+                await provider.request({ 
+                    method: 'wallet_switchEthereumChain', 
+                    params: [{ chainId: BASE_CHAIN_ID }] 
+                });
+            } catch (switchError) {
+                // Chain not added, might need to add it
+                if (switchError.code === 4902) {
+                    showError('Please add Base Chain to your wallet first');
+                    throw new Error('Chain not added');
+                }
+                throw switchError;
+            }
+
+            // Request accounts
+            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            
+            if (accounts && accounts.length > 0) {
+                setConnectedState(accounts[0]);
+            } else {
+                throw new Error('No accounts returned');
+            }
+
+        } catch (error) {
+            console.error("Connection Error:", error);
+            btn.disabled = false;
+            btnText.innerText = "Connect Wallet";
+            
+            // User-friendly error messages
+            if (error.code === 4001) {
+                showError('Connection cancelled. Please try again.');
+            } else if (error.code === -32002) {
+                showError('Connection request already pending. Check your wallet.');
+            } else if (error.message?.includes('Chain not added')) {
+                // Error already shown
+            } else {
+                showError('Connection failed. Please try again.');
+            }
+        }
+    }
+
+    // --- LOGOUT ---
+    function performLogout() {
+        localStorage.removeItem('tysm_wallet');
+        setDisconnectedState();
+    }
+
+    // --- INITIALIZE ON LOAD ---
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedWallet = localStorage.getItem('tysm_wallet');
+        if (savedWallet && savedWallet.startsWith('0x')) {
+            setConnectedState(savedWallet);
+        }
+    });
+
+    // --- EVENT LISTENERS ---
+    const btnConnect = document.getElementById('btnConnect');
+    const btnLogout = document.getElementById('btnLogout');
+    const btnTip = document.getElementById('btnTip');
+
+    if (btnConnect) {
+        btnConnect.addEventListener('click', connectWallet);
+    }
+
+    if (btnLogout) {
+        btnLogout.addEventListener('click', performLogout);
+    }
+
+    if (btnTip) {
+        btnTip.addEventListener('click', () => {
+            alert("💡 Tip functionality coming soon! USDC payments will be available in v1.3.0");
+        });
+    }
+</script>
+```
+
 </body>
 </html>
