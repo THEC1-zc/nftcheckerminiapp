@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Showroom v1.14</title>
+    <title>Showroom v1.16</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -67,14 +67,13 @@
             text-transform: uppercase; letter-spacing: 1px;
         }
 
-        /* DEAL ALERT (Bottom & Bigger) */
+        /* DEAL ALERT */
         .deal-alert {
-            display: none; /* Hidden by default */
+            display: none; 
             background-color: var(--orange); color: white;
             font-size: 0.9rem; font-weight: 800; text-transform: uppercase;
             padding: 12px; width: 100%; box-sizing: border-box;
-            animation: pulse 2s infinite;
-            letter-spacing: 1px;
+            animation: pulse 2s infinite; letter-spacing: 1px;
         }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.85; } 100% { opacity: 1; } }
 
@@ -110,11 +109,9 @@
         }
         .action-btn:hover { background: var(--primary); transform: translateY(-2px); }
         
-        /* Fallback Mint Button Style */
         .mint-mode { background: linear-gradient(135deg, #8e2de2, #4a00e0); box-shadow: 0 5px 20px rgba(142, 45, 226, 0.4); }
 
         .error-box { display: none; color: var(--red); font-weight: 600; margin-top: 20px; padding: 15px; background: #fff5f5; border-radius: 10px; }
-
         .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 30px; font-weight: 800; font-family: monospace; opacity: 0.6; }
     </style>
 </head>
@@ -140,9 +137,10 @@
             
             <div class="info-box">
                 <div id="collName" class="coll-name">Loading...</div>
+                
                 <div class="item-label" id="itemLabel">Best Market Price</div>
                 
-                <div class="price-container">
+                <div id="priceBox" class="price-container">
                     <div class="price-col">
                         <span class="lbl">Price (ETH)</span>
                         <span id="priceEth" class="eth-val">---</span>
@@ -159,7 +157,7 @@
             <div id="dealAlert" class="deal-alert">🔥 Buy lower than mint price</div>
         </div>
         
-        <div class="version-tag">v1.14 (UX Polish & Mint Push)</div>
+        <div class="version-tag">v1.16 (Holders Only Mode)</div>
     </div>
 
     <script>
@@ -188,15 +186,15 @@
                 const metaData = await metaRes.json();
                 const collName = metaData.name || "Unknown Collection";
                 
-                // --- IMAGE LOGIC ---
+                // --- STATES ---
                 let finalImage = "";
-                let isOwnedImage = false;
-                let isMintFallback = false;
-
+                let hasHowler = false; 
+                let isOwnedImage = false; 
+                
                 // A: Collection Meta
                 if(metaData.openSea && metaData.openSea.imageUrl) finalImage = metaData.openSea.imageUrl;
 
-                // B: Deep Scan
+                // B: Deep Scan (if no image)
                 if (!finalImage || finalImage.includes("placehold")) {
                     try {
                         const deepUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftsForContract?contractAddress=${COLLECTION_ADDR}&pageSize=10`;
@@ -217,7 +215,9 @@
                         const ownerUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNFTsForOwner?owner=${targetWallet}&contractAddresses[]=${COLLECTION_ADDR}&pageSize=1`;
                         const ownerRes = await fetch(ownerUrl);
                         const ownerData = await ownerRes.json();
+                        
                         if (ownerData.ownedNfts && ownerData.ownedNfts.length > 0) {
+                            hasHowler = true; 
                             const myNft = ownerData.ownedNfts[0];
                             let candidate = myNft.image?.cachedUrl || myNft.image?.originalUrl || myNft.image?.pngUrl;
                             if(candidate) { finalImage = candidate; isOwnedImage = true; }
@@ -225,13 +225,10 @@
                     } catch(err) {}
                 }
 
-                // D: Mint Fallback (New Text)
+                // D: Fallback Image (Mint Text) if absolutely nothing found
                 if (!finalImage || finalImage.includes("placehold")) {
-                    // Use %0A for new line in placeholder URL
                     finalImage = "https://placehold.co/600x600/8e2de2/ffffff?text=YOU+SHOULD%0AMINT+AN+HOWLER"; 
-                    isMintFallback = true;
                 }
-
                 if(finalImage && finalImage.startsWith('ipfs://')) finalImage = finalImage.replace('ipfs://', 'https://ipfs.io/ipfs/');
 
                 // 3. Floor Price
@@ -249,39 +246,54 @@
                 
                 const buyBtn = document.getElementById('buyLink');
                 const label = document.getElementById('itemLabel');
+                const priceBox = document.getElementById('priceBox');
                 const infoBox = document.querySelector('.info-box');
-                const priceContainer = document.querySelector('.price-container');
 
-                // Logic to switch between Buy and Mint AND move button
-                if (isMintFallback) {
-                    buyBtn.innerText = "Mint on Farcaster 🎩";
-                    buyBtn.href = MINT_LINK;
-                    buyBtn.classList.add("mint-mode");
-                    label.innerText = "No listing image found";
-                    // MOVE BUTTON UP (Before Price)
-                    infoBox.insertBefore(buyBtn, priceContainer);
-                    buyBtn.style.marginBottom = "20px";
-                } else {
+                // --- LOGIC SPLIT: HOLDER vs NON-HOLDER ---
+                
+                if (hasHowler) {
+                    // === SCENARIO: HAS HOWLER ===
+                    // Show prices, show alert if cheap, show OpenSea link
+                    
+                    priceBox.style.display = 'flex';
+                    label.style.display = 'block';
+                    label.innerText = "Value of your Asset"; 
+
                     buyBtn.innerText = "View on OpenSea ↗";
                     buyBtn.href = `https://opensea.io/assets/base/${COLLECTION_ADDR}?search[sortAscending]=true&search[sortBy]=UNIT_PRICE`;
                     buyBtn.classList.remove("mint-mode");
-                    // MOVE BUTTON DOWN (To bottom of info box)
-                    infoBox.appendChild(buyBtn);
-                    buyBtn.style.marginBottom = "10px";
-                }
+                    infoBox.appendChild(buyBtn); // Standard bottom position
 
-                // Badge Logic
-                if (isOwnedImage) {
-                    const badge = document.getElementById('badgeText');
-                    badge.innerText = "YOUR ASSET";
-                    badge.style.backgroundColor = "#2ecc71"; 
-                }
+                    // Badge
+                    if (isOwnedImage) {
+                        const badge = document.getElementById('badgeText');
+                        badge.innerText = "YOUR ASSET";
+                        badge.style.backgroundColor = "#2ecc71"; 
+                    }
 
-                // Deal Alert Logic (< $2)
-                if (floorUsd < 2.00) {
-                    document.getElementById('dealAlert').style.display = "block";
+                    // Deal Alert (< 2$) - ONLY FOR HOLDERS (as per instruction)
+                    if (floorUsd < 2.00) {
+                        document.getElementById('dealAlert').style.display = "block";
+                    } else {
+                        document.getElementById('dealAlert').style.display = "none";
+                    }
+
                 } else {
-                    document.getElementById('dealAlert').style.display = "none";
+                    // === SCENARIO: NO HOWLER ===
+                    // Hide prices, Hide alert, Force Mint Button
+                    
+                    priceBox.style.display = 'none';
+                    label.style.display = 'none';
+                    document.getElementById('dealAlert').style.display = "none"; // Always hidden
+
+                    buyBtn.innerText = "Mint on Farcaster 🎩";
+                    buyBtn.href = MINT_LINK;
+                    buyBtn.classList.add("mint-mode");
+                    
+                    // Move button to be prominent
+                    infoBox.insertBefore(buyBtn, infoBox.firstChild.nextSibling); 
+                    buyBtn.style.marginBottom = "10px";
+                    buyBtn.style.marginTop = "10px";
                 }
 
                 loader.style.display = 'none';
@@ -290,7 +302,7 @@
             } catch(e) {
                 console.error(e);
                 loader.style.display = 'none';
-                errorBox.innerText = "Impossibile recuperare i dati. Riprova più tardi.";
+                errorBox.innerText = "Impossibile recuperare i dati.";
                 errorBox.style.display = 'block';
             }
         }
