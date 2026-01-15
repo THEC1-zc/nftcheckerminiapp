@@ -16,7 +16,14 @@
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: var(--bg); color: var(--text); 
+            background-color: var(--bg);
+            /* BACKGROUND IMAGE APPLIED HERE */
+            background-image: url('back.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: var(--text); 
             padding: 20px; margin: 0; 
             display: flex; flex-direction: column; align-items: center; 
         }
@@ -90,19 +97,21 @@
 
         <div class="label">QUICK SEARCH BY LEVEL</div>
         <div class="links-grid">
-            <a href="https://opensea.io/collection/chickenfish?search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=1&search[sortAscending]=true&search[sortBy]=UNIT_PRICE" target="_blank" class="filter-btn">Level 1 ↗</a>
-            <a href="https://opensea.io/collection/chickenfish?search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=2&search[sortAscending]=true&search[sortBy]=UNIT_PRICE" target="_blank" class="filter-btn">Level 2 ↗</a>
-            <a href="https://opensea.io/collection/chickenfish?search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=3&search[sortAscending]=true&search[sortBy]=UNIT_PRICE" target="_blank" class="filter-btn">Level 3 ↗</a>
-            <a href="https://opensea.io/collection/chickenfish?search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=4&search[sortAscending]=true&search[sortBy]=UNIT_PRICE" target="_blank" class="filter-btn">Level 4 ↗</a>
+            <a id="link1" href="#" target="_blank" class="filter-btn">Level 1 ↗</a>
+            <a id="link2" href="#" target="_blank" class="filter-btn">Level 2 ↗</a>
+            <a id="link3" href="#" target="_blank" class="filter-btn">Level 3 ↗</a>
+            <a id="link4" href="#" target="_blank" class="filter-btn">Level 4 ↗</a>
         </div>
-        <a href="https://opensea.io/collection/chickenfish?search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=5&search[sortAscending]=true&search[sortBy]=UNIT_PRICE" target="_blank" class="main-btn">Find Level 5 (Rare) 💎</a>
+        <a id="link5" href="#" target="_blank" class="main-btn">Find Level 5 (Rare) 💎</a>
 
     </div>
 
-    <div class="version">v6.0 (Solid Alchemy Foundation)</div>
+    <div class="version">v6.2 (Fixed Address & Background)</div>
 
     <script>
+        // ✅ INDIRIZZO CORRETTO HARDCODED
         const COLLECTION = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0".toLowerCase();
+        
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
 
         window.addEventListener('DOMContentLoaded', loadPhaseOne);
@@ -125,19 +134,30 @@
                 const ethRate = parseFloat(priceData.data.amount);
 
                 // --- RENDER ---
-                document.getElementById('collName').innerText = metaData.name || "Chickenfish";
-                document.getElementById('collImg').src = metaData.openSea?.imageUrl || "https://placehold.co/400x400?text=Chickenfish";
+                document.getElementById('collName').innerText = metaData.name || "Unknown Collection";
+                document.getElementById('collImg').src = metaData.openSea?.imageUrl || "https://placehold.co/400x400?text=No+Image";
                 
                 const floor = floorData.openSea?.floorPrice || 0;
                 document.getElementById('priceEth').innerText = `${floor.toFixed(4)} Ξ`;
                 document.getElementById('priceUsd').innerText = `$${(floor * ethRate).toFixed(2)}`;
 
+                // SETUP LINKS
+                // Usiamo "Level" (maiuscolo) che è lo standard più comune su OpenSea
+                const baseUrl = `https://opensea.io/assets/base/${COLLECTION}?search[sortAscending]=true&search[sortBy]=UNIT_PRICE&search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=`;
+
+                document.getElementById('link1').href = baseUrl + "1";
+                document.getElementById('link2').href = baseUrl + "2";
+                document.getElementById('link3').href = baseUrl + "3";
+                document.getElementById('link4').href = baseUrl + "4";
+                document.getElementById('link5').href = baseUrl + "5";
+
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
 
             } catch (e) {
-                document.getElementById('loader').innerText = "Error: " + e.message;
+                document.getElementById('loader').innerText = "Error loading data. Reload.";
                 document.getElementById('loader').style.color = "red";
+                console.error(e);
             }
         }
     </script>
