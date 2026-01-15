@@ -82,6 +82,8 @@
         .buy-btn:hover { background-color: var(--primary); }
 
         .error-msg { color: var(--red); text-align: center; font-weight: 600; font-size: 0.9rem; display: none; padding: 20px; background: #fff5f5; border-radius: 10px; }
+        
+        .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 25px; font-weight: 800; font-family: monospace; opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -98,11 +100,13 @@
         <div id="error" class="error-msg">⚠️ Unable to fetch listings.</div>
 
         <div id="grid" class="nft-grid"></div>
+        
+        <div class="version-tag">Showroom v1.0</div>
     </div>
 
     <script>
-        // Target Collection
-        const COLLECTION_ADDR = "0x160650efd60032aa49bbec70920a870aacffdc39"; 
+        // Target Collection (Lowercase strict)
+        const COLLECTION_ADDR = "0x160650efd60032aa49bbec70920a870aacffdc39".toLowerCase(); 
         
         window.addEventListener('DOMContentLoaded', fetchShowroom);
 
@@ -112,19 +116,18 @@
             const error = document.getElementById('error');
 
             try {
-                // Fetch 20 items to ensure we find at least 3 valid listed ones
+                // public anonymous call (no headers) to avoid CORS
                 const url = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=20&includeAttributes=false`;
                 
-                const res = await fetch(url, {
-                    headers: { 'x-api-key': 'demo-api-key', 'accept': '*/*' }
-                });
+                // NO HEADERS for public access
+                const res = await fetch(url); 
 
-                if (!res.ok) throw new Error("API Connection Failed");
+                if (!res.ok) throw new Error(`API Connection Error: ${res.status}`);
                 const data = await res.json();
 
-                if(!data.tokens || data.tokens.length === 0) throw new Error("No items found");
+                if(!data.tokens || data.tokens.length === 0) throw new Error("No items found in collection");
 
-                // FILTER: Exclude items NOT listed (where floorAsk price is missing or zero)
+                // FILTER: Only keep Valid Listings (price > 0)
                 const listedItems = data.tokens.filter(item => {
                     return item.market && 
                            item.market.floorAsk && 
@@ -132,7 +135,7 @@
                            item.market.floorAsk.price.amount.native > 0;
                 });
 
-                if(listedItems.length === 0) throw new Error("No active listings found.");
+                if(listedItems.length === 0) throw new Error("No active listings found right now.");
 
                 // TAKE TOP 3
                 const top3 = listedItems.slice(0, 3);
@@ -148,11 +151,14 @@
                     const priceEth = market.floorAsk.price.amount.native || 0;
                     const priceUsd = market.floorAsk.price.amount.usd || 0;
                     
-                    let imgUrl = token.image || 'https://placehold.co/400x400?text=No+Img';
+                    // Safe Image Handling
+                    let imgUrl = token.image;
+                    if (!imgUrl) imgUrl = 'https://placehold.co/400x400?text=No+Img';
                     if (token.imageSmall) imgUrl = token.imageSmall; 
 
                     const collName = token.collection?.name || "Collection";
                     const name = token.name || `Item #${token.tokenId}`;
+                    // Direct link to OpenSea asset
                     const openseaLink = `https://opensea.io/assets/base/${COLLECTION_ADDR}/${token.tokenId}`;
 
                     const card = document.createElement('div');
@@ -181,7 +187,7 @@
             } catch(e) {
                 console.error(e);
                 loading.style.display = 'none';
-                error.innerText = `⚠️ Error: ${e.message}`;
+                error.innerText = `⚠️ ${e.message}`;
                 error.style.display = 'block';
             }
         }
