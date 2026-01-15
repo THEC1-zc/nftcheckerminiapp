@@ -1,98 +1,78 @@
-// api/sniper.js
 export default async function handler(req, res) {
     const COLLECTION = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0";
+    const RESERVOIR_API = "https://api-base.reservoir.tools/tokens/v6";
     
-    // Usiamo l'API pubblica di Reservoir (Server-to-Server non ha problemi di CORS)
-    const RESERVOIR_URL = "https://api-base.reservoir.tools/tokens/v6";
+    // Se hai una tua key di Reservoir, mettila qui al posto di 'demo-api-key'
+    const API_KEY = "demo-api-key"; 
 
     try {
-        // 1. SCARICA I DATI GREZZI
-        // Chiediamo i 100 token più economici in vendita (ordinati per prezzo)
-        // Includiamo gli attributi per vedere Score e Max Level
-        const url = `${RESERVOIR_URL}?collection=${COLLECTION}&sortBy=floorAskPrice&limit=100&includeAttributes=true`;
+        // 1. Scarica i 100 listing più economici
+        const url = `${RESERVOIR_API}?collection=${COLLECTION}&sortBy=floorAskPrice&limit=100&includeAttributes=true`;
         
         const response = await fetch(url, {
-            headers: { 
-                'accept': '*/*',
-                'x-api-key': 'demo-api-key' // Chiave pubblica server-side
+            headers: {
+                'x-api-key': API_KEY,
+                'accept': '*/*'
             }
         });
 
-        if (!response.ok) throw new Error(`Errore Reservoir: ${response.status}`);
-        
+        if (!response.ok) {
+            throw new Error(`Reservoir API Error: ${response.status} ${response.statusText}`);
+        }
+
         const data = await response.json();
         const tokens = data.tokens || [];
 
-        // 2. PREPARA I CONTENITORI (Solo il migliore per ogni livello)
-        // Usiamo un oggetto per tenere traccia del primo (e quindi più economico) trovato per ogni livello
+        // 2. Filtra (Logica Golden Egg)
         const bestDeals = {}; 
 
-        // 3. IL FILTRO "GOLDEN EGG" (La tua logica esatta)
         for (const item of tokens) {
-            
-            // A. È in vendita? (Ha un prezzo?)
-            const priceData = item.market?.floorAsk?.price?.amount;
-            if (!priceData) continue; // Salta se non è listato
+            // Check prezzo
+            const price = item.market?.floorAsk?.price?.amount?.native;
+            if (!price) continue;
 
-            // B. Estrai i Tratti (Normalizziamo i nomi in minuscolo per sicurezza)
+            // Estrai tratti
             const attrs = item.token.attributes || [];
             let level = -1;
-            let neynarScore = 0; // Default basso (se manca il tratto, vale 0)
-            let maxChickenLevel = 0; // Default basso
+            let neynarScore = 0;
+            let maxChickenLevel = 0;
 
             for (const a of attrs) {
                 const key = (a.key || "").toLowerCase();
-                const val = a.value;
+                const val = parseFloat(a.value); // Converte "3" o "0.8" in numero
 
-                // Cerca "Level"
-                if (key === 'level') level = parseInt(val);
-                
-                // Cerca "Owner Neynar Score" (o simili varianti)
-                if (key.includes('neynar') && key.includes('score')) {
-                    neynarScore = parseFloat(val);
-                }
-                
-                // Cerca "Owner Max Chicken Level"
-                if (key.includes('max') && key.includes('chicken')) {
-                    maxChickenLevel = parseInt(val);
-                }
+                if (key === 'level') level = val;
+                if (key.includes('neynar') && key.includes('score')) neynarScore = val;
+                if (key.includes('max') && key.includes('chicken')) maxChickenLevel = val;
             }
 
-            // C. Filtra per Livello (Ci interessano solo 1, 2, 3, 4, 5)
+            // Filtra solo livelli 1-5
             if (level < 1 || level > 5) continue;
 
-            // D. APPLICA LA TUA REGOLA DI ESCLUSIONE
-            // Regola: Tieni se (Score >= 0.69) OPPURE (MaxLevel >= 3)
-            // Se Score è basso (<0.69) E MaxLevel è basso (<3) -> SCARTA.
+            // --- IL FILTRO SICUREZZA ---
+            // Accettiamo se Score è alto OPPURE se è una Whale (MaxLvl alto)
             const isSafe = (neynarScore >= 0.69) || (maxChickenLevel >= 3);
 
-            if (!isSafe) continue; // Scarta elemento "unsafe"
+            if (!isSafe) continue; // Scartato
 
-            // E. Salva il risultato (Solo se non abbiamo già trovato un deal migliore per questo livello)
-            // Dato che l'API ci dà i token ordinati per prezzo crescente, il primo che troviamo è il migliore.
+            // Salva il primo trovato per livello (essendo ordinati per prezzo, è il best deal)
             if (!bestDeals[level]) {
                 bestDeals[level] = {
-                    level: level,
-                    tokenId: item.token.tokenId,
+                    id: item.token.tokenId,
                     name: item.token.name,
                     image: item.token.image,
-                    priceEth: priceData.native,
-                    priceUsd: priceData.usd,
-                    reason: (neynarScore >= 0.69) ? `Score ${neynarScore}` : `Whale (Lvl ${maxChickenLevel})`,
-                    openseaLink: `https://opensea.io/assets/base/${COLLECTION}/${item.token.tokenId}`
+                    priceEth: price,
+                    priceUsd: item.market.floorAsk.price.amount.usd,
+                    reason: (neynarScore >= 0.69) ? `Score ${neynarScore}` : `Whale (MaxLvl ${maxChickenLevel})`
                 };
             }
-
-            // Ottimizzazione: Se abbiamo trovato tutti e 5 i livelli, fermati.
-            if (bestDeals[1] && bestDeals[2] && bestDeals[3] && bestDeals[4] && bestDeals[5]) break;
         }
 
-        // 4. RISPONDI ALLA APP
-        // Restituisce un JSON pulito con solo i dati che servono
+        // Restituisce i risultati
         return res.status(200).json(bestDeals);
 
     } catch (error) {
-        console.error("Sniper Error:", error);
-        return res.status(500).json({ error: "Errore durante la scansione del mercato" });
+        console.error("Backend Error:", error);
+        return res.status(500).json({ error: error.message });
     }
 }
