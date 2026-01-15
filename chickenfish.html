@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chickenfish Market</title>
+    <title>Chickenfish Test</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -12,275 +12,192 @@
     </script>
 
     <style>
-        :root { --primary: #FFC107; --accent: #FF9800; --bg: #fffbf0; --card-bg: #ffffff; --text: #3e2723; --green: #2ecc71; --purple: #9b59b6; --red: #e74c3c; }
+        :root { --bg: #fffbf0; --text: #3e2723; --accent: #FF9800; --green: #2ecc71; --card-bg: #fff; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: var(--bg);
-            color: var(--text); 
-            padding: 15px; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            overflow-x: hidden; 
-        }
-        
-        .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
-        .back-btn { text-decoration: none; color: #5d4037; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
-        
-        .container { width: 100%; max-width: 600px; box-sizing: border-box; }
-
-        h2 { text-align: center; margin-top: 0; font-weight: 900; color: var(--text); margin-bottom: 5px; font-size: 1.8rem; }
-        .subtitle { text-align: center; color: #795548; font-size: 0.9rem; margin-bottom: 25px; }
-
-        .status-bar { 
-            width: 100%; max-width: 400px; background: #fff; padding: 10px; 
-            border-radius: 12px; font-size: 0.8rem; color: #888; text-align: center;
-            margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .status-active { color: var(--accent); font-weight: 700; }
-
-        /* NFT LIST */
-        .nft-list { display: flex; flex-direction: column; gap: 15px; width: 100%; }
-        
-        .nft-card { 
-            background: #fff; border: 1px solid #efebe9; border-radius: 16px; overflow: hidden; 
-            box-shadow: 0 5px 15px rgba(62, 39, 35, 0.06); transition: transform 0.2s;
-            display: flex; flex-direction: row; height: 130px; position: relative; opacity: 0; animation: fadeIn 0.5s forwards;
-        }
-        @keyframes fadeIn { to { opacity: 1; } }
-        
-        .level-badge {
-            position: absolute; top: 8px; left: 8px; z-index: 2;
-            background: rgba(0,0,0,0.8); color: white; padding: 3px 8px;
-            border-radius: 6px; font-size: 0.65rem; font-weight: 800; backdrop-filter: blur(4px);
+            background-color: var(--bg); color: var(--text); 
+            padding: 20px; margin: 0; 
+            display: flex; flex-direction: column; align-items: center; 
         }
 
-        .rep-badge {
-            display: inline-block; padding: 2px 6px; border-radius: 4px; 
-            font-size: 0.6rem; font-weight: 700; margin-top: 4px;
-        }
-        .rep-ok { background: #e8f5e9; color: var(--green); border: 1px solid #c8e6c9; }
-        .rep-whale { background: #f3e5f5; color: var(--purple); border: 1px solid #e1bee7; }
+        .back-btn { text-decoration: none; color: #5d4037; background: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        .nft-img { width: 130px; height: 130px; object-fit: cover; flex-shrink: 0; background: #fff8e1; }
-        
-        .nft-info { padding: 12px 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; }
-        
-        .nft-name { font-weight: 900; font-size: 1rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
-        .token-id { font-size: 0.7rem; color: #a1887f; font-family: monospace; }
-        
-        .price-label { font-size: 0.6rem; text-transform: uppercase; color: #bbb; font-weight: 700; margin-bottom: 2px; }
-        .price-row { display: flex; align-items: baseline; gap: 6px; }
-        .price-eth { font-size: 1.1rem; font-weight: 900; color: var(--accent); }
-        .price-usd { font-size: 0.8rem; color: #8d6e63; font-weight: 500; }
-        
-        .action-btn {
-            text-decoration: none; background: #3e2723; color: white; 
-            padding: 8px 0; border-radius: 8px; font-weight: 700; font-size: 0.8rem;
-            text-align: center; display: block; width: 100%; margin-top: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        h2 { margin: 0 0 10px 0; font-weight: 900; }
+        .status-log { 
+            font-family: monospace; font-size: 0.8rem; color: #666; 
+            background: #eee; padding: 10px; border-radius: 8px; 
+            width: 100%; max-width: 400px; margin-bottom: 20px;
+            min-height: 40px; display: flex; align-items: center; justify-content: center;
         }
-        .action-btn:hover { background: var(--accent); }
 
-        /* Fallback Card */
-        .fallback-card {
-            border: 2px dashed #ddd; background: #fafafa;
-            display: flex; align-items: center; justify-content: center;
-            height: 80px; border-radius: 16px; color: #aaa; font-size: 0.9rem;
+        /* SINGLE BIG CARD */
+        .result-card {
+            background: var(--card-bg); width: 100%; max-width: 350px;
+            border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(62, 39, 35, 0.15);
+            display: none; /* Hidden until found */
+            flex-direction: column;
         }
+
+        .img-area { width: 100%; aspect-ratio: 1/1; position: relative; }
+        .nft-img { width: 100%; height: 100%; object-fit: cover; }
         
-        .version-tag { text-align: center; font-size: 0.7rem; color: #8d6e63; margin-top: 25px; font-weight: 800; font-family: monospace; opacity: 0.6; }
+        .badge {
+            position: absolute; top: 15px; left: 15px;
+            background: rgba(0,0,0,0.8); color: #fff; padding: 6px 12px;
+            border-radius: 12px; font-weight: 800; font-size: 0.8rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .info-area { padding: 25px; }
+        .title { font-size: 1.4rem; font-weight: 900; margin-bottom: 5px; }
+        .traits { display: flex; gap: 10px; margin-bottom: 20px; }
+        .trait-tag { background: #f5f5f5; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: #795548; }
+        .score-tag { background: #e8f5e9; color: var(--green); border: 1px solid #c8e6c9; }
+
+        .price-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+        .eth-price { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
+        .usd-price { font-size: 1rem; color: #999; font-weight: 600; padding-bottom: 4px; }
+
+        .btn {
+            display: block; width: 100%; padding: 16px; background: #3e2723; color: white;
+            text-align: center; text-decoration: none; font-weight: 700; border-radius: 14px;
+            font-size: 1rem;
+        }
+
+        .version { margin-top: 30px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
     </style>
 </head>
 <body>
 
-    <div class="nav-header">
-        <a href="index.html" class="back-btn">⬅ Home</a>
+    <a href="index.html" class="back-btn">⬅ Home</a>
+    <h2>Single Match Test</h2>
+    
+    <div id="status" class="status-log">Initializing...</div>
+
+    <div id="card" class="result-card">
+        <div class="img-area">
+            <div class="badge">BEST DEAL FOUND</div>
+            <img id="nftImg" class="nft-img" src="">
+        </div>
+        <div class="info-area">
+            <div id="nftName" class="title">...</div>
+            <div class="traits">
+                <div id="lvlTag" class="trait-tag">Lvl ?</div>
+                <div id="scoreTag" class="trait-tag score-tag">Score ?</div>
+            </div>
+            
+            <div class="price-row">
+                <div id="priceEth" class="eth-price">---</div>
+                <div id="priceUsd" class="usd-price">---</div>
+            </div>
+
+            <a id="buyBtn" href="#" target="_blank" class="btn">View on OpenSea</a>
+        </div>
     </div>
 
-    <div class="container">
-        <h2>Chickenfish Market</h2>
-        <div class="subtitle">Live Listings by Level (1-5)</div>
-
-        <div id="statusBar" class="status-bar">Initializing...</div>
-
-        <div id="list" class="nft-list"></div>
-        
-        <div class="version-tag">v4.0 (Surgical Strike)</div>
-    </div>
+    <div class="version">v5.0 (Single Target Test)</div>
 
     <script>
-        const COLLECTION_ADDR = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0".toLowerCase();
-        const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
+        // CONFIG
+        const COLLECTION = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0".toLowerCase();
         
-        // Use AllOrigins Proxy to bypass CORS on Reservoir
-        const PROXY_BASE = "https://api.allorigins.win/raw?url=";
-        const RESERVOIR_BASE = "https://api-base.reservoir.tools/tokens/v6";
+        // Using "AllOrigins" as proxy to avoid CORS on Reservoir
+        const PROXY = "https://api.allorigins.win/raw?url=";
+        const API_URL = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION}&sortBy=floorAskPrice&limit=50&includeAttributes=true`;
 
-        let ethPrice = 0;
+        window.addEventListener('DOMContentLoaded', runTest);
 
-        window.addEventListener('DOMContentLoaded', startSurgicalStrike);
+        async function runTest() {
+            const status = document.getElementById('status');
+            const card = document.getElementById('card');
 
-        async function startSurgicalStrike() {
-            const statusBar = document.getElementById('statusBar');
-            const listDiv = document.getElementById('list');
-
-            // 1. Get ETH Price first (Silent)
             try {
+                // 1. Get ETH Price
+                status.innerText = "Fetching ETH Price...";
                 const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
-                const priceJson = await priceRes.json();
-                ethPrice = parseFloat(priceJson.data.amount);
-            } catch(e) { console.warn("ETH Price failed"); }
+                const priceData = await priceRes.json();
+                const ethRate = parseFloat(priceData.data.amount);
 
-            // 2. Loop through Levels 1 to 5 SEQUENTIALLY
-            for (let i = 1; i <= 5; i++) {
-                statusBar.innerHTML = `Hunting for <span class="status-active">Level ${i}</span>...`;
+                // 2. Fetch Listings
+                status.innerText = "Scanning top 50 listings...";
+                const targetUrl = PROXY + encodeURIComponent(API_URL);
+                const res = await fetch(targetUrl);
                 
-                try {
-                    const deal = await findBestDealForLevel(i);
-                    if (deal) {
-                        renderCard(listDiv, deal, i);
-                    } else {
-                        renderFallback(listDiv, i, "No valid listings found");
-                    }
-                } catch (err) {
-                    console.error(`Level ${i} failed:`, err);
-                    renderFallback(listDiv, i, "Data Unavailable");
-                }
-            }
-
-            statusBar.innerText = "Scan Complete ✅";
-        }
-
-        async function findBestDealForLevel(level) {
-            // Targeted Query: Only get items of this specific Level
-            const params = new URLSearchParams({
-                collection: COLLECTION_ADDR,
-                sortBy: "floorAskPrice",
-                limit: "8", // Get top 8 cheapest to check Rep
-                "attributes[Level]": level, // THE MAGIC FILTER
-                includeAttributes: "true"
-            });
-
-            const targetUrl = `${RESERVOIR_BASE}?${params.toString()}`;
-            const proxyUrl = PROXY_BASE + encodeURIComponent(targetUrl);
-
-            const res = await fetch(proxyUrl);
-            if (!res.ok) return null;
-            const data = await res.json();
-
-            if (!data.tokens || data.tokens.length === 0) return null;
-
-            // Analyze Candidates
-            for (const item of data.tokens) {
-                if (!item.market?.floorAsk?.price?.amount?.native) continue;
-
-                const price = item.market.floorAsk.price.amount.native;
-                const maker = item.market.floorAsk.maker;
-                const token = item.token;
-
-                // Check Rep
-                let neynarScore = -1;
-                const attrs = token.attributes || [];
-                for (const a of attrs) {
-                    const key = (a.key || "").toLowerCase();
-                    if (key.includes("neynar") || key.includes("score")) neynarScore = parseFloat(a.value);
-                }
-
-                let reason = null;
-                if (neynarScore > 0.69) {
-                    reason = `Rep Score ${neynarScore}`;
-                } else {
-                    // Whale Check
-                    const isWhale = await checkSellerWallet(maker);
-                    if (isWhale) reason = "Whale Seller";
-                }
-
-                // If approved, return immediately (since it's the cheapest valid one)
-                if (reason) {
-                    return {
-                        tokenId: token.tokenId,
-                        name: token.name || `Chickenfish #${token.tokenId}`,
-                        image: token.image,
-                        price: price,
-                        reason: reason
-                    };
-                }
-            }
-            return null; // None of the top 8 passed the check
-        }
-
-        async function checkSellerWallet(walletAddr) {
-            try {
-                const url = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNFTsForOwner?owner=${walletAddr}&contractAddresses[]=${COLLECTION_ADDR}&withMetadata=true`;
-                const res = await fetch(url);
+                if (!res.ok) throw new Error(`Proxy/API Error: ${res.status}`);
                 const data = await res.json();
-                if (!data.ownedNfts) return false;
-                
-                // Check for Level 3+
-                for (const item of data.ownedNfts) {
-                    const attrs = item.raw.metadata.attributes || [];
-                    const lvlAttr = attrs.find(a => a.trait_type && (a.trait_type.toLowerCase().includes("level")));
-                    if (lvlAttr && parseInt(lvlAttr.value) >= 3) return true;
+
+                if (!data.tokens || data.tokens.length === 0) throw new Error("No listings found.");
+
+                // 3. Find the Winner
+                let winner = null;
+                let checkedCount = 0;
+
+                for (const item of data.tokens) {
+                    checkedCount++;
+                    status.innerText = `Checking Item ${checkedCount}/50...`;
+
+                    // Skip if not listed
+                    if (!item.market?.floorAsk?.price?.amount?.native) continue;
+
+                    const token = item.token;
+                    const attrs = token.attributes || [];
+                    
+                    // Parse Traits
+                    let level = -1;
+                    let score = -1;
+
+                    for (const a of attrs) {
+                        const key = (a.key || "").toLowerCase();
+                        if (key.includes("level") || key.includes("lvl")) level = parseInt(a.value);
+                        if (key.includes("neynar") || key.includes("score")) score = parseFloat(a.value);
+                    }
+
+                    // --- THE TEST CRITERIA ---
+                    // 1. Valid Level (1-5)
+                    // 2. High Score (> 0.69)
+                    if (level >= 1 && level <= 5 && score > 0.69) {
+                        winner = {
+                            name: token.name || `Chickenfish #${token.tokenId}`,
+                            tokenId: token.tokenId,
+                            image: token.image,
+                            price: item.market.floorAsk.price.amount.native,
+                            level: level,
+                            score: score
+                        };
+                        break; // STOP searching, we found one!
+                    }
                 }
-                return false;
-            } catch (err) { return false; }
-        }
 
-        function renderCard(container, data, level) {
-            let imgUrl = data.image || 'https://placehold.co/150x150?text=No+Img';
-            // Simple IPFS fix
-            if (imgUrl.includes("ipfs") && !imgUrl.startsWith("http")) {
-                 imgUrl = `https://ipfs.io/ipfs/${imgUrl.replace("ipfs://", "")}`;
+                // 4. Render Result
+                if (winner) {
+                    status.innerText = "✅ Match Found!";
+                    status.style.background = "#d4edda";
+                    status.style.color = "#155724";
+
+                    document.getElementById('nftImg').src = winner.image;
+                    document.getElementById('nftName').innerText = winner.name;
+                    document.getElementById('lvlTag').innerText = `Level ${winner.level}`;
+                    document.getElementById('scoreTag').innerText = `Rep ${winner.score}`;
+                    
+                    document.getElementById('priceEth').innerText = `${winner.price.toFixed(4)} Ξ`;
+                    document.getElementById('priceUsd').innerText = `$${(winner.price * ethRate).toFixed(2)}`;
+                    
+                    document.getElementById('buyBtn').href = `https://opensea.io/assets/base/${COLLECTION}/${winner.tokenId}`;
+                    
+                    card.style.display = 'flex'; // Show card
+                } else {
+                    status.innerText = "❌ No items with Score > 0.69 found in the cheapest 50.";
+                    status.style.background = "#f8d7da";
+                    status.style.color = "#721c24";
+                }
+
+            } catch (e) {
+                console.error(e);
+                status.innerText = `Error: ${e.message}`;
+                status.style.background = "#fff3cd";
+                status.style.color = "#856404";
             }
-            
-            const badgeClass = data.reason.includes("Score") ? "rep-ok" : "rep-whale";
-            const usdVal = data.price * ethPrice;
-            const link = `https://opensea.io/assets/base/${COLLECTION_ADDR}/${data.tokenId}`;
-
-            const html = `
-            <div class="nft-card">
-                <div class="level-badge">LEVEL ${level}</div>
-                <img src="${imgUrl}" class="nft-img" onerror="this.src='https://placehold.co/150x150?text=Err'">
-                
-                <div class="nft-info">
-                    <div>
-                        <div class="nft-name">${data.name}</div>
-                        <div class="token-id">ID: ${data.tokenId}</div>
-                        <div class="rep-badge ${badgeClass}">${data.reason}</div>
-                    </div>
-
-                    <div>
-                        <div class="price-label">Listing Price</div>
-                        <div class="price-row">
-                            <span class="price-eth">${data.price.toFixed(4)} ETH</span>
-                            <span class="price-usd">$${usdVal.toFixed(2)}</span>
-                        </div>
-                    </div>
-
-                    <a href="${link}" target="_blank" class="action-btn">Buy on OpenSea ↗</a>
-                </div>
-            </div>`;
-
-            container.innerHTML += html;
-        }
-
-        function renderFallback(container, level, msg) {
-            // Direct link to OpenSea filtered by Level trait as fallback
-            // Note: Trait filter params on OpenSea are complex, linking to general collection
-            const link = `https://opensea.io/collection/chickenfish?search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=${level}&search[sortAscending]=true&search[sortBy]=UNIT_PRICE`;
-            
-            const html = `
-            <div class="nft-card" style="height: 100px; justify-content: center; background: #fafafa; border: 2px dashed #eee;">
-                <div style="text-align:center;">
-                    <div style="font-weight:800; color:#ccc; font-size: 1rem;">LEVEL ${level}</div>
-                    <div style="font-size:0.75rem; color:#aaa; margin-bottom:5px;">${msg}</div>
-                    <a href="${link}" target="_blank" style="font-size:0.7rem; color:#3e2723; text-decoration:underline;">Check OpenSea manually</a>
-                </div>
-            </div>`;
-            container.innerHTML += html;
         }
     </script>
 </body>
