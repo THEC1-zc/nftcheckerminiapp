@@ -12,12 +12,12 @@
     </script>
 
     <style>
-        :root { --bg: #0f0f0f; --text: #eaeaea; --card-bg: #1a1a1a; --accent: #7c4dff; }
+        :root { --bg: #fffbf0; --text: #3e2723; --card-bg: #ffffff; --green: #2ecc71; --orange: #ff9f43; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: var(--bg);
-            background-image: url('back.png'); /* Assicurati che l'immagine ci sia o rimuovi questa riga */
+            background-image: url('back.png');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -26,46 +26,45 @@
             display: flex; flex-direction: column; align-items: center; 
         }
 
-        .back-btn { align-self: flex-start; text-decoration: none; color: #aaa; background: #333; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 20px; }
+        .back-btn { align-self: flex-start; text-decoration: none; color: #5d4037; background: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
         .card {
             background: var(--card-bg); width: 100%; max-width: 400px;
             border-radius: 24px; overflow: hidden; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            text-align: center; padding-bottom: 30px; border: 1px solid #333;
+            box-shadow: 0 20px 40px rgba(62, 39, 35, 0.15);
+            text-align: center; padding-bottom: 30px;
         }
 
-        .img-wrapper { width: 100%; height: 280px; position: relative; }
+        .img-wrapper { width: 100%; height: 320px; position: relative; }
         .coll-img { width: 100%; height: 100%; object-fit: cover; }
         
         .info { padding: 25px 20px 10px 20px; }
-        .main-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 5px 0; color: #fff; }
-        .subtitle { color: #888; font-size: 0.8rem; margin-bottom: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .main-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 5px 0; color: #222; }
+        .subtitle { color: #888; font-size: 0.8rem; margin-bottom: 25px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 
         .btn-container { display: flex; flex-direction: column; gap: 12px; }
 
-        .market-btn {
+        .snipe-btn {
             display: flex; align-items: center; justify-content: space-between;
             padding: 18px; border-radius: 16px; text-decoration: none;
-            transition: all 0.2s; font-weight: 800; font-size: 1.1rem;
-            border: 1px solid #333;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 800; font-size: 1rem; border: 1px solid transparent;
         }
-        
-        /* Magically (Il preferito dai Pro su Base) */
-        .btn-magically { background: linear-gradient(90deg, #ff00cc, #333399); color: white; border: none; }
-        .btn-magically:hover { transform: scale(1.02); box-shadow: 0 0 15px rgba(255, 0, 204, 0.4); }
 
-        /* OpenSea Pro */
-        .btn-os-pro { background: #000; color: white; border: 1px solid #444; }
-        .btn-os-pro:hover { background: #222; border-color: #fff; }
+        /* OPENSEA (Verde) */
+        .btn-os { background: #e8f5e9; border-color: #c8e6c9; color: #1b5e20; }
+        .btn-os:hover { background: #c8e6c9; transform: translateY(-2px); }
 
-        /* OpenSea Standard */
-        .btn-os { background: #2081e2; color: white; border: none; }
-        .btn-os:hover { background: #1868b7; }
+        /* BLUR (Arancione) */
+        .btn-blur { background: #fff3e0; border-color: #ffe0b2; color: #e65100; }
+        .btn-blur:hover { background: #ffe0b2; transform: translateY(-2px); }
 
-        .label-small { font-size: 0.7rem; color: #bbb; margin-bottom: 5px; text-align: left; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px;}
+        /* ELEMENT (Grigio) */
+        .btn-element { background: #f5f5f5; border-color: #e0e0e0; color: #424242; }
+        .btn-element:hover { background: #e0e0e0; transform: translateY(-2px); }
 
-        .version { margin-top: 40px; font-size: 0.7rem; opacity: 0.3; font-family: monospace; }
+        .note { margin-top: 20px; font-size: 0.7rem; color: #aaa; padding: 0 20px; font-style: italic; }
+        .version { margin-top: 40px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -79,60 +78,35 @@
         
         <div class="info">
             <h2 class="main-title">Chickens by $EGGS</h2>
-            <div class="subtitle">Multi-Market Sniper</div>
+            <div class="subtitle">Select Marketplace</div>
             
             <div class="btn-container">
                 
-                <div>
-                    <div class="label-small">RECOMMENDED (FASTEST)</div>
-                    <a id="btnMagically" href="#" target="_blank" class="market-btn btn-magically">
-                        <span>⚡ Magically.gg</span>
-                        <span>↗</span>
-                    </a>
-                </div>
+                <a href="https://opensea.io/collection/chickens-by-eggs?search[numericTraits][0][name]=Owner%20Max%20Chicken%20Level&search[numericTraits][0][ranges][0][min]=3&search[toggles][0]=BUY_NOW" 
+                   target="_blank" class="snipe-btn btn-os">
+                    <span>🌊 OpenSea (Whale Filter)</span>
+                    <span>↗</span>
+                </a>
 
-                <div>
-                    <div class="label-small">ADVANCED INTERFACE</div>
-                    <a id="btnPro" href="#" target="_blank" class="market-btn btn-os-pro">
-                        <span>💎 OpenSea Pro</span>
-                        <span>↗</span>
-                    </a>
-                </div>
+                <a href="https://blur.io/collection/chickens-by-eggs" target="_blank" class="snipe-btn btn-blur">
+                    <span>⚡ Blur (Pro Sniper)</span>
+                    <span>↗</span>
+                </a>
 
-                <div>
-                    <div class="label-small">STANDARD</div>
-                    <a id="btnOs" href="#" target="_blank" class="market-btn btn-os">
-                        <span>🌊 OpenSea</span>
-                        <span>↗</span>
-                    </a>
-                </div>
+                <a href="https://element.market/collections/chickens-by-eggs" target="_blank" class="snipe-btn btn-element">
+                    <span>🧩 Element Market</span>
+                    <span>↗</span>
+                </a>
 
+            </div>
+
+            <div class="note">
+                *Se OpenSea non filtra, usa Blur per vedere i listing "a muro".
             </div>
         </div>
     </div>
 
-    <div class="version">v17.0 (Aggregators)</div>
+    <div class="version">v18.0 (Market Explorer)</div>
 
-    <script>
-        // CONFIGURAZIONE LINK
-        
-        // 1. MAGICALLY (Tentativo di filtro Score >= 0.69)
-        // Magically usa JSON nell'URL. Proviamo a iniettare il filtro.
-        // Se non funziona, aprirà la collezione e potrai usare la barra laterale molto veloce.
-        const MAGICALLY_BASE = "https://magically.gg/collection/chickens-by-eggs";
-        const MAGICALLY_PARAMS = "?status=listed&sort=priceAsc"; 
-        
-        // 2. OPENSEA PRO (Aggregatore ufficiale)
-        const PRO_BASE = "https://pro.opensea.io/collection/chickens-by-eggs";
-
-        // 3. OPENSEA STANDARD
-        const OS_BASE = "https://opensea.io/collection/chickens-by-eggs";
-
-        window.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('btnMagically').href = MAGICALLY_BASE + MAGICALLY_PARAMS;
-            document.getElementById('btnPro').href = PRO_BASE;
-            document.getElementById('btnOs').href = OS_BASE;
-        });
-    </script>
 </body>
 </html>
