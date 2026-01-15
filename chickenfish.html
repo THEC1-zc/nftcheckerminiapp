@@ -49,6 +49,7 @@
             padding: 18px; border-radius: 16px; text-decoration: none;
             transition: transform 0.2s, box-shadow 0.2s;
             font-weight: 800; font-size: 1rem; border: 1px solid transparent;
+            cursor: pointer;
         }
 
         /* OPENSEA (Verde) */
@@ -58,10 +59,6 @@
         /* BLUR (Arancione) */
         .btn-blur { background: #fff3e0; border-color: #ffe0b2; color: #e65100; }
         .btn-blur:hover { background: #ffe0b2; transform: translateY(-2px); }
-
-        /* ELEMENT (Grigio) */
-        .btn-element { background: #f5f5f5; border-color: #e0e0e0; color: #424242; }
-        .btn-element:hover { background: #e0e0e0; transform: translateY(-2px); }
 
         .note { margin-top: 20px; font-size: 0.7rem; color: #aaa; padding: 0 20px; font-style: italic; }
         .version { margin-top: 40px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
@@ -78,35 +75,72 @@
         
         <div class="info">
             <h2 class="main-title">Chickens by $EGGS</h2>
-            <div class="subtitle">Select Marketplace</div>
+            <div class="subtitle">Direct Access</div>
             
             <div class="btn-container">
                 
-                <a href="https://opensea.io/collection/chickens-by-eggs?search[numericTraits][0][name]=Owner%20Max%20Chicken%20Level&search[numericTraits][0][ranges][0][min]=3&search[toggles][0]=BUY_NOW" 
-                   target="_blank" class="snipe-btn btn-os">
-                    <span>🌊 OpenSea (Whale Filter)</span>
+                <div onclick="openOpenSea()" class="snipe-btn btn-os">
+                    <span>🌊 OpenSea (Smart Filter)</span>
                     <span>↗</span>
-                </a>
+                </div>
 
-                <a href="https://blur.io/collection/chickens-by-eggs" target="_blank" class="snipe-btn btn-blur">
-                    <span>⚡ Blur (Pro Sniper)</span>
-                    <span>↗</span>
-                </a>
-
-                <a href="https://element.market/collections/chickens-by-eggs" target="_blank" class="snipe-btn btn-element">
-                    <span>🧩 Element Market</span>
+                <a href="https://blur.io/collection/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0" 
+                   target="_blank" class="snipe-btn btn-blur">
+                    <span>⚡ Blur (Contract View)</span>
                     <span>↗</span>
                 </a>
 
             </div>
 
             <div class="note">
-                *Se OpenSea non filtra, usa Blur per vedere i listing "a muro".
+                *Blur usa il Contract Address. OpenSea usa un nuovo formato URL.
             </div>
         </div>
     </div>
 
-    <div class="version">v18.0 (Market Explorer)</div>
+    <div class="version">v19.0 (Contract & JSON Fix)</div>
 
+    <script>
+        function openOpenSea() {
+            // Costruiamo l'URL usando il formato JSON stringify che OpenSea preferisce per le query complesse
+            // Questo aggira i problemi di parentesi quadre
+            
+            const baseUrl = "https://opensea.io/collection/chickens-by-eggs";
+            
+            // Definiamo i parametri in un oggetto JS pulito
+            const queryParams = {
+                search: {
+                    sortAscending: true,
+                    sortBy: "UNIT_PRICE",
+                    toggles: ["BUY_NOW"],
+                    numericTraits: [
+                        {
+                            name: "Owner Max Chicken Level",
+                            ranges: [{ min: 3 }]
+                        }
+                    ]
+                }
+            };
+
+            // Trasformiamo l'oggetto in una stringa URL compatibile
+            // Esempio risultato: ?search[numericTraits][0][name]=... ma gestito meglio dal browser
+            const params = new URLSearchParams();
+            
+            // Aggiungiamo manualmente i parametri per sicurezza massima
+            params.append('search[toggles][0]', 'BUY_NOW');
+            params.append('search[sortAscending]', 'true');
+            params.append('search[sortBy]', 'UNIT_PRICE');
+            
+            // "Owner Max Chicken Level" >= 3
+            // Usiamo il nome ESATTO visto nello screenshot
+            params.append('search[numericTraits][0][name]', 'Owner Max Chicken Level');
+            params.append('search[numericTraits][0][ranges][0][min]', '3');
+
+            const finalUrl = `${baseUrl}?${params.toString()}`;
+            
+            // Debug (opzionale): console.log(finalUrl);
+            window.open(finalUrl, '_blank');
+        }
+    </script>
 </body>
 </html>
