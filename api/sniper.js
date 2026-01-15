@@ -1,84 +1,98 @@
+// api/sniper.js
 export default async function handler(req, res) {
-  // 1. Configurazione
-  const COLLECTION = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0";
-  const RESERVOIR_API = "https://api-base.reservoir.tools/tokens/v6";
-  
-  // Usiamo la demo key pubblica server-side (più stabile dei proxy)
-  const API_KEY = "demo-api-key"; 
-
-  try {
-    // 2. Scarica i 100 listing più economici in assoluto
-    // Questo è il "Pool" dove cerchiamo le gemme
-    const url = `${RESERVOIR_API}?collection=${COLLECTION}&sortBy=floorAskPrice&limit=100&includeAttributes=true`;
+    const COLLECTION = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0";
     
-    const response = await fetch(url, {
-      headers: {
-        'x-api-key': API_KEY,
-        'accept': '*/*'
-      }
-    });
-    
-    if (!response.ok) throw new Error(`Reservoir Error: ${response.status}`);
-    const data = await response.json();
-    const tokens = data.tokens || [];
+    // Usiamo l'API pubblica di Reservoir (Server-to-Server non ha problemi di CORS)
+    const RESERVOIR_URL = "https://api-base.reservoir.tools/tokens/v6";
 
-    // 3. I Contenitori per i risultati (Livelli 1-5)
-    const bestDeals = { 1: null, 2: null, 3: null, 4: null, 5: null };
-    
-    // 4. IL FILTRO "GOLDEN EGG"
-    for (const item of tokens) {
-      // A. Check: è listato?
-      const price = item.market?.floorAsk?.price?.amount?.native;
-      if (!price) continue;
-
-      // B. Estrai i Tratti
-      const attrs = item.token.attributes || [];
-      let level = -1;
-      let neynarScore = 0; // Default basso
-      let maxChickenLevel = 0; // Default basso
-
-      for (const a of attrs) {
-        const key = (a.key || "").toLowerCase();
-        const val = parseFloat(a.value); // Converti valore in numero
+    try {
+        // 1. SCARICA I DATI GREZZI
+        // Chiediamo i 100 token più economici in vendita (ordinati per prezzo)
+        // Includiamo gli attributi per vedere Score e Max Level
+        const url = `${RESERVOIR_URL}?collection=${COLLECTION}&sortBy=floorAskPrice&limit=100&includeAttributes=true`;
         
-        if (key === 'level') level = val;
-        // Nota: uso 'includes' per flessibilità sui nomi dei tratti
-        if (key.includes('neynar score')) neynarScore = val;
-        if (key.includes('max chicken level')) maxChickenLevel = val;
-      }
+        const response = await fetch(url, {
+            headers: { 
+                'accept': '*/*',
+                'x-api-key': 'demo-api-key' // Chiave pubblica server-side
+            }
+        });
 
-      // C. Ignora se il livello non è 1-5
-      if (level < 1 || level > 5) continue;
+        if (!response.ok) throw new Error(`Errore Reservoir: ${response.status}`);
+        
+        const data = await response.json();
+        const tokens = data.tokens || [];
 
-      // D. LOGICA DI ESCLUSIONE (Il Cuore della richiesta)
-      // "Escludere se Score < 0.69... A MENO CHE MaxLevel >= 3"
-      // Quindi: Tieni se (Score >= 0.69) OPPURE (MaxLevel >= 3)
-      const isSafe = (neynarScore >= 0.69) || (maxChickenLevel >= 3);
+        // 2. PREPARA I CONTENITORI (Solo il migliore per ogni livello)
+        // Usiamo un oggetto per tenere traccia del primo (e quindi più economico) trovato per ogni livello
+        const bestDeals = {}; 
 
-      if (!isSafe) continue; // Scartato!
+        // 3. IL FILTRO "GOLDEN EGG" (La tua logica esatta)
+        for (const item of tokens) {
+            
+            // A. È in vendita? (Ha un prezzo?)
+            const priceData = item.market?.floorAsk?.price?.amount;
+            if (!priceData) continue; // Salta se non è listato
 
-      // E. Salva se è il primo (quindi il più economico) che troviamo per questo livello
-      if (!bestDeals[level]) {
-        bestDeals[level] = {
-          id: item.token.tokenId,
-          name: item.token.name,
-          image: item.token.image,
-          priceEth: price,
-          priceUsd: item.market.floorAsk.price.amount.usd,
-          score: neynarScore,
-          maxLvl: maxChickenLevel
-        };
-      }
-      
-      // Se abbiamo riempito tutti i 5 livelli, possiamo fermarci (opzionale, per velocità)
-      if (bestDeals[1] && bestDeals[2] && bestDeals[3] && bestDeals[4] && bestDeals[5]) break;
+            // B. Estrai i Tratti (Normalizziamo i nomi in minuscolo per sicurezza)
+            const attrs = item.token.attributes || [];
+            let level = -1;
+            let neynarScore = 0; // Default basso (se manca il tratto, vale 0)
+            let maxChickenLevel = 0; // Default basso
+
+            for (const a of attrs) {
+                const key = (a.key || "").toLowerCase();
+                const val = a.value;
+
+                // Cerca "Level"
+                if (key === 'level') level = parseInt(val);
+                
+                // Cerca "Owner Neynar Score" (o simili varianti)
+                if (key.includes('neynar') && key.includes('score')) {
+                    neynarScore = parseFloat(val);
+                }
+                
+                // Cerca "Owner Max Chicken Level"
+                if (key.includes('max') && key.includes('chicken')) {
+                    maxChickenLevel = parseInt(val);
+                }
+            }
+
+            // C. Filtra per Livello (Ci interessano solo 1, 2, 3, 4, 5)
+            if (level < 1 || level > 5) continue;
+
+            // D. APPLICA LA TUA REGOLA DI ESCLUSIONE
+            // Regola: Tieni se (Score >= 0.69) OPPURE (MaxLevel >= 3)
+            // Se Score è basso (<0.69) E MaxLevel è basso (<3) -> SCARTA.
+            const isSafe = (neynarScore >= 0.69) || (maxChickenLevel >= 3);
+
+            if (!isSafe) continue; // Scarta elemento "unsafe"
+
+            // E. Salva il risultato (Solo se non abbiamo già trovato un deal migliore per questo livello)
+            // Dato che l'API ci dà i token ordinati per prezzo crescente, il primo che troviamo è il migliore.
+            if (!bestDeals[level]) {
+                bestDeals[level] = {
+                    level: level,
+                    tokenId: item.token.tokenId,
+                    name: item.token.name,
+                    image: item.token.image,
+                    priceEth: priceData.native,
+                    priceUsd: priceData.usd,
+                    reason: (neynarScore >= 0.69) ? `Score ${neynarScore}` : `Whale (Lvl ${maxChickenLevel})`,
+                    openseaLink: `https://opensea.io/assets/base/${COLLECTION}/${item.token.tokenId}`
+                };
+            }
+
+            // Ottimizzazione: Se abbiamo trovato tutti e 5 i livelli, fermati.
+            if (bestDeals[1] && bestDeals[2] && bestDeals[3] && bestDeals[4] && bestDeals[5]) break;
+        }
+
+        // 4. RISPONDI ALLA APP
+        // Restituisce un JSON pulito con solo i dati che servono
+        return res.status(200).json(bestDeals);
+
+    } catch (error) {
+        console.error("Sniper Error:", error);
+        return res.status(500).json({ error: "Errore durante la scansione del mercato" });
     }
-
-    // 5. Rispondi al Frontend
-    return res.status(200).json(bestDeals);
-
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Failed to snipe chickens' });
-  }
 }
