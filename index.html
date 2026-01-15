@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WALLET AUTO STAT TRACKER</title>
+    <title>WAST Hub</title>
     
     <meta property="og:image" content="https://nftcheckerminiapp.vercel.app/icon.png" />
     <meta name="fc:miniapp" content='{"version": "1", "imageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "button": { "title": "🚀 Open WAST", "action": { "type": "launch_miniapp", "name": "WAST Hub", "url": "https://nftcheckerminiapp.vercel.app", "splashImageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "splashBackgroundColor": "#0052FF" } } }' />
@@ -15,11 +15,10 @@
     </script>
 
     <style>
-        :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; }
+        :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --red: #ff4757; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            /* BACKGROUND back.png */
             background-color: var(--bg); 
             background-image: url('back.png'); 
             background-size: cover; 
@@ -38,22 +37,30 @@
         .header { text-align: center; margin-bottom: 20px; background: rgba(255,255,255,0.9); padding: 25px; border-radius: 20px; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .logo { width: 80px; height: 80px; background: white; border-radius: 20px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); object-fit: contain; }
         
-        /* WAST BRANDING STYLE */
         .wast-brand { font-weight: 900; font-size: 1.5rem; letter-spacing: 3px; color: var(--primary); display: block; margin-bottom: 5px; }
         
         h1 { margin: 0; font-size: 20px; letter-spacing: -0.5px; font-weight: 700; }
         p { color: #666; margin-top: 5px; font-size: 0.9rem; }
         
-        /* CONNECT BUTTON */
-        .btn-connect { background-color: #1a1a1a; color: white; padding: 14px 24px; font-size: 1rem; font-weight: 600; border-radius: 12px; cursor: pointer; border: none; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s, background-color 0.2s; }
+        /* WALLET CONTROLS */
+        .wallet-box { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 25px; width: 100%; max-width: 300px; }
+
+        .btn-connect { background-color: #1a1a1a; color: white; padding: 14px 24px; font-size: 1rem; font-weight: 600; border-radius: 12px; cursor: pointer; border: none; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s, background-color 0.2s; width: 100%; justify-content: center; }
         .btn-connect:active { transform: scale(0.98); }
         .btn-connect:hover { background-color: #333; }
         .btn-connect.connected { background-color: #2ecc71; cursor: default; }
 
+        /* LOGOUT BUTTON */
+        .btn-logout { 
+            background: transparent; border: 1px solid #ddd; color: #666; 
+            padding: 8px 16px; font-size: 0.8rem; font-weight: 600; border-radius: 20px; 
+            cursor: pointer; transition: all 0.2s; display: none; /* Hidden by default */
+        }
+        .btn-logout:hover { background-color: #ffe5e5; color: var(--red); border-color: var(--red); }
+
         /* TIP BUTTON */
         .btn-tip { background-color: #FF9800; color: white; padding: 10px 20px; font-size: 0.9rem; font-weight: 700; border-radius: 20px; cursor: pointer; border: none; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3); transition: transform 0.2s; }
         .btn-tip:hover { transform: translateY(-2px); opacity: 0.9; }
-        .btn-tip:active { transform: scale(0.95); }
 
         /* MENU GRID */
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
@@ -73,10 +80,13 @@
         <p>Select a tool to start</p>
     </div>
 
-    <button id="btnConnect" class="btn-connect">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
-        Connect Wallet (Base)
-    </button>
+    <div class="wallet-box">
+        <button id="btnConnect" class="btn-connect">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
+            <span id="btnText">Connect Wallet</span>
+        </button>
+        <button id="btnLogout" class="btn-logout">Logout ❌</button>
+    </div>
 
     <button id="btnTip" class="btn-tip">☕ Tip 1 USDC</button>
 
@@ -113,19 +123,43 @@
         const run = async () => { await sdk.actions.ready(); };
         run();
 
+        // --- STATE MANAGEMENT ---
         function setConnectedState(address) {
             const btn = document.getElementById('btnConnect');
-            // MODIFICATO: Primi 2 + ultimi 4
-            btn.innerHTML = `✅ ${address.slice(0,2)}...${address.slice(-4)}`;
+            const btnText = document.getElementById('btnText');
+            const logoutBtn = document.getElementById('btnLogout');
+
+            btnText.innerHTML = `✅ ${address.slice(0,2)}...${address.slice(-4)}`;
             btn.classList.add('connected');
+            logoutBtn.style.display = 'block'; // Show Logout
+            
             localStorage.setItem('tysm_wallet', address);
             
-            // Update links with wallet param
-            document.getElementById('linkScanner').href = `scanner.html?wallet=${address}`;
-            document.getElementById('linkTxs').href = `txs.html?wallet=${address}`;
-            document.getElementById('linkShowroom').href = `showroom.html?wallet=${address}`;
+            updateLinks(address);
         }
 
+        function setDisconnectedState() {
+            const btn = document.getElementById('btnConnect');
+            const btnText = document.getElementById('btnText');
+            const logoutBtn = document.getElementById('btnLogout');
+
+            btnText.innerText = "Connect Wallet";
+            btn.classList.remove('connected');
+            logoutBtn.style.display = 'none'; // Hide Logout
+            
+            localStorage.removeItem('tysm_wallet');
+            
+            updateLinks(""); // Clear params
+        }
+
+        function updateLinks(address) {
+            const param = address ? `?wallet=${address}` : "";
+            document.getElementById('linkScanner').href = `scanner.html${param}`;
+            document.getElementById('linkTxs').href = `txs.html${param}`;
+            document.getElementById('linkShowroom').href = `showroom.html${param}`;
+        }
+
+        // --- EVENTS ---
         window.addEventListener('DOMContentLoaded', () => {
             const savedWallet = localStorage.getItem('tysm_wallet');
             if(savedWallet) {
@@ -138,7 +172,7 @@
             if(btn.classList.contains('connected')) return;
 
             try {
-                btn.innerHTML = "Connecting...";
+                document.getElementById('btnText').innerText = "Connecting...";
                 const provider = await sdk.wallet.getEthereumProvider();
                 await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_CHAIN_ID }] });
                 const accounts = await provider.request({ method: 'eth_requestAccounts' });
@@ -147,15 +181,21 @@
                     setConnectedState(accounts[0]);
                 }
             } catch (error) {
-                console.error("Errore login:", error);
-                btn.innerHTML = "❌ Error";
-                setTimeout(() => { btn.innerHTML = "Connect Wallet (Base)"; }, 2000);
+                console.error("Login Error:", error);
+                document.getElementById('btnText').innerText = "❌ Error";
+                setTimeout(() => { setDisconnectedState(); }, 2000);
+            }
+        }
+
+        function logout() {
+            if(confirm("Disconnect wallet?")) {
+                setDisconnectedState();
             }
         }
 
         document.getElementById('btnConnect').addEventListener('click', connectWallet);
+        document.getElementById('btnLogout').addEventListener('click', logout);
         
-        // Placeholder for TIP button (logic to be implemented)
         document.getElementById('btnTip').addEventListener('click', () => {
             alert("Tip functionality coming soon!"); 
         });
