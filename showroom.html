@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Showroom v1.0</title>
+    <title>Showroom v1.1</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -39,13 +39,12 @@
         h2 { text-align: center; margin-top: 0; font-weight: 900; color: #333; margin-bottom: 5px; }
         .subtitle { text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 20px; }
 
-        /* Loader Animation */
         .loading-spinner { 
             border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%;
             width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 30px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-text { text-align: center; color: #999; font-size: 0.8rem; }
+        .loading-text { text-align: center; color: #999; font-size: 0.8rem; margin-bottom: 20px; }
 
         .nft-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
         @media (min-width: 500px) { .nft-grid { grid-template-columns: 1fr 1fr 1fr; } }
@@ -104,23 +103,22 @@
 
         <div id="loader">
             <div class="loading-spinner"></div>
-            <div class="loading-text">Routing via Proxy...</div>
+            <div class="loading-text">Connecting via AllOrigins...</div>
         </div>
         
         <div id="error" class="error-msg"></div>
 
         <div id="grid" class="nft-grid"></div>
         
-        <div class="version-tag">v1.0 Showroom</div>
+        <div class="version-tag">Showroom v1.1</div>
     </div>
 
     <script>
-        // Target Collection Address
         const COLLECTION_ADDR = "0x160650efd60032aa49bbec70920a870aacffdc39".toLowerCase(); 
         
-        // Use a Public Proxy to bypass CORS issues on client-side fetch
-        const PROXY_URL = "https://corsproxy.io/?"; 
-        const RESERVOIR_API = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=20&includeAttributes=false`;
+        // NEW PROXY STRATEGY: AllOrigins (More robust than corsproxy.io for JSON)
+        const PROXY_BASE = "https://api.allorigins.win/get?url=";
+        const TARGET_API = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=20&includeAttributes=false`;
 
         window.addEventListener('DOMContentLoaded', fetchShowroom);
 
@@ -130,17 +128,21 @@
             const errorDiv = document.getElementById('error');
 
             try {
-                // Compose the "Tunneled" URL
-                // We double encodeURIComponent to be safe with the proxy
-                const targetUrl = PROXY_URL + encodeURIComponent(RESERVOIR_API);
+                // Add timestamp to prevent caching
+                const freshUrl = TARGET_API + `&_t=${new Date().getTime()}`;
+                const fullUrl = PROXY_BASE + encodeURIComponent(freshUrl);
                 
-                const res = await fetch(targetUrl);
-
-                if (!res.ok) throw new Error(`Network Error: ${res.status}`);
+                const res = await fetch(fullUrl);
+                if (!res.ok) throw new Error(`Proxy Error: ${res.status}`);
                 
-                const data = await res.json();
+                const wrapper = await res.json();
+                
+                // AllOrigins returns the actual data inside "contents" string
+                if (!wrapper.contents) throw new Error("Empty response from proxy");
+                
+                const data = JSON.parse(wrapper.contents);
 
-                if(!data.tokens || data.tokens.length === 0) throw new Error("Collection appears empty or API changed.");
+                if(!data.tokens || data.tokens.length === 0) throw new Error("No items returned from API");
 
                 // 1. Filter: Keep only valid listings (price > 0)
                 const listedItems = data.tokens.filter(item => {
@@ -150,7 +152,7 @@
                            item.market.floorAsk.price.amount.native > 0;
                 });
 
-                if(listedItems.length === 0) throw new Error("No active listings found for this collection.");
+                if(listedItems.length === 0) throw new Error("No active listings found.");
 
                 // 2. Slice: Take Top 3
                 const top3 = listedItems.slice(0, 3);
@@ -166,7 +168,6 @@
                     const priceEth = market.floorAsk.price.amount.native || 0;
                     const priceUsd = market.floorAsk.price.amount.usd || 0;
                     
-                    // Image Logic
                     let imgUrl = token.image || 'https://placehold.co/400x400?text=No+Img';
                     if (token.imageSmall) imgUrl = token.imageSmall; 
 
