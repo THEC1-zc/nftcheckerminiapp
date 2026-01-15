@@ -181,7 +181,7 @@
     <button id="btnLogout" class="btn-logout" aria-label="Disconnect wallet and logout">Logout ❌</button>
 </div>
 
-<button id="btnTip" class="btn-tip" aria-label="Send 1 USDC tip">☕ Tip 1 USDC</button>
+<button id="btnTip" class="btn-tip" aria-label="Send 1 USDC tip to the creator">☕ Tip the Creator 1$</button>
 
 <div class="menu-grid">
     <a href="scanner.html" id="linkScanner" class="menu-card" aria-label="Check your NFT holdings">
@@ -451,14 +451,14 @@
                     window.open(`https://basescan.org/tx/${txHash}`, '_blank');
                 }
                 // Reset button
-                btnTip.innerHTML = '☕ Tip 1 USDC';
+                btnTip.innerHTML = '☕ Tip the Creator 1$';
                 btnTip.style.backgroundColor = '#FF9800';
                 btnTip.disabled = false;
             }, 2000);
 
         } catch (error) {
             console.error("Tip Error:", error);
-            btnTip.innerHTML = '☕ Tip 1 USDC';
+            btnTip.innerHTML = '☕ Tip the Creator 1$';
             btnTip.disabled = false;
 
             // User-friendly error messages
