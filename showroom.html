@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Showroom v1.8</title>
+    <title>Showroom v1.11</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -34,7 +34,7 @@
         .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
         .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
         
-        .container { background: var(--card-bg); padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 500px; box-sizing: border-box; text-align: center; min-height: 400px; }
+        .container { background: var(--card-bg); padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 500px; box-sizing: border-box; text-align: center; min-height: 450px; }
 
         h2 { margin: 0; font-weight: 900; color: #333; font-size: 1.6rem; margin-bottom: 5px; }
         .subtitle { color: #666; font-size: 0.9rem; margin-bottom: 30px; }
@@ -117,7 +117,7 @@
         <div id="error" class="error-box"></div>
 
         <div id="card" class="deal-card">
-            <div class="deal-badge">Current Floor</div>
+            <div class="deal-badge" id="badgeText">Current Floor</div>
             <div class="img-wrapper">
                 <img id="nftImg" class="collection-img" src="" alt="NFT Image">
             </div>
@@ -140,7 +140,7 @@
             </div>
         </div>
         
-        <div class="version-tag">v1.8 (Deep Scan Img)</div>
+        <div class="version-tag">v1.11 (Logic Swap)</div>
     </div>
 
     <script>
@@ -152,50 +152,74 @@
         async function loadData() {
             const loader = document.getElementById('loader');
             const card = document.getElementById('card');
-            const errorBox = document.getElementById('error');
+            const errorBox = document.getElementById('errorBox');
+            
+            const targetWallet = localStorage.getItem('tysm_wallet');
 
             try {
-                // 1. Get ETH Price (Coinbase)
+                // 1. ETH Price
                 const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
                 const priceJson = await priceRes.json();
                 const ethPrice = parseFloat(priceJson.data.amount);
 
-                // 2. Metadata (Name & Image)
-                // We use two strategies here:
-                // A. Check Collection Metadata
-                // B. If no image, fetch the first existing NFT in the collection
-                
-                let collName = "Collection";
-                let imageUrl = "";
-
-                // Call A: Collection Metadata
+                // 2. Metadata (Name & Default Img)
                 const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${COLLECTION_ADDR}`;
                 const metaRes = await fetch(metaUrl);
                 const metaData = await metaRes.json();
+                const collName = metaData.name || "Unknown Collection";
                 
-                collName = metaData.name || "Unknown Collection";
+                // --- IMAGE LOGIC (New Order: Meta -> Deep -> Owner) ---
+                let finalImage = "";
+                let isOwnedImage = false;
+
+                // STEP 1: Collection Metadata Image
                 if(metaData.openSea && metaData.openSea.imageUrl) {
-                    imageUrl = metaData.openSea.imageUrl;
+                    finalImage = metaData.openSea.imageUrl;
                 }
 
-                // Call B: Deep Scan if image is missing
-                if (!imageUrl) {
+                // STEP 2: Deep Scan (Previously #3) - Run if image missing or placeholder
+                if (!finalImage || finalImage.includes("placehold")) {
                     try {
-                        // "getNftsForContract" with pageSize=1 returns the first actual NFT it finds
-                        const deepUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftsForContract?contractAddress=${COLLECTION_ADDR}&pageSize=1`;
+                        const deepUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftsForContract?contractAddress=${COLLECTION_ADDR}&pageSize=10`;
                         const deepRes = await fetch(deepUrl);
                         const deepData = await deepRes.json();
                         
-                        if(deepData.nfts && deepData.nfts.length > 0) {
-                            const nft = deepData.nfts[0];
-                            // Try all image fields
-                            imageUrl = nft.image.cachedUrl || nft.image.originalUrl || nft.image.pngUrl;
+                        if(deepData.nfts) {
+                            for (const nft of deepData.nfts) {
+                                let candidate = nft.image?.cachedUrl || nft.image?.originalUrl || nft.image?.pngUrl;
+                                if (candidate && candidate.length > 5) {
+                                    finalImage = candidate;
+                                    break; 
+                                }
+                            }
                         }
-                    } catch(err) { console.warn("Deep scan failed"); }
+                    } catch(err) { console.warn("Image hunt failed"); }
                 }
 
-                // Final Fallback
-                if (!imageUrl) imageUrl = "https://placehold.co/600x600?text=No+Preview";
+                // STEP 3: Owner Check (Previously #2) - OVERRIDES EVERYTHING
+                if (targetWallet) {
+                    try {
+                        const ownerUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNFTsForOwner?owner=${targetWallet}&contractAddresses[]=${COLLECTION_ADDR}&pageSize=1`;
+                        const ownerRes = await fetch(ownerUrl);
+                        const ownerData = await ownerRes.json();
+
+                        if (ownerData.ownedNfts && ownerData.ownedNfts.length > 0) {
+                            const myNft = ownerData.ownedNfts[0];
+                            let candidate = myNft.image?.cachedUrl || myNft.image?.originalUrl || myNft.image?.pngUrl;
+                            
+                            if(candidate) {
+                                finalImage = candidate;
+                                isOwnedImage = true; 
+                            }
+                        }
+                    } catch(err) { console.warn("Wallet check failed", err); }
+                }
+
+                // Final Cleanup
+                if(finalImage && finalImage.startsWith('ipfs://')) {
+                    finalImage = finalImage.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                }
+                if (!finalImage) finalImage = "https://placehold.co/600x600?text=No+Image";
 
                 // 3. Floor Price
                 const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION_ADDR}`;
@@ -206,15 +230,21 @@
                 const floorUsd = floorEth * ethPrice;
 
                 // --- UI UPDATE ---
-                document.getElementById('nftImg').src = imageUrl;
+                document.getElementById('nftImg').src = finalImage;
                 document.getElementById('nftImg').onerror = function() { this.src = 'https://placehold.co/600x600?text=Err'; };
                 
                 document.getElementById('collName').innerText = collName;
                 document.getElementById('priceEth').innerText = `${floorEth.toFixed(4)} Ξ`;
                 document.getElementById('priceUsd').innerText = `$${floorUsd.toFixed(2)}`;
                 
-                // Sorted Link
                 document.getElementById('buyLink').href = `https://opensea.io/assets/base/${COLLECTION_ADDR}?search[sortAscending]=true&search[sortBy]=UNIT_PRICE`;
+
+                // Badge Logic
+                if (isOwnedImage) {
+                    const badge = document.getElementById('badgeText');
+                    badge.innerText = "YOUR ASSET";
+                    badge.style.backgroundColor = "#2ecc71"; 
+                }
 
                 loader.style.display = 'none';
                 card.style.display = 'block';
