@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chickenfish Hub</title>
+    <title>Chickenfish Sniper</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -12,7 +12,7 @@
     </script>
 
     <style>
-        :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --green: #2ecc71; --orange: #ff9f43; }
+        :root { --bg: #fffbf0; --text: #3e2723; --accent: #FFC107; --card-bg: #ffffff; --green: #2ecc71; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -20,173 +20,224 @@
             background-image: url('back.png');
             background-size: cover;
             background-position: center;
-            background-repeat: no-repeat;
             background-attachment: fixed;
             color: var(--text); 
-            padding: 20px; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
+            padding: 20px; margin: 0; 
+            display: flex; flex-direction: column; align-items: center; 
         }
 
-        .nav-header { width: 100%; max-width: 400px; display: flex; margin-bottom: 15px; }
-        .back-btn { text-decoration: none; color: #555; background: rgba(255,255,255,0.8); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; backdrop-filter: blur(4px); }
+        .nav-header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-btn { text-decoration: none; color: #5d4037; background: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* CARD */
+        /* NEYNAR SCORE BOX */
+        .neynar-box { 
+            background: #222; color: #fff; padding: 5px 12px; border-radius: 20px; 
+            font-size: 0.75rem; font-weight: 700; display: none; align-items: center; gap: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .neynar-icon { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; }
+
+        /* MAIN CARD */
         .card {
             background: var(--card-bg); width: 100%; max-width: 400px;
-            border-radius: 24px; overflow: hidden; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            text-align: center; display: none; /* Hidden on load */
+            border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(62, 39, 35, 0.1);
+            text-align: center; padding-bottom: 20px;
         }
 
-        .img-wrapper { 
-            width: 100%; height: 300px; background: #eee; 
-            display: flex; align-items: center; justify-content: center;
-        }
+        .img-wrapper { width: 100%; height: 300px; background: #eee; position: relative; }
         .coll-img { width: 100%; height: 100%; object-fit: cover; }
 
-        .info-box { padding: 25px 20px; }
-        
-        .coll-name { text-transform: uppercase; font-size: 0.75rem; color: #888; letter-spacing: 1px; font-weight: 700; margin-bottom: 4px; }
-        .main-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 20px 0; color: #222; }
+        .info { padding: 20px; }
+        .main-title { font-size: 1.5rem; font-weight: 900; margin: 0 0 5px 0; color: #222; }
+        .subtitle { color: #888; font-size: 0.8rem; margin-bottom: 20px; }
 
-        /* PRICE BOX */
-        .price-row { 
-            display: flex; justify-content: center; align-items: baseline; gap: 10px; 
-            background: #f8f9fa; padding: 15px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #eee;
+        /* STATS GRID */
+        .stats-row { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px;
         }
-        .eth-val { font-size: 1.6rem; font-weight: 900; color: var(--primary); }
-        .usd-val { font-size: 1rem; color: #666; font-weight: 500; }
+        .stat-box { background: #f8f9fa; padding: 10px; border-radius: 12px; border: 1px solid #eee; }
+        .stat-val { font-size: 1.1rem; font-weight: 900; color: #3e2723; }
+        .stat-lbl { font-size: 0.65rem; color: #aaa; text-transform: uppercase; font-weight: 700; }
 
-        /* BUTTONS GRID */
-        .section-label { font-size: 0.7rem; font-weight: 800; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        /* ACTION GRID */
+        .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; font-weight: 700; margin-bottom: 10px; display: block; }
         
-        .grid-links { 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; 
+        .links-grid { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; 
+            padding: 0 20px; margin-bottom: 10px; 
         }
 
         .filter-btn {
-            background: #fff; border: 2px solid #eee; color: #333;
-            padding: 12px; border-radius: 14px; text-decoration: none;
-            font-weight: 700; font-size: 0.9rem; transition: all 0.2s;
-            display: flex; justify-content: center; align-items: center;
+            background: #fff8e1; border: 1px solid #ffe082; color: #3e2723;
+            padding: 12px; border-radius: 12px; text-decoration: none;
+            font-weight: 700; font-size: 0.9rem; transition: background 0.2s;
+            display: flex; align-items: center; justify-content: center;
         }
-        .filter-btn:hover { border-color: var(--primary); color: var(--primary); background: #f0f7ff; transform: translateY(-2px); }
+        .filter-btn:hover { background: #ffecb3; transform: translateY(-2px); }
 
         .main-btn {
-            display: block; width: 100%; padding: 14px; margin-top: 10px;
-            background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); 
-            color: white; border-radius: 14px; text-decoration: none; font-weight: 700;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s;
+            display: block; margin: 10px 20px; padding: 15px;
+            background: #3e2723; color: white; border-radius: 14px;
+            text-decoration: none; font-weight: 700;
         }
-        .main-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
 
-        .note { font-size: 0.7rem; color: #bbb; margin-top: 15px; font-style: italic; }
-
-        .loader { margin-top: 50px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 30px; font-weight: 800; font-family: monospace; opacity: 0.6; }
+        .loading { margin: 50px auto; font-weight: 600; color: #aaa; }
+        .version { margin-top: 30px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
     </style>
 </head>
 <body>
 
     <div class="nav-header">
         <a href="index.html" class="back-btn">⬅ Home</a>
+        <div id="neynarBadge" class="neynar-box">
+            <span class="neynar-icon"></span>
+            Neynar: <span id="myScore" style="margin-left:4px">Checking...</span>
+        </div>
     </div>
 
-    <div id="loader" class="loader"></div>
+    <div id="loader" class="loading">Fetching Data...</div>
 
-    <div id="content" class="card">
+    <div id="content" class="card" style="display: none;">
         <div class="img-wrapper">
-            <img id="collImg" class="coll-img" src="" onerror="this.src='https://placehold.co/600x600?text=No+Image'">
+            <img id="collImg" class="coll-img" src="" onerror="this.src='https://placehold.co/400x400?text=No+Image'">
         </div>
         
-        <div class="info-box">
-            <div class="coll-name">Base Network</div>
-            <div id="collNameTitle" class="main-title">Loading...</div>
+        <div class="info">
+            <h2 id="collNameTitle">Loading...</h2>
+            <div class="subtitle">Base Network • Verified</div>
 
-            <div class="price-row">
-                <span id="priceEth" class="eth-val">---</span>
-                <span id="priceUsd" class="usd-val">---</span>
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div id="floorEth" class="stat-val">---</div>
+                    <div class="stat-lbl">Floor Price</div>
+                </div>
+                <div class="stat-box">
+                    <div id="supply" class="stat-val">---</div>
+                    <div class="stat-lbl">Total Supply</div>
+                </div>
             </div>
 
-            <div class="section-label">Find on OpenSea (Filtered)</div>
-            
-            <div class="grid-links">
-                <a id="link1" href="#" target="_blank" class="filter-btn">Level 1 ↗</a>
-                <a id="link2" href="#" target="_blank" class="filter-btn">Level 2 ↗</a>
-                <a id="link3" href="#" target="_blank" class="filter-btn">Level 3 ↗</a>
-                <a id="link4" href="#" target="_blank" class="filter-btn">Level 4 ↗</a>
+            <span class="label">SNIPE BY LEVEL (BUY NOW)</span>
+            <div class="links-grid">
+                <a id="link1" href="#" target="_blank" class="filter-btn">Level 1 ⚡</a>
+                <a id="link2" href="#" target="_blank" class="filter-btn">Level 2 ⚡</a>
+                <a id="link3" href="#" target="_blank" class="filter-btn">Level 3 ⚡</a>
+                <a id="link4" href="#" target="_blank" class="filter-btn">Level 4 ⚡</a>
             </div>
-            
             <a id="link5" href="#" target="_blank" class="main-btn">Find Level 5 (Rare) 💎</a>
-
-            <div class="note">* Filtra per 'Level'. Controlla manualmente il Neynar Score.</div>
         </div>
     </div>
 
-    <div class="version-tag">v1.1 (Hub & Smart Links)</div>
+    <div class="version">v7.1 (Neynar Integrated)</div>
 
     <script>
+        // CONFIG
         const COLLECTION = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0".toLowerCase();
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
+        
+        // 🔑 NEYNAR API KEY INTEGRATA
+        const NEYNAR_KEY = 'DD21E376-E7B8-4ED4-BEE9-6D56A55412A7'; 
 
-        window.addEventListener('DOMContentLoaded', loadData);
+        window.addEventListener('DOMContentLoaded', initApp);
 
-        async function loadData() {
+        async function initApp() {
             try {
-                // 1. Fetch Metadata (Alchemy)
+                // 1. Get Contract Metadata (To find Slug)
                 const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${COLLECTION}`;
                 const metaRes = await fetch(metaUrl);
                 const metaData = await metaRes.json();
 
-                // 2. Fetch Floor Price (Alchemy)
+                // 2. Fix Image: If Collection Image is missing, fetch Token #1
+                let imgUrl = metaData.openSea?.imageUrl || metaData.imageUrl;
+                
+                if (!imgUrl) {
+                    try {
+                        const tokenUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftMetadata?contractAddress=${COLLECTION}&tokenId=1`;
+                        const tokenRes = await fetch(tokenUrl);
+                        const tokenData = await tokenRes.json();
+                        imgUrl = tokenData.image?.cachedUrl || tokenData.image?.originalUrl;
+                    } catch(err) { console.log("Token fetch failed"); }
+                }
+                
+                // IPFS Cleanup
+                if(imgUrl && imgUrl.startsWith('ipfs://')) imgUrl = imgUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                
+                // 3. Get Floor Price
                 const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION}`;
                 const floorRes = await fetch(floorUrl);
                 const floorData = await floorRes.json();
 
-                // 3. Fetch ETH Price (Coinbase)
-                const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
-                const priceJson = await priceRes.json();
-                const ethRate = parseFloat(priceJson.data.amount);
-
-                // --- DATA PROCESSING ---
-                const name = metaData.name || "Chickenfish";
+                // --- UI POPULATION ---
+                document.getElementById('collImg').src = imgUrl || "https://placehold.co/400x400?text=Chickenfish";
+                document.getElementById('collNameTitle').innerText = metaData.name || "Chickenfish";
                 
-                // Image Logic (OpenSea > Metadata > Fallback)
-                let imgUrl = metaData.openSea?.imageUrl || metaData.imageUrl || "https://placehold.co/600x600?text=Chickenfish";
-                if(imgUrl.startsWith('ipfs://')) imgUrl = imgUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                const floor = floorData.openSea?.floorPrice || 0;
+                document.getElementById('floorEth').innerText = `${floor.toFixed(4)} Ξ`;
+                document.getElementById('supply').innerText = metaData.totalSupply || "???";
 
-                const floorEth = floorData.openSea?.floorPrice || 0;
-                const floorUsd = floorEth * ethRate;
+                // --- LINK GENERATION ---
+                // We use the "slug" from Alchemy if available, otherwise fallback to "chickenfish"
+                let slug = metaData.openSea?.collectionName || "chickenfish"; 
+                slug = slug.toLowerCase().replace(/\s+/g, '-');
 
-                // --- UI UPDATE ---
-                document.getElementById('collImg').src = imgUrl;
-                document.getElementById('collNameTitle').innerText = name;
-                document.getElementById('priceEth').innerText = `${floorEth.toFixed(4)} Ξ`;
-                document.getElementById('priceUsd').innerText = `$${floorUsd.toFixed(2)}`;
+                // OpenSea Filter Params
+                const baseUrl = `https://opensea.io/collection/${slug}?search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=`;
+                const suffix = `&search[toggles][0]=BUY_NOW&search[sortAscending]=true&search[sortBy]=UNIT_PRICE`;
 
-                // --- SMART LINKS SETUP ---
-                // OpenSea URL params for Trait Filtering: search[stringTraits][0][name]=TraitName&search[stringTraits][0][values][0]=Value
-                const baseUrl = `https://opensea.io/assets/base/${COLLECTION}?search[sortAscending]=true&search[sortBy]=UNIT_PRICE&search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=`;
+                document.getElementById('link1').href = baseUrl + "1" + suffix;
+                document.getElementById('link2').href = baseUrl + "2" + suffix;
+                document.getElementById('link3').href = baseUrl + "3" + suffix;
+                document.getElementById('link4').href = baseUrl + "4" + suffix;
+                document.getElementById('link5').href = baseUrl + "5" + suffix;
 
-                document.getElementById('link1').href = baseUrl + "1";
-                document.getElementById('link2').href = baseUrl + "2";
-                document.getElementById('link3').href = baseUrl + "3";
-                document.getElementById('link4').href = baseUrl + "4";
-                document.getElementById('link5').href = baseUrl + "5";
+                // --- NEYNAR CHECK ---
+                // Recupera il wallet salvato dalla home page
+                const wallet = localStorage.getItem('tysm_wallet');
+                if (wallet) {
+                    checkNeynarScore(wallet);
+                } else {
+                    document.getElementById('neynarBadge').style.display = 'none';
+                }
 
-                // Show Content
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
 
             } catch (e) {
                 console.error(e);
-                document.getElementById('loader').style.display = 'none';
-                alert("Errore caricamento dati. Riprova.");
+                document.getElementById('loader').innerText = "Load Failed. Check Console.";
+                document.getElementById('loader').style.color = "red";
+            }
+        }
+
+        async function checkNeynarScore(address) {
+            try {
+                // Mostra il badge
+                document.getElementById('neynarBadge').style.display = "flex";
+
+                // Fetch User by Address
+                const url = `https://api.neynar.com/v2/farcaster/user/bulk-by-address?addresses=${address}`;
+                const res = await fetch(url, {
+                    headers: { 
+                        'accept': 'application/json',
+                        'api_key': NEYNAR_KEY
+                    }
+                });
+                const data = await res.json();
+                
+                if (data[address] && data[address].length > 0) {
+                    // Utente trovato su Farcaster
+                    const user = data[address][0];
+                    // Se vuoi mostrare uno score specifico, puoi aggiungerlo qui.
+                    // Per ora mostriamo "Active" per confermare che l'API funziona e l'utente esiste.
+                    document.getElementById('myScore').innerText = "Active"; 
+                    document.getElementById('myScore').style.color = "#2ecc71";
+                } else {
+                    document.getElementById('myScore').innerText = "Not Found";
+                    document.getElementById('myScore').style.color = "#ff9f43";
+                }
+            } catch (e) {
+                console.log("Neynar check failed", e);
+                document.getElementById('myScore').innerText = "Error";
             }
         }
     </script>
