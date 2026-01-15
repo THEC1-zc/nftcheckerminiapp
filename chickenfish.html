@@ -12,7 +12,7 @@
     </script>
 
     <style>
-        :root { --bg: #fffbf0; --text: #3e2723; --accent: #FFC107; --card-bg: #ffffff; }
+        :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --green: #2ecc71; --red: #ff4757; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -23,152 +23,175 @@
             background-repeat: no-repeat;
             background-attachment: fixed;
             color: var(--text); 
-            padding: 20px; margin: 0; 
-            display: flex; flex-direction: column; align-items: center; 
+            padding: 15px; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            overflow-x: hidden; 
         }
-
-        .back-btn { text-decoration: none; color: #5d4037; background: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
-        h2 { margin: 0 0 5px 0; font-weight: 900; font-size: 1.8rem; }
-        .subtitle { color: #795548; font-size: 0.9rem; margin-bottom: 30px; }
-
-        .card {
-            background: var(--card-bg); width: 100%; max-width: 400px;
-            border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(62, 39, 35, 0.1);
-            text-align: center; padding-bottom: 20px;
-        }
-
-        .img-wrapper { width: 100%; height: 250px; background: #eee; position: relative; }
-        .coll-img { width: 100%; height: 100%; object-fit: cover; }
-
-        .info { padding: 20px; }
-        .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; font-weight: 700; margin-bottom: 5px; }
         
-        .price-box { margin-bottom: 25px; }
-        .eth-price { font-size: 2.2rem; font-weight: 900; color: #3e2723; }
-        .usd-price { font-size: 1rem; color: #8d6e63; font-weight: 600; }
-
-        .links-grid { 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; 
-            padding: 0 20px; margin-bottom: 10px; 
-        }
-
-        .filter-btn {
-            background: #fff8e1; border: 1px solid #ffe082; color: #3e2723;
-            padding: 12px; border-radius: 12px; text-decoration: none;
-            font-weight: 700; font-size: 0.9rem; transition: background 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 5px;
-        }
-        .filter-btn:hover { background: #ffecb3; }
-
-        .main-btn {
-            display: block; margin: 10px 20px; padding: 15px;
-            background: #3e2723; color: white; border-radius: 14px;
-            text-decoration: none; font-weight: 700;
-        }
-
-        .loading { margin: 50px auto; font-weight: 600; color: #aaa; }
-        .version { margin-top: 30px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
+        .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
+        .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
         
-        .note { font-size: 0.7rem; color: #aaa; padding: 0 20px; margin-bottom: 10px; font-style: italic; }
+        /* CARD PRINCIPALE */
+        .container { 
+            background: var(--card-bg); 
+            padding: 0; /* Padding rimosso per far toccare l'immagine ai bordi */
+            border-radius: 24px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.08); 
+            width: 100%; 
+            max-width: 400px; 
+            overflow: hidden; /* Importante per i bordi arrotondati dell'immagine */
+            text-align: center; 
+            display: none; /* Nascosto finché non carica */
+        }
+
+        /* IMMAGINE */
+        .img-wrapper {
+            width: 100%; 
+            aspect-ratio: 1/1; 
+            background: #f0f2f5; 
+            position: relative; 
+            overflow: hidden;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        .collection-img {
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            transition: transform 0.5s ease;
+        }
+        
+        /* INFO BOX */
+        .info-box { padding: 25px; text-align: left; }
+
+        .coll-name { font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px; }
+        .main-title { font-size: 1.6rem; font-weight: 900; color: #1a1a1a; margin-bottom: 20px; line-height: 1.2; }
+
+        /* PREZZI */
+        .price-container { 
+            background: #f8f9fa; border-radius: 16px; padding: 15px 20px; margin-bottom: 20px; 
+            display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee;
+        }
+        .price-col { display: flex; flex-direction: column; }
+        .lbl { font-size: 0.65rem; font-weight: 700; color: #999; text-transform: uppercase; }
+        .eth-val { font-size: 1.5rem; font-weight: 900; color: var(--primary); }
+        .usd-val { font-size: 1rem; font-weight: 600; color: #555; text-align: right; }
+
+        /* BOTTONE */
+        .action-btn {
+            display: block; width: 100%; padding: 16px; border-radius: 14px;
+            background: #1a1a1a; color: white; text-decoration: none;
+            font-weight: 700; text-align: center; font-size: 1rem;
+            transition: background 0.2s, transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+        .action-btn:hover { background: var(--primary); transform: translateY(-2px); }
+
+        /* LOADER */
+        .loading-spinner { 
+            border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%;
+            width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 60px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 30px; font-weight: 800; font-family: monospace; opacity: 0.6; }
     </style>
 </head>
 <body>
 
-    <a href="index.html" class="back-btn">⬅ Home</a>
-
-    <div id="loader" class="loading">Loading Data...</div>
-
-    <div id="content" class="card" style="display: none;">
-        <div class="img-wrapper">
-            <img id="collImg" class="coll-img" src="" onerror="this.src='https://placehold.co/400x400?text=No+Image'">
-        </div>
-        
-        <div class="info">
-            <h2 id="collName">Loading...</h2>
-            <div class="subtitle">Base Network</div>
-
-            <div class="price-box">
-                <div class="label">Current Floor Price</div>
-                <div id="priceEth" class="eth-price">---</div>
-                <div id="priceUsd" class="usd-price">---</div>
-            </div>
-        </div>
-
-        <div class="label">OPEN IN OPENSEA (FILTERED)</div>
-        <div class="links-grid">
-            <a id="link1" href="#" target="_blank" class="filter-btn">Level 1 ↗</a>
-            <a id="link2" href="#" target="_blank" class="filter-btn">Level 2 ↗</a>
-            <a id="link3" href="#" target="_blank" class="filter-btn">Level 3 ↗</a>
-            <a id="link4" href="#" target="_blank" class="filter-btn">Level 4 ↗</a>
-        </div>
-        <a id="link5" href="#" target="_blank" class="main-btn">Find Level 5 (Rare) 💎</a>
-        
-        <p class="note">*OpenSea cannot filter by Neynar Score.</p>
-
+    <div class="nav-header">
+        <a href="index.html" class="back-btn">⬅ Home</a>
     </div>
 
-    <div class="version">v6.3 (Image Fix & Smart Links)</div>
+    <div id="loader" class="loading-spinner"></div>
+
+    <div id="card" class="container">
+        <div class="img-wrapper">
+            <img id="collImg" class="collection-img" src="" alt="Collection Image">
+        </div>
+        
+        <div class="info-box">
+            <div class="coll-name">Base Network</div>
+            <div id="collNameTitle" class="main-title">Loading...</div>
+            
+            <div class="price-container">
+                <div class="price-col">
+                    <span class="lbl">Floor Price (ETH)</span>
+                    <span id="priceEth" class="eth-val">---</span>
+                </div>
+                <div class="price-col">
+                    <span class="lbl">Value (USD)</span>
+                    <span id="priceUsd" class="usd-val">---</span>
+                </div>
+            </div>
+
+            <a id="osLink" href="#" target="_blank" class="action-btn">View Collection ↗</a>
+        </div>
+    </div>
+
+    <div class="version-tag">Step 1: Collection Base</div>
 
     <script>
+        // CONFIGURAZIONE
         const COLLECTION = "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0".toLowerCase();
         const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
 
-        window.addEventListener('DOMContentLoaded', loadPhaseOne);
+        window.addEventListener('DOMContentLoaded', loadStepOne);
 
-        async function loadPhaseOne() {
+        async function loadStepOne() {
+            const loader = document.getElementById('loader');
+            const card = document.getElementById('card');
+
             try {
-                // 1. Metadata
+                // 1. Dati Collezione (Nome, Immagine)
                 const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${COLLECTION}`;
                 const metaRes = await fetch(metaUrl);
                 const metaData = await metaRes.json();
 
-                // 2. Floor Price
+                // 2. Floor Price (Alchemy)
                 const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION}`;
                 const floorRes = await fetch(floorUrl);
                 const floorData = await floorRes.json();
 
-                // 3. ETH Price
+                // 3. Prezzo ETH (Coinbase)
                 const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
-                const priceData = await priceRes.json();
-                const ethRate = parseFloat(priceData.data.amount);
+                const priceJson = await priceRes.json();
+                const ethRate = parseFloat(priceJson.data.amount);
 
-                // --- UI UPDATES ---
+                // --- LOGICA DATI ---
                 
-                // Better Image Logic: Try OpenSea first, then general image, then fallback
-                let finalImg = metaData.openSea?.imageUrl || metaData.imageUrl || "";
-                if(!finalImg && metaData.contractMetadata) {
-                     finalImg = metaData.contractMetadata.openSea?.imageUrl || metaData.contractMetadata.imageUrl;
-                }
-                // IPFS Fix
-                if(finalImg && finalImg.startsWith('ipfs://')) finalImg = finalImg.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                // Nome
+                const name = metaData.name || "Chickenfish";
                 
-                document.getElementById('collImg').src = finalImg || "https://placehold.co/400x400?text=Chickenfish";
-                document.getElementById('collName').innerText = metaData.name || "Chickenfish";
+                // Immagine (Cerchiamo in vari campi per sicurezza)
+                let imgUrl = metaData.openSea?.imageUrl || metaData.imageUrl || "https://placehold.co/600x600?text=No+Image";
+                if (imgUrl.startsWith('ipfs://')) imgUrl = imgUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
 
-                const floor = floorData.openSea?.floorPrice || 0;
-                document.getElementById('priceEth').innerText = `${floor.toFixed(4)} Ξ`;
-                document.getElementById('priceUsd').innerText = `$${(floor * ethRate).toFixed(2)}`;
+                // Prezzi
+                const floorEth = floorData.openSea?.floorPrice || 0;
+                const floorUsd = floorEth * ethRate;
 
-                // --- SMART LINKS GENERATION ---
-                // We use the 'assets' endpoint filtered by contract + trait
-                // Structure: https://opensea.io/assets/base/ADDRESS?search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=VALUE
+                // --- AGGIORNAMENTO UI ---
+                document.getElementById('collImg').src = imgUrl;
+                document.getElementById('collNameTitle').innerText = name;
+                document.getElementById('priceEth').innerText = `${floorEth.toFixed(4)} Ξ`;
+                document.getElementById('priceUsd').innerText = `$${floorUsd.toFixed(2)}`;
                 
-                const baseOsUrl = `https://opensea.io/assets/base/${COLLECTION}?search[sortAscending]=true&search[sortBy]=UNIT_PRICE&search[stringTraits][0][name]=Level&search[stringTraits][0][values][0]=`;
+                // Link OpenSea Genrico
+                document.getElementById('osLink').href = `https://opensea.io/assets/base/${COLLECTION}`;
 
-                document.getElementById('link1').href = baseOsUrl + "1";
-                document.getElementById('link2').href = baseOsUrl + "2";
-                document.getElementById('link3').href = baseOsUrl + "3";
-                document.getElementById('link4').href = baseOsUrl + "4";
-                document.getElementById('link5').href = baseOsUrl + "5";
-
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
+                // Mostra tutto
+                loader.style.display = 'none';
+                card.style.display = 'block';
 
             } catch (e) {
                 console.error(e);
-                document.getElementById('loader').innerText = "Load Error. Refresh.";
-                document.getElementById('loader').style.color = "red";
+                loader.style.display = 'none';
+                alert("Errore nel caricamento dati base.");
             }
         }
     </script>
