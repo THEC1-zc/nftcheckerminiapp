@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Showroom v1.5</title>
+    <title>Showroom v1.6</title>
     
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -34,57 +34,64 @@
         .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
         .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
         
-        .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; min-height: 400px; }
+        .container { background: var(--card-bg); padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 500px; box-sizing: border-box; text-align: center; }
 
-        .collection-header { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-        #collImage { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { margin: 0; font-weight: 900; color: #333; font-size: 1.4rem; }
-        .subtitle { color: #666; font-size: 0.9rem; margin-top: 5px; }
+        h2 { margin: 0; font-weight: 900; color: #333; font-size: 1.6rem; margin-bottom: 5px; }
+        .subtitle { color: #666; font-size: 0.9rem; margin-bottom: 30px; }
 
-        .stats-box { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; }
-        .stat { text-align: center; background: #f8f9fa; padding: 10px 20px; border-radius: 12px; border: 1px solid #eee; }
-        .stat-val { display: block; font-weight: 900; font-size: 1.1rem; color: var(--primary); }
-        .stat-lbl { font-size: 0.7rem; text-transform: uppercase; color: #888; font-weight: 700; }
-
-        .nft-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        @media (min-width: 500px) { .nft-grid { grid-template-columns: 1fr 1fr 1fr; } }
-        
-        .nft-card { 
-            background: #fff; border: 1px solid #eee; border-radius: 16px; overflow: hidden; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s;
-            display: flex; flex-direction: column; position: relative;
+        .loading-spinner { 
+            border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%;
+            width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 40px auto;
         }
-        .nft-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .nft-rank {
-            position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white;
-            padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; z-index: 2;
-            backdrop-filter: blur(4px);
+        /* HERO CARD STYLE */
+        .deal-card {
+            background: linear-gradient(145deg, #ffffff, #f5f7fa);
+            border: 1px solid #eee;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,82,255,0.1);
+            max-width: 320px;
+            margin: 0 auto;
+            position: relative;
+            display: none; /* Hidden until loaded */
         }
 
-        .nft-img-container { width: 100%; aspect-ratio: 1/1; background: #f8f9fa; overflow: hidden; }
-        .nft-img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .nft-info { padding: 15px; display: flex; flex-direction: column; gap: 4px; flex-grow: 1; }
-        .nft-name { font-weight: 800; font-size: 0.95rem; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        .nft-price-box { 
-            margin-top: auto; padding-top: 10px; border-top: 1px dashed #eee;
-            display: flex; justify-content: space-between; align-items: center;
+        .deal-badge {
+            position: absolute; top: 15px; left: 15px;
+            background: #0052FF; color: white; padding: 5px 12px;
+            border-radius: 20px; font-weight: 700; font-size: 0.8rem;
+            z-index: 10; box-shadow: 0 4px 10px rgba(0,82,255,0.3);
         }
-        .price-val { font-size: 1.1rem; font-weight: 900; color: var(--primary); }
-        .price-usd { font-size: 0.8rem; color: #999; font-weight: 500; }
-        
-        .buy-btn { 
-            margin-top: 12px; text-decoration: none; background-color: #1a1a1a; color: white; 
-            text-align: center; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 0.85rem;
-            transition: background 0.2s; display: block;
-        }
-        .buy-btn:hover { background-color: var(--primary); }
 
-        .loading-spinner { text-align: center; font-style: italic; color: #999; margin: 40px 0; }
+        .img-wrapper {
+            width: 100%; height: 320px; background: #eee; position: relative;
+        }
+        .collection-img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        .info-box { padding: 20px; text-align: left; }
         
-        .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 25px; font-weight: 800; font-family: monospace; opacity: 0.8; }
+        .coll-name { font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px; }
+        .item-label { font-size: 1.2rem; font-weight: 800; color: #333; margin-bottom: 15px; }
+
+        .price-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px; }
+        .eth-price { font-size: 1.8rem; font-weight: 900; color: var(--primary); }
+        .usd-price { font-size: 1rem; font-weight: 500; color: #666; }
+
+        .action-btn {
+            display: block; width: 100%; padding: 15px; border-radius: 12px;
+            background: #1a1a1a; color: white; text-decoration: none;
+            font-weight: 700; text-align: center; font-size: 1rem;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .action-btn:hover { background: var(--primary); transform: translateY(-2px); }
+
+        .error-box { display: none; color: var(--red); font-weight: 600; margin-top: 20px; padding: 15px; background: #fff5f5; border-radius: 10px; }
+
+        .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 30px; font-weight: 800; font-family: monospace; opacity: 0.6; }
     </style>
 </head>
 <body>
@@ -94,142 +101,102 @@
     </div>
 
     <div class="container">
-        <div class="collection-header">
-            <img id="collImage" src="https://placehold.co/100x100?text=..." alt="Collection">
-            <h2 id="collName">Loading...</h2>
-            <div class="subtitle">Base Network</div>
-        </div>
+        <h2>Showroom</h2>
+        <div class="subtitle">Best Available Deal</div>
 
-        <div class="stats-box">
-            <div class="stat">
-                <span class="stat-val" id="floorEth">---</span>
-                <span class="stat-lbl">Floor ETH</span>
+        <div id="loader" class="loading-spinner"></div>
+        <div id="error" class="error-box"></div>
+
+        <div id="card" class="deal-card">
+            <div class="deal-badge">🔥 BEST FLOOR</div>
+            <div class="img-wrapper">
+                <img id="nftImg" class="collection-img" src="" alt="Collection Image">
             </div>
-            <div class="stat">
-                <span class="stat-val" id="floorUsd">---</span>
-                <span class="stat-lbl">Floor USD</span>
+            <div class="info-box">
+                <div id="collName" class="coll-name">Loading...</div>
+                <div class="item-label">Floor Item</div>
+                
+                <div class="price-row">
+                    <span id="priceEth" class="eth-price">---</span>
+                    <span id="priceUsd" class="usd-price">($---)</span>
+                </div>
+
+                <a id="buyLink" href="#" target="_blank" class="action-btn">Acquista su OpenSea ↗</a>
             </div>
         </div>
-
-        <div id="loading" class="loading-spinner">Scouting best deals...</div>
-
-        <div id="grid" class="nft-grid"></div>
         
-        <div class="version-tag">Showroom v1.5</div>
+        <div class="version-tag">v1.6 (Alchemy Core)</div>
     </div>
 
     <script>
-        const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
         const COLLECTION_ADDR = "0x160650efd60032aa49bbec70920a870aacffdc39".toLowerCase(); 
-        
-        // Proxy Strategy: ThingProxy (Handles headers better)
-        const PROXY_BASE = "https://thingproxy.freeboard.io/fetch/";
-        const RESERVOIR_API = `https://api-base.reservoir.tools/tokens/v6?collection=${COLLECTION_ADDR}&sortBy=floorAskPrice&limit=5`;
+        const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
 
-        window.addEventListener('DOMContentLoaded', initShowroom);
+        window.addEventListener('DOMContentLoaded', loadData);
 
-        async function initShowroom() {
-            const grid = document.getElementById('grid');
-            const loading = document.getElementById('loading');
-            
-            // 1. FETCH BASE DATA (Alchemy + Prices)
-            let collectionData = { name: "Unknown", img: "", floor: 0 };
-            let ethPrice = 0;
+        async function loadData() {
+            const loader = document.getElementById('loader');
+            const card = document.getElementById('card');
+            const errorBox = document.getElementById('error');
 
             try {
-                // A. Get ETH Price
+                // 1. Get ETH Price from Coinbase (Reliable & Free)
                 const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
                 const priceJson = await priceRes.json();
-                ethPrice = parseFloat(priceJson.data.amount);
+                const ethPrice = parseFloat(priceJson.data.amount);
 
-                // B. Get Collection Metadata (Alchemy)
+                // 2. Get Collection Metadata (Alchemy)
+                // This gives us the Name and the Collection Image
                 const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${COLLECTION_ADDR}`;
                 const metaRes = await fetch(metaUrl);
-                const metaJson = await metaRes.json();
-                
-                collectionData.name = metaJson.name || "Collection";
-                collectionData.img = metaJson.openSea?.imageUrl || "https://placehold.co/100x100?text=Coll";
+                if(!metaRes.ok) throw new Error("Alchemy Metadata Error");
+                const metaData = await metaRes.json();
 
-                // C. Get Floor Price (Alchemy)
+                // 3. Get Floor Price (Alchemy)
                 const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${COLLECTION_ADDR}`;
                 const floorRes = await fetch(floorUrl);
-                const floorJson = await floorRes.json();
-                collectionData.floor = floorJson.openSea?.floorPrice || 0;
+                if(!floorRes.ok) throw new Error("Alchemy Floor Error");
+                const floorData = await floorRes.json();
 
-                // UPDATE UI HEADER
-                document.getElementById('collName').innerText = collectionData.name;
-                document.getElementById('collImage').src = collectionData.img;
-                document.getElementById('floorEth').innerText = `${collectionData.floor.toFixed(4)} Ξ`;
-                document.getElementById('floorUsd').innerText = `$${(collectionData.floor * ethPrice).toFixed(2)}`;
+                // --- DATA PROCESSING ---
+                
+                // Image Logic: Try OpenSea image first, fallbacks later
+                let imageUrl = metaData.openSea?.imageUrl;
+                if (!imageUrl) imageUrl = "https://placehold.co/600x600?text=No+Image";
 
-            } catch(e) { console.error("Base data error:", e); }
+                // Name Logic
+                const collectionName = metaData.name || "Unknown Collection";
 
-            // 2. FETCH LISTINGS (Try Proxy)
-            try {
-                const res = await fetch(PROXY_BASE + encodeURIComponent(RESERVOIR_API));
-                const data = await res.json();
+                // Price Logic
+                const floorEth = floorData.openSea?.floorPrice || 0;
+                const floorUsd = floorEth * ethPrice;
 
-                if(data.tokens && data.tokens.length > 0) {
-                    const valid = data.tokens.filter(t => t.market?.floorAsk?.price?.amount?.native > 0).slice(0, 3);
-                    renderCards(valid, collectionData.name);
-                } else {
-                    throw new Error("No listings from proxy");
-                }
+                // Link Logic: Direct to sorted listings
+                const osLink = `https://opensea.io/assets/base/${COLLECTION_ADDR}?search[sortAscending]=true&search[sortBy]=UNIT_PRICE`;
+
+                // --- UI UPDATE ---
+                document.getElementById('nftImg').src = imageUrl;
+                
+                // Add error handler for image just in case url is broken
+                document.getElementById('nftImg').onerror = function() { 
+                    this.src = 'https://placehold.co/600x600?text=Image+Error'; 
+                };
+
+                document.getElementById('collName').innerText = collectionName;
+                document.getElementById('priceEth').innerText = `${floorEth.toFixed(4)} Ξ`;
+                document.getElementById('priceUsd').innerText = `($${floorUsd.toFixed(2)})`;
+                document.getElementById('buyLink').href = osLink;
+
+                // Show Result
+                loader.style.display = 'none';
+                card.style.display = 'block';
+
             } catch(e) {
-                console.warn("Proxy failed, using Visual Fallback:", e);
-                // 3. FALLBACK: Render Generic "Floor Item" Cards using Alchemy Data
-                renderFallback(collectionData, ethPrice);
-            } finally {
-                loading.style.display = 'none';
+                console.error(e);
+                loader.style.display = 'none';
+                errorBox.innerText = "Impossibile recuperare i dati. Riprova più tardi.";
+                errorBox.style.display = 'block';
             }
-        }
-
-        function renderCards(items, collName) {
-            const grid = document.getElementById('grid');
-            let rank = 1;
-            items.forEach(item => {
-                const token = item.token;
-                const market = item.market;
-                const price = market.floorAsk.price.amount.native;
-                const usd = market.floorAsk.price.amount.usd;
-                const link = `https://opensea.io/assets/base/${COLLECTION_ADDR}/${token.tokenId}`;
-                
-                let img = token.image || 'https://placehold.co/400x400?text=IMG';
-                
-                grid.innerHTML += createCardHTML(rank, img, collName, token.name, price, usd, link);
-                rank++;
-            });
-        }
-
-        function renderFallback(collData, ethPrice) {
-            const grid = document.getElementById('grid');
-            const link = `https://opensea.io/assets/base/${COLLECTION_ADDR}?search[sortAscending]=true&search[sortBy]=UNIT_PRICE`;
-            
-            // Generate 3 "Floor" cards
-            for(let i=1; i<=3; i++) {
-                const price = collData.floor;
-                const usd = price * ethPrice;
-                grid.innerHTML += createCardHTML(i, collData.img, collData.name, `Floor Item #${i}`, price, usd, link);
-            }
-        }
-
-        function createCardHTML(rank, img, coll, name, eth, usd, link) {
-            return `
-            <div class="nft-card">
-                <div class="nft-rank">#${rank} Best</div>
-                <div class="nft-img-container">
-                    <img src="${img}" class="nft-img" onerror="this.src='https://placehold.co/400x400?text=Err'">
-                </div>
-                <div class="nft-info">
-                    <div class="collection-name">${coll}</div>
-                    <span class="nft-name">${name}</span>
-                    <div class="nft-price-box">
-                        <div class="price-val">${eth.toFixed(4)} Ξ</div>
-                        <div class="price-usd">$${usd.toFixed(2)}</div>
-                    </div>
-                    <a href="${link}" target="_blank" class="buy-btn">Buy on OpenSea</a>
-                </div>
-            </div>`;
         }
     </script>
 </body>
