@@ -12,116 +12,125 @@
     </script>
 
     <style>
-        :root { --bg: #fffbf0; --text: #3e2723; --card-bg: #ffffff; --green: #2ecc71; }
+        :root { --bg: #fffbf0; --text: #3e2723; --card-bg: #ffffff; --green: #2ecc71; --blue: #3498db; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: var(--bg);
             background-image: url('back.png');
             background-size: cover;
+            background-position: center;
             background-attachment: fixed;
-            color: var(--text); padding: 15px; margin: 0; 
+            color: var(--text); 
+            padding: 20px; margin: 0; 
             display: flex; flex-direction: column; align-items: center; 
         }
 
-        .back-btn { align-self: flex-start; text-decoration: none; color: #5d4037; background: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 20px; }
-        h2 { margin: 0 0 20px 0; font-weight: 900; font-size: 1.8rem; }
-
-        .grid { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 500px; }
+        .back-btn { align-self: flex-start; text-decoration: none; color: #5d4037; background: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
         .card {
-            background: var(--card-bg); border-radius: 16px; padding: 12px;
-            display: flex; gap: 15px; align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; overflow: hidden;
-        }
-        
-        .level-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; }
-        .l-1 { background: #bdc3c7; } .l-2 { background: #2ecc71; } .l-3 { background: #3498db; }
-        .l-4 { background: #9b59b6; } .l-5 { background: #f1c40f; }
-
-        .thumb { width: 70px; height: 70px; border-radius: 10px; object-fit: cover; background: #eee; }
-        
-        .info { flex-grow: 1; }
-        .top-row { display: flex; justify-content: space-between; font-weight: 800; font-size: 0.9rem; margin-bottom: 4px; }
-        .badge { font-size: 0.65rem; background: #e8f5e9; color: var(--green); padding: 2px 6px; border-radius: 4px; font-weight: 700; display: inline-block; margin-bottom: 4px;}
-        
-        .price { font-size: 1.1rem; font-weight: 900; color: #3e2723; }
-        .usd { font-size: 0.8rem; color: #999; font-weight: 500; margin-left: 5px; }
-
-        .buy-btn {
-            background: #3e2723; color: white; text-decoration: none;
-            padding: 10px 15px; border-radius: 10px; font-weight: 700; font-size: 0.8rem;
+            background: var(--card-bg); width: 100%; max-width: 400px;
+            border-radius: 24px; overflow: hidden; 
+            box-shadow: 0 20px 40px rgba(62, 39, 35, 0.15);
+            text-align: center; padding-bottom: 30px;
         }
 
-        .loading { margin-top: 50px; font-weight: 600; color: #888; }
-        .empty { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
+        .img-wrapper { width: 100%; height: 320px; position: relative; }
+        .coll-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .info { padding: 25px 20px 10px 20px; }
+        .main-title { font-size: 1.8rem; font-weight: 900; margin: 0 0 5px 0; color: #222; }
+        .subtitle { color: #888; font-size: 0.8rem; margin-bottom: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* PULSANTI */
+        .btn-container { display: flex; flex-direction: column; gap: 15px; }
+
+        .snipe-btn {
+            display: flex; flex-direction: column; align-items: flex-start;
+            padding: 20px; border-radius: 18px; text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative; overflow: hidden; border: 2px solid transparent;
+        }
+
+        /* Stile Bottone Whale (Verde) */
+        .btn-whale {
+            background: #e8f5e9; border-color: #c8e6c9; color: #1b5e20;
+        }
+        .btn-whale:hover { background: #c8e6c9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(46, 204, 113, 0.2); }
+
+        /* Stile Bottone Score (Blu) */
+        .btn-score {
+            background: #e3f2fd; border-color: #bbdefb; color: #0d47a1;
+        }
+        .btn-score:hover { background: #bbdefb; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2); }
+
+        .btn-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 800; opacity: 0.7; margin-bottom: 5px; }
+        .btn-main { font-size: 1.2rem; font-weight: 900; display: flex; align-items: center; gap: 8px; width: 100%; justify-content: space-between;}
+        
+        .arrow { font-size: 1.2rem; }
+
+        /* Link generico */
+        .os-link { margin-top: 25px; display: inline-block; color: #aaa; font-size: 0.8rem; text-decoration: none; font-weight: 600; }
+        .os-link:hover { color: #3e2723; text-decoration: underline; }
+
+        .version { margin-top: 40px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
     </style>
 </head>
 <body>
 
     <a href="index.html" class="back-btn">⬅ Home</a>
-    <h2>Smart Sniper</h2>
 
-    <div id="loader" class="loading">Scanning Market...</div>
-    <div id="grid" class="grid" style="display: none;"></div>
+    <div class="card">
+        <div class="img-wrapper">
+            <img src="l5.jpeg" class="coll-img" onerror="this.src='https://placehold.co/400x400?text=Chicken'">
+        </div>
+        
+        <div class="info">
+            <h2 class="main-title">Chickens by $EGGS</h2>
+            <div class="subtitle">Sniper Launchpad</div>
+            
+            <div class="btn-container">
+                <a id="btnWhale" href="#" target="_blank" class="snipe-btn btn-whale">
+                    <span class="btn-label">Option A (Best for Deals)</span>
+                    <span class="btn-main">
+                        <span>🐋 Whale Filter (Lvl 3+)</span>
+                        <span class="arrow">↗</span>
+                    </span>
+                </a>
+
+                <a id="btnScore" href="#" target="_blank" class="snipe-btn btn-score">
+                    <span class="btn-label">Option B (High Reputation)</span>
+                    <span class="btn-main">
+                        <span>🛡️ Score Filter (>0.69)</span>
+                        <span class="arrow">↗</span>
+                    </span>
+                </a>
+            </div>
+
+            <a href="https://opensea.io/collection/chickens-by-eggs" target="_blank" class="os-link">View Full Collection on OpenSea</a>
+        </div>
+    </div>
+
+    <div class="version">v14.0 (Dual Launchpad)</div>
 
     <script>
-        window.addEventListener('DOMContentLoaded', async () => {
-            const loader = document.getElementById('loader');
-            const grid = document.getElementById('grid');
+        // BASE URL
+        const BASE = "https://opensea.io/collection/chickens-by-eggs";
+        
+        // COMMON: Buy Now + Sort Low Price
+        const COMMON = "?search[toggles][0]=BUY_NOW&search[sortAscending]=true&search[sortBy]=UNIT_PRICE";
 
-            try {
-                // CHIAMA IL BACKEND
-                const res = await fetch('/api/sniper');
-                if(!res.ok) throw new Error("API Error");
-                const data = await res.json();
+        // URL GENERATION
+        window.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. WHALE FILTER: Owner Max Chicken Level >= 3
+            // Nota: OpenSea usa range "min" per i filtri numerici
+            const whaleParams = "&search[numericTraits][0][name]=Owner%20Max%20Chicken%20Level&search[numericTraits][0][ranges][0][min]=3";
+            document.getElementById('btnWhale').href = BASE + COMMON + whaleParams;
 
-                let html = "";
-                for(let i=1; i<=5; i++) {
-                    const item = data[i];
-                    
-                    if(item) {
-                        // Listing Trovato
-                        let img = item.image || "l5.jpeg";
-                        if(img.startsWith('ipfs://')) img = img.replace('ipfs://', 'https://ipfs.io/ipfs/');
-                        
-                        html += `
-                        <div class="card">
-                            <div class="level-bar l-${i}"></div>
-                            <img src="${img}" class="thumb" onerror="this.src='l5.jpeg'">
-                            <div class="info">
-                                <div class="top-row"><span>Level ${i}</span> <span>#${item.tokenId}</span></div>
-                                <div class="badge">✅ ${item.reason}</div>
-                                <div>
-                                    <span class="price">${parseFloat(item.priceEth).toFixed(4)} Ξ</span>
-                                    <span class="usd">$${item.priceUsd.toFixed(2)}</span>
-                                </div>
-                            </div>
-                            <a href="${item.openseaLink}" target="_blank" class="buy-btn">BUY</a>
-                        </div>`;
-                    } else {
-                        // Nessun listing valido
-                        html += `
-                        <div class="card empty">
-                            <div class="level-bar l-${i}" style="background:#ccc"></div>
-                            <div class="thumb" style="display:flex;align-items:center;justify-content:center">🚫</div>
-                            <div class="info">
-                                <div class="top-row"><span>Level ${i}</span></div>
-                                <div class="badge" style="background:#eee;color:#999">No listings</div>
-                            </div>
-                        </div>`;
-                    }
-                }
-
-                grid.innerHTML = html;
-                loader.style.display = 'none';
-                grid.style.display = 'flex';
-
-            } catch(e) {
-                loader.innerText = "Error loading data.";
-                loader.style.color = "red";
-                console.error(e);
-            }
+            // 2. SCORE FILTER: Owner Neynar Score >= 0.69
+            const scoreParams = "&search[numericTraits][0][name]=Owner%20Neynar%20Score&search[numericTraits][0][ranges][0][min]=0.69";
+            document.getElementById('btnScore').href = BASE + COMMON + scoreParams;
         });
     </script>
 </body>
