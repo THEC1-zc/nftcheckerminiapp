@@ -440,7 +440,7 @@
             <div class="loading-state">Loading collections...</div>
         </div>
 
-        <div class="version-tag">v2.2.1</div>
+        <div class="version-tag">v2.2.3</div>
     </div>
 
     <script type="module">
@@ -464,14 +464,14 @@
                 name: "Degen Dogs on Base",
                 contract: "0x09154248ffdbaf8aa877ae8a4bf8ce1503596428",
                 chain: "base",
-                image: "https://i.seadn.io/s/raw/files/3e449c729ec1b87e6bc8b1a4e3c8f0e3.png",
+                image: "dog.png",
                 description: "Man's best friend on Base",
                 showCheapest: true,
                 openseaCollection: "degen-dogs-on-base"
             }
         ];
 
-        const RESERVOIR_API = "https://api.reservoir.tools";
+        const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh';
 
         // State
         let walletAddress = null;
@@ -495,31 +495,15 @@
             return `${eth.toFixed(4)} ETH`;
         }
 
-        // API Functions with enhanced error handling
+        // API Functions using Alchemy (same as Showroom)
         async function getCollectionFloor(contract) {
             try {
-                // Try with base: prefix
-                let url = `${RESERVOIR_API}/collections/v7?id=base:${contract}`;
-                let response = await fetch(url);
-                let data = await response.json();
+                const url = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${contract}`;
+                const response = await fetch(url);
+                const data = await response.json();
                 
-                if (data.collections && data.collections[0]) {
-                    const floorAsk = data.collections[0].floorAsk;
-                    return floorAsk?.price?.amount?.native || null;
-                }
-
-                // Fallback: try without prefix
-                url = `${RESERVOIR_API}/collections/v7?id=${contract}`;
-                response = await fetch(url);
-                data = await response.json();
-                
-                if (data.collections && data.collections[0]) {
-                    const floorAsk = data.collections[0].floorAsk;
-                    return floorAsk?.price?.amount?.native || null;
-                }
-
-                console.warn('No floor data found for', contract);
-                return null;
+                const floorEth = data.openSea?.floorPrice || null;
+                return floorEth;
             } catch (error) {
                 console.error('Error fetching floor for', contract, error);
                 return null;
@@ -528,89 +512,35 @@
 
         async function getCheapestListing(contract) {
             try {
-                // Try multiple endpoint formats
-                const endpoints = [
-                    `${RESERVOIR_API}/orders/asks/v5?contracts=base:${contract}&sortBy=price&limit=1&includeRawData=true`,
-                    `${RESERVOIR_API}/orders/asks/v5?contracts=${contract}&sortBy=price&limit=1&includeRawData=true`,
-                    `${RESERVOIR_API}/tokens/v7?collection=base:${contract}&sortBy=floorAskPrice&limit=1`
-                ];
-
-                for (const url of endpoints) {
-                    try {
-                        const response = await fetch(url);
-                        const data = await response.json();
-                        
-                        // Handle orders format
-                        if (data.orders && data.orders[0]) {
-                            const order = data.orders[0];
-                            const tokenId = order.criteria?.data?.token?.tokenId;
-                            const price = order.price?.amount?.native;
-                            const image = order.criteria?.data?.token?.image;
-                            
-                            if (tokenId && price) {
-                                return {
-                                    tokenId,
-                                    price,
-                                    image: image || 'https://placehold.co/80x80?text=NFT',
-                                    link: `https://opensea.io/assets/base/${contract}/${tokenId}`
-                                };
-                            }
-                        }
-
-                        // Handle tokens format
-                        if (data.tokens && data.tokens[0]) {
-                            const token = data.tokens[0];
-                            const tokenId = token.token?.tokenId;
-                            const price = token.market?.floorAsk?.price?.amount?.native;
-                            const image = token.token?.image;
-                            
-                            if (tokenId && price) {
-                                return {
-                                    tokenId,
-                                    price,
-                                    image: image || 'https://placehold.co/80x80?text=NFT',
-                                    link: `https://opensea.io/assets/base/${contract}/${tokenId}`
-                                };
-                            }
-                        }
-                    } catch (err) {
-                        console.warn('Endpoint failed:', url, err);
-                        continue;
+                // Get first NFT from collection
+                const nftsUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNFTsForContract?contractAddress=${contract}&pageSize=1`;
+                const nftsResponse = await fetch(nftsUrl);
+                const nftsData = await nftsResponse.json();
+                
+                if (nftsData.nfts && nftsData.nfts[0]) {
+                    const nft = nftsData.nfts[0];
+                    const tokenId = nft.tokenId;
+                    const image = nft.image?.cachedUrl || nft.image?.originalUrl || nft.image?.pngUrl;
+                    
+                    // Get floor price
+                    const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${contract}`;
+                    const floorRes = await fetch(floorUrl);
+                    const floorData = await floorRes.json();
+                    const price = floorData.openSea?.floorPrice;
+                    
+                    if (tokenId && price) {
+                        return {
+                            tokenId,
+                            price,
+                            image: image || 'https://placehold.co/80x80?text=NFT',
+                            link: `https://opensea.io/assets/base/${contract}/${tokenId}`
+                        };
                     }
                 }
-
-                console.warn('No cheapest listing found for', contract);
+                
                 return null;
             } catch (error) {
                 console.error('Error fetching cheapest NFT for', contract, error);
-                return null;
-            }
-        }
-
-        async function getCollectionImage(contract) {
-            try {
-                // Try with base: prefix
-                let url = `${RESERVOIR_API}/collections/v7?id=base:${contract}`;
-                let response = await fetch(url);
-                let data = await response.json();
-                
-                if (data.collections && data.collections[0]) {
-                    const image = data.collections[0].image;
-                    if (image) return image;
-                }
-
-                // Fallback: try without prefix
-                url = `${RESERVOIR_API}/collections/v7?id=${contract}`;
-                response = await fetch(url);
-                data = await response.json();
-                
-                if (data.collections && data.collections[0]) {
-                    return data.collections[0].image || null;
-                }
-
-                return null;
-            } catch (error) {
-                console.error('Error fetching collection image for', contract, error);
                 return null;
             }
         }
@@ -624,13 +554,12 @@
                 const card = document.createElement('div');
                 card.className = 'project-card';
 
-                // Fetch data with timeout
+                // Fetch floor price with timeout
                 const timeoutPromise = new Promise((_, reject) => 
                     setTimeout(() => reject(new Error('Timeout')), 10000)
                 );
 
                 let floor = null;
-                let imageUrl = collection.image;
                 
                 try {
                     floor = await Promise.race([
@@ -639,18 +568,6 @@
                     ]);
                 } catch (error) {
                     console.warn('Floor fetch timeout/error for', collection.name);
-                }
-
-                // Fetch image if not provided
-                if (!imageUrl) {
-                    try {
-                        imageUrl = await Promise.race([
-                            getCollectionImage(collection.contract),
-                            timeoutPromise
-                        ]);
-                    } catch (error) {
-                        console.warn('Image fetch timeout/error for', collection.name);
-                    }
                 }
 
                 let cheapestHTML = '';
@@ -713,12 +630,9 @@
                     </div>
                 ` : '';
 
-                // Use fallback image if none found
-                const finalImage = imageUrl || `https://placehold.co/400x280/0052FF/ffffff?text=${encodeURIComponent(collection.name)}`;
-
                 card.innerHTML = `
                     <div class="img-wrapper">
-                        <img src="${finalImage}" 
+                        <img src="${collection.image}" 
                              alt="${collection.name}" 
                              class="project-img"
                              onerror="this.src='https://placehold.co/400x280/0052FF/ffffff?text=${encodeURIComponent(collection.name)}'">
