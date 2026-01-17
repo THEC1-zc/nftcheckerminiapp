@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chickenfish Hub</title>
+    <title>WAST Hub - Project Showcase</title>
     
+    <!-- Farcaster SDK -->
     <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
         const run = async () => { await sdk.actions.ready(); };
@@ -12,97 +13,676 @@
     </script>
 
     <style>
-        :root { --bg: #fffbf0; --text: #3e2723; --card-bg: #ffffff; --green: #2ecc71; --red-bg: #ffebee; --red-text: #c62828; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: var(--bg);
+        :root {
+            --deep-blue: #001F66;
+            --primary-blue: #0052FF;
+            --electric-blue: #0080FF;
+            --sky-blue: #00B4FF;
+            --success-green: #00D9A3;
+            --danger-red: #FF4757;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0e27, #1a1f3a);
+            color: var(--deep-blue);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Background Image */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background-image: url('back.png');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            color: var(--text); 
-            padding: 20px; margin: 0; 
-            display: flex; flex-direction: column; align-items: center; 
+            opacity: 0.25;
+            z-index: -2;
         }
 
-        .back-btn { align-self: flex-start; text-decoration: none; color: #5d4037; background: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
-        .card {
-            background: var(--card-bg); width: 100%; max-width: 400px;
-            border-radius: 24px; overflow: hidden; 
-            box-shadow: 0 20px 40px rgba(62, 39, 35, 0.15);
-            text-align: center; padding-bottom: 30px;
+        /* Background Overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 82, 255, 0.1), rgba(0, 15, 40, 0.6));
+            z-index: -1;
         }
 
-        /* Box contenitore dell'immagine */
-        .img-wrapper { width: 100%; height: 280px; position: relative; background: #f8f8f8; }
-        
-        /* MODIFICA QUI: 'contain' adatta l'immagine intera nel box */
-        .coll-img { width: 100%; height: 100%; object-fit: contain; }
-        
-        .info { padding: 30px 20px; }
-        .main-title { font-size: 2rem; font-weight: 900; margin: 0 0 10px 0; color: #222; }
-        .subtitle { color: #888; font-size: 1rem; margin-bottom: 30px; font-weight: 500; }
-
-        /* Bottone Principale */
-        .main-btn {
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-            background: var(--green); color: white; text-decoration: none;
-            padding: 20px; border-radius: 18px; font-weight: 800; font-size: 1.2rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
-            margin-bottom: 30px;
-        }
-        .main-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(46, 204, 113, 0.4); background: #27ae60; }
-
-        /* Box Disclaimer Rosso */
-        .disclaimer-box {
-            background: var(--red-bg); border: 2px solid #ffcdd2;
-            border-radius: 16px; padding: 15px;
-            display: flex; align-items: center; gap: 15px;
-            text-align: left; color: var(--red-text);
+        /* Sticky Header */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid var(--primary-blue);
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideDown 0.5s ease-out;
         }
 
-        .disclaimer-img {
-            width: 60px; height: 60px; border-radius: 12px; border: 2px solid #e57373; object-fit: cover;
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
-        .disclaimer-text { font-size: 0.9rem; line-height: 1.4; }
-        .disclaimer-title { font-weight: 900; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 4px; display: block;}
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-        .version { margin-top: 40px; font-size: 0.7rem; opacity: 0.5; font-family: monospace; }
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+        }
+
+        .brand-name {
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .wallet-section {
+            position: relative;
+        }
+
+        .wallet-btn {
+            background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 82, 255, 0.4);
+        }
+
+        .wallet-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 82, 255, 0.6);
+        }
+
+        .wallet-btn.connected {
+            background: linear-gradient(135deg, var(--success-green), #00B87C);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 50px 24px;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 15px;
+            color: white;
+            text-shadow: 0 2px 20px rgba(0, 82, 255, 0.5);
+            letter-spacing: -1px;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: var(--sky-blue);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 50px;
+            opacity: 0.9;
+        }
+
+        /* Projects Grid */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 50px;
+        }
+
+        /* Project Card */
+        .project-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 82, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 82, 255, 0.25);
+            border-color: var(--primary-blue);
+        }
+
+        /* Image Wrapper */
+        .img-wrapper {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(135deg, rgba(0, 82, 255, 0.05), rgba(0, 180, 255, 0.1));
+            overflow: hidden;
+        }
+
+        .project-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .project-card:hover .project-img {
+            transform: scale(1.1);
+        }
+
+        /* Floor Price Badge */
+        .floor-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 15px rgba(0, 82, 255, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .floor-badge.loading {
+            background: linear-gradient(135deg, #666, #888);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Card Info */
+        .card-info {
+            padding: 28px 22px;
+        }
+
+        .project-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            color: var(--deep-blue);
+            letter-spacing: -0.5px;
+        }
+
+        .project-subtitle {
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        /* OpenSea Button */
+        .opensea-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
+            color: white;
+            text-decoration: none;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 82, 255, 0.4);
+            margin-bottom: 20px;
+        }
+
+        .opensea-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 82, 255, 0.6);
+        }
+
+        /* Cheapest NFT Section */
+        .cheapest-nft {
+            background: linear-gradient(135deg, rgba(0, 82, 255, 0.05), rgba(0, 180, 255, 0.08));
+            border: 2px solid var(--sky-blue);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .cheapest-nft-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--primary-blue);
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+        }
+
+        .nft-preview {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nft-thumb {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid var(--primary-blue);
+        }
+
+        .nft-details {
+            flex: 1;
+        }
+
+        .nft-price {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--deep-blue);
+            margin-bottom: 4px;
+        }
+
+        .nft-link {
+            color: var(--primary-blue);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .nft-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Warning Box (Red for Chickens) */
+        .warning-box {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            border: 2px solid var(--danger-red);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .warning-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            border: 2px solid var(--danger-red);
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .warning-text {
+            color: #c62828;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .warning-title {
+            display: block;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        /* Error Message */
+        .error-message {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            background: white;
+            border: 2px solid var(--danger-red);
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 25px rgba(255, 71, 87, 0.3);
+            z-index: 1000;
+            max-width: 350px;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .error-message.show { display: block; }
+
+        /* Version Tag */
+        .version-tag {
+            text-align: center;
+            margin-top: 50px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: var(--sky-blue);
+            opacity: 0.6;
+        }
+
+        /* Loading State */
+        .loading-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--sky-blue);
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header { padding: 12px 16px; }
+            .brand-name { font-size: 1.2rem; letter-spacing: 2px; }
+            .logo-img { width: 35px; height: 35px; }
+            .wallet-btn { padding: 10px 20px; font-size: 0.9rem; }
+            
+            .container { padding: 30px 16px; }
+            .page-title { font-size: 2rem; }
+            .page-subtitle { font-size: 1rem; }
+            
+            .projects-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .project-title { font-size: 1.5rem; }
+            .card-info { padding: 22px 18px; }
+        }
     </style>
 </head>
 <body>
 
-    <a href="index.html" class="back-btn">⬅ Home</a>
-
-    <div class="card">
-        <div class="img-wrapper">
-            <img src="l5.jpeg" class="coll-img" onerror="this.src='https://placehold.co/400x280?text=Chicken+Cover&font=roboto'">
+    <!-- Sticky Header -->
+    <header>
+        <div class="logo-section">
+            <img src="icon.png" alt="WAST" class="logo-img" onerror="this.style.display='none'">
+            <div class="brand-name">WAST</div>
         </div>
-        
-        <div class="info">
-            <h2 class="main-title">Get your Chicken!</h2>
-            <div class="subtitle">Join the coop on Base network.</div>
-            
-            <a href="https://opensea.io/collection/chickens-by-eggs" target="_blank" class="main-btn">
-                <span>Buy you a Chicken 🐔</span>
-            </a>
-
-            <div class="disclaimer-box">
-                <img src="l0.png" class="disclaimer-img" onerror="this.src='https://placehold.co/60x60/ff0000/ffffff?text=RED'">
-                <div class="disclaimer-text">
-                    <span class="disclaimer-title">⚠️ Important Warning</span>
-                    Don't buy <strong>RED ones</strong> (like this), they aren't productive!
-                </div>
-            </div>
-
+        <div class="wallet-section">
+            <button id="walletBtn" class="wallet-btn">Connect Wallet</button>
         </div>
+    </header>
+
+    <!-- Error Message Container -->
+    <div id="errorMessage" class="error-message"></div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="page-title">Project Showcase</h1>
+        <div class="page-subtitle">Curated NFT collections we love</div>
+
+        <!-- Projects Grid -->
+        <div class="projects-grid" id="projectsGrid">
+            <!-- Loading State -->
+            <div class="loading-state">Loading collections...</div>
+        </div>
+
+        <div class="version-tag">v2.2.0</div>
     </div>
 
-    <div class="version">v25.1 (Image Resized)</div>
+    <script type="module">
+        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+
+        // Configuration
+        const COLLECTIONS = [
+            {
+                name: "Chickens by $EGGS",
+                contract: "0x84eea2be67b17698b0e09b57eeeda47aa921bbf0",
+                chain: "base",
+                image: "l5.jpeg",
+                description: "Join the coop on Base network",
+                warning: {
+                    text: "Don't buy <strong>RED ones</strong> (like this), they aren't productive!",
+                    image: "l0.png"
+                },
+                openseaCollection: "chickens-by-eggs"
+            },
+            {
+                name: "Degen Dogs on Base",
+                contract: "0x09154248ffdbaf8aa877ae8a4bf8ce1503596428",
+                chain: "base",
+                image: null, // Will fetch from API
+                description: "Man's best friend on Base",
+                showCheapest: true,
+                openseaCollection: "degen-dogs-on-base"
+            }
+        ];
+
+        const RESERVOIR_API = "https://api.reservoir.tools";
+        const BASE_CHAIN_ID = "base";
+
+        // State
+        let walletAddress = null;
+        let provider = null;
+
+        // Utility Functions
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+            setTimeout(() => errorEl.classList.remove('show'), 5000);
+        }
+
+        function formatAddress(address) {
+            return `${address.slice(0, 6)}...${address.slice(-4)}`;
+        }
+
+        function formatPrice(price) {
+            if (!price) return "N/A";
+            const eth = parseFloat(price);
+            return `${eth.toFixed(4)} ETH`;
+        }
+
+        // API Functions
+        async function getCollectionFloor(contract) {
+            try {
+                const url = `${RESERVOIR_API}/collections/v7?id=${BASE_CHAIN_ID}:${contract}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.collections && data.collections[0]) {
+                    const floorAsk = data.collections[0].floorAsk;
+                    return floorAsk?.price?.amount?.native || null;
+                }
+                return null;
+            } catch (error) {
+                console.error('Error fetching floor:', error);
+                return null;
+            }
+        }
+
+        async function getCheapestListing(contract) {
+            try {
+                const url = `${RESERVOIR_API}/orders/asks/v5?contracts=${BASE_CHAIN_ID}:${contract}&sortBy=price&limit=1&includeRawData=true`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.orders && data.orders[0]) {
+                    const order = data.orders[0];
+                    const tokenId = order.criteria?.data?.token?.tokenId;
+                    const price = order.price?.amount?.native;
+                    const image = order.criteria?.data?.token?.image;
+                    
+                    return {
+                        tokenId,
+                        price,
+                        image,
+                        link: `https://opensea.io/assets/base/${contract}/${tokenId}`
+                    };
+                }
+                return null;
+            } catch (error) {
+                console.error('Error fetching cheapest NFT:', error);
+                return null;
+            }
+        }
+
+        async function getCollectionImage(contract) {
+            try {
+                const url = `${RESERVOIR_API}/collections/v7?id=${BASE_CHAIN_ID}:${contract}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.collections && data.collections[0]) {
+                    return data.collections[0].image || null;
+                }
+                return null;
+            } catch (error) {
+                console.error('Error fetching collection image:', error);
+                return null;
+            }
+        }
+
+        // Render Functions
+        async function renderProjects() {
+            const grid = document.getElementById('projectsGrid');
+            grid.innerHTML = '';
+
+            for (const collection of COLLECTIONS) {
+                const card = document.createElement('div');
+                card.className = 'project-card';
+
+                // Fetch data
+                const floor = await getCollectionFloor(collection.contract);
+                let imageUrl = collection.image;
+                
+                if (!imageUrl) {
+                    imageUrl = await getCollectionImage(collection.contract);
+                }
+
+                let cheapestHTML = '';
+                if (collection.showCheapest) {
+                    const cheapest = await getCheapestListing(collection.contract);
+                    if (cheapest) {
+                        cheapestHTML = `
+                            <div class="cheapest-nft">
+                                <div class="cheapest-nft-title">🔥 Cheapest Listed</div>
+                                <div class="nft-preview">
+                                    <img src="${cheapest.image}" alt="NFT" class="nft-thumb" onerror="this.src='https://placehold.co/80x80?text=NFT'">
+                                    <div class="nft-details">
+                                        <div class="nft-price">${formatPrice(cheapest.price)}</div>
+                                        <a href="${cheapest.link}" target="_blank" class="nft-link">View on OpenSea →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                const warningHTML = collection.warning ? `
+                    <div class="warning-box">
+                        <img src="${collection.warning.image}" alt="Warning" class="warning-img" onerror="this.src='https://placehold.co/60x60/ff0000/ffffff?text=!'">
+                        <div class="warning-text">
+                            <span class="warning-title">⚠️ Important Warning</span>
+                            ${collection.warning.text}
+                        </div>
+                    </div>
+                ` : '';
+
+                card.innerHTML = `
+                    <div class="img-wrapper">
+                        <img src="${imageUrl || 'https://placehold.co/400x280?text=' + encodeURIComponent(collection.name)}" 
+                             alt="${collection.name}" 
+                             class="project-img"
+                             onerror="this.src='https://placehold.co/400x280?text=${encodeURIComponent(collection.name)}'">
+                        <div class="floor-badge ${floor ? '' : 'loading'}">
+                            ${floor ? 'Floor: ' + formatPrice(floor) : 'Loading...'}
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <h2 class="project-title">${collection.name}</h2>
+                        <div class="project-subtitle">${collection.description}</div>
+                        
+                        <a href="https://opensea.io/collection/${collection.openseaCollection}" 
+                           target="_blank" 
+                           class="opensea-btn">
+                            View on OpenSea →
+                        </a>
+                        
+                        ${cheapestHTML}
+                        ${warningHTML}
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            }
+        }
+
+        // Wallet Functions
+        async function connectWallet() {
+            try {
+                provider = await sdk.wallet.getEthereumProvider();
+                const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                
+                if (accounts && accounts.length > 0) {
+                    walletAddress = accounts[0];
+                    localStorage.setItem('tysm_wallet', walletAddress);
+                    updateWalletUI();
+                }
+            } catch (error) {
+                console.error('Wallet connection error:', error);
+                if (error.code === 4001) {
+                    showError('Connection cancelled');
+                } else {
+                    showError('Failed to connect wallet');
+                }
+            }
+        }
+
+        function updateWalletUI() {
+            const btn = document.getElementById('walletBtn');
+            if (walletAddress) {
+                btn.textContent = formatAddress(walletAddress);
+                btn.classList.add('connected');
+            } else {
+                btn.textContent = 'Connect Wallet';
+                btn.classList.remove('connected');
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('walletBtn').addEventListener('click', connectWallet);
+
+        // Initialize
+        async function init() {
+            await sdk.actions.ready();
+            
+            // Check for stored wallet
+            const stored = localStorage.getItem('tysm_wallet');
+            if (stored) {
+                walletAddress = stored;
+                updateWalletUI();
+            }
+
+            // Render projects
+            await renderProjects();
+        }
+
+        init();
+    </script>
 
 </body>
 </html>
