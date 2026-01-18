@@ -937,138 +937,96 @@
     async function loadUserTokens(walletAddr) {
         const select = document.getElementById('tokenSelect');
         const loading = document.getElementById('loadingTokens');
-        
-        select.style.display = 'none';
-        loading.style.display = 'block';
-        select.innerHTML = '';
+        select.style.display = 'none'; loading.style.display = 'block'; select.innerHTML = '';
 
         try {
             let allTokens = [];
             let pageKey = null;
             let loopCount = 0;
-
-            // Fetch all token balances
             do {
-                if (loopCount > 30) break;
-                
-                const params = [walletAddr];
-                if (pageKey) params.push({ pageKey: pageKey });
-                
-                const data = await API.alchemyRPC("alchemy_getTokenBalances", params);
-                
-                if (data.result?.tokenBalances) {
-                    allTokens = allTokens.concat(data.result.tokenBalances);
-                }
-                
+                if(loopCount > 30) break; 
+                const params = { "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", "params": [walletAddr] };
+                if(pageKey) params.params.push({ pageKey: pageKey });
+                const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${CONFIG.ALCHEMY_KEY}`, { 
+                    method: "POST", 
+                    headers: { "Content-Type": "application/json" }, 
+                    body: JSON.stringify(params)
+                });
+                const data = await res.json();
+                if(data.result?.tokenBalances) allTokens = allTokens.concat(data.result.tokenBalances);
                 pageKey = data.result?.pageKey;
                 loopCount++;
             } while (pageKey);
 
-            // Filter out zero balances
             let tokens = allTokens.filter(t => t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000");
+            const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${CONFIG.ALCHEMY_KEY}`, { 
+                method: "POST", 
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] }) 
+            });
+            const ethData = await ethRes.json();
+            if(ethData.result && ethData.result !== "0x0") tokens.push({ contractAddress: CONFIG.ETH_PSEUDO, tokenBalance: ethData.result });
 
-            // Get ETH balance
-            const ethData = await API.alchemyRPC("eth_getBalance", [walletAddr, "latest"]);
-            if (ethData.result && ethData.result !== "0x0") {
-                tokens.push({
-                    contractAddress: CONFIG.ETH_PSEUDO,
-                    tokenBalance: ethData.result
-                });
-            }
-
-            // Deduplicate
             const uniqueMap = new Map();
-            for (const t of tokens) {
-                uniqueMap.set(t.contractAddress.toLowerCase(), t);
-            }
+            for(const t of tokens) uniqueMap.set(t.contractAddress.toLowerCase(), t);
             tokens = Array.from(uniqueMap.values());
 
-            loading.innerText = `Pricing ${tokens.length} tokens...`;
-
-            // Fetch prices in chunks
+            loading.innerText = `Indexing ${tokens.length} tokens...`;
             const pricedTokens = [];
             const chunks = [];
-            for (let i = 0; i < tokens.length; i += 30) {
-                chunks.push(tokens.slice(i, i + 30));
-            }
+            for (let i=0; i<tokens.length; i+=30) chunks.push(tokens.slice(i, i+30));
 
-            for (const chunk of chunks) {
-                const queryAddrs = chunk.map(t => 
-                    t.contractAddress === CONFIG.ETH_PSEUDO ? CONFIG.WETH_ADDR : t.contractAddress
-                ).join(',');
-
+            for(const chunk of chunks) {
+                const queryAddrs = chunk.map(t => t.contractAddress === CONFIG.ETH_PSEUDO ? CONFIG.WETH_ADDR : t.contractAddress).join(',');
                 try {
                     const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${queryAddrs}`);
                     const dexData = await dexRes.json();
-
                     chunk.forEach(t => {
                         const lcAddr = t.contractAddress.toLowerCase();
-                        const pair = dexData.pairs ? dexData.pairs.find(p => 
-                            p.baseToken.address.toLowerCase() === (lcAddr === CONFIG.ETH_PSEUDO ? CONFIG.WETH_ADDR : lcAddr)
-                        ) : null;
-
-                        const decimals = 18;
-                        const bal = Number(BigInt(t.tokenBalance)) / (10 ** decimals);
-
-                        let price = pair ? parseFloat(pair.priceUsd) : 0;
-                        if (lcAddr === CONFIG.USDC_BASE) price = 1.0;
-                        if (price === 0 && (lcAddr === CONFIG.ETH_PSEUDO || lcAddr === CONFIG.WETH_ADDR)) price = 2500;
-
-                        const sym = pair ? pair.baseToken.symbol : (lcAddr === CONFIG.ETH_PSEUDO ? "ETH" : t.contractAddress.slice(0, 6));
+                        const pair = dexData.pairs ? dexData.pairs.find(p => p.baseToken.address.toLowerCase() === (lcAddr === CONFIG.ETH_PSEUDO ? CONFIG.WETH_ADDR : lcAddr)) : null;
+                        const decimals = 18; 
+                        const bal = Number(BigInt(t.tokenBalance)) / (10**decimals);
                         
-                        pricedTokens.push({
-                            ca: t.contractAddress,
-                            symbol: sym,
-                            bal: bal,
-                            usd: bal * price
-                        });
+                        let price = pair ? parseFloat(pair.priceUsd) : 0;
+                        if(lcAddr === CONFIG.USDC_BASE) price = 1.0;
+                        if(price === 0 && (lcAddr === CONFIG.ETH_PSEUDO || lcAddr === CONFIG.WETH_ADDR)) price = 2500; 
+
+                        const sym = pair ? pair.baseToken.symbol : (lcAddr === CONFIG.ETH_PSEUDO ? "ETH" : t.contractAddress.slice(0,6));
+                        pricedTokens.push({ ca: t.contractAddress, symbol: sym, bal: bal, usd: bal * price });
                     });
-                } catch (e) {
-                    console.error(e);
-                }
-                
+                } catch(e) { console.error(e); }
                 await Utils.sleep(100);
             }
 
-            // Sort by USD value
-            pricedTokens.sort((a, b) => b.usd - a.usd);
-
+            pricedTokens.sort((a,b) => b.usd - a.usd);
             const valued = pricedTokens.filter(t => t.usd > 0.01);
             const others = pricedTokens.filter(t => t.usd <= 0.01);
 
             select.innerHTML = '<option value="" disabled selected>Select a token...</option>';
-
-            if (valued.length > 0) {
-                const grp = document.createElement('optgroup');
-                grp.label = "💰 VALUED ASSETS";
-                valued.forEach(t => {
-                    const o = document.createElement('option');
-                    o.value = t.ca;
-                    o.innerText = `${t.symbol} - ${Utils.formatUSD(t.usd)}`;
+            if(valued.length>0) {
+                const grp = document.createElement('optgroup'); grp.label="💲 VALUED ASSETS";
+                valued.forEach(t => { 
+                    const o = document.createElement('option'); o.value = t.ca; 
+                    o.innerText = `${t.symbol} - $${t.usd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
                     grp.appendChild(o);
                 });
                 select.appendChild(grp);
             }
-
-            if (others.length > 0) {
-                const grp = document.createElement('optgroup');
-                grp.label = "❓ OTHERS";
-                others.forEach(t => {
-                    const o = document.createElement('option');
-                    o.value = t.ca;
+            if(others.length>0) {
+                const grp = document.createElement('optgroup'); grp.label="❓ OTHERS";
+                others.forEach(t => { 
+                    const o = document.createElement('option'); o.value = t.ca; 
                     o.innerText = `${t.symbol} (${t.bal.toFixed(4)})`;
                     grp.appendChild(o);
                 });
                 select.appendChild(grp);
             }
 
-        } catch (e) {
-            console.error(e);
-            select.innerHTML = '<option disabled>Error loading tokens</option>';
-        } finally {
-            loading.style.display = 'none';
-            select.style.display = 'block';
-        }
+        } catch(e) { 
+            console.error('Token loading error:', e); 
+            select.innerHTML='<option disabled>Error loading tokens</option>'; 
+        } 
+        finally { loading.style.display='none'; select.style.display='block'; }
     }
 
     // ============================================================================
