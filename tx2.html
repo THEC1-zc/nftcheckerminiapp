@@ -402,14 +402,29 @@
         border-radius: 8px; 
         background: #e6fffa; 
     }
-    .version-tag { 
-        text-align: center; 
-        font-size: 0.7rem; 
-        color: #0052FF; 
-        margin-top: 25px; 
-        font-weight: 800; 
+    #debugBox { 
+        background: #1a1a1a; 
+        color: #00ff00; 
+        padding: 10px; 
+        border-radius: 8px; 
         font-family: monospace; 
-        opacity: 0.8; 
+        font-size: 0.7rem; 
+        margin: 10px 0; 
+        max-height: 200px; 
+        overflow-y: auto; 
+        display: none;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+    .debug-toggle {
+        background: #1a1a1a;
+        color: #00ff00;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        margin-bottom: 10px;
+        display: inline-block;
     }
 
     /* Profit/Loss Row Highlighting */
@@ -491,7 +506,10 @@
 
 <div class="container">
     <h2 style="text-align:center; margin-top:0;">🔬 Professional Analyzer</h2>
-    <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Engine: v13.0 · Smart Classification · Adaptive Rate Limiting</p>
+    <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Engine: v13.0.3 · Smart Classification · Adaptive Rate Limiting</p>
+    
+    <div class="debug-toggle" onclick="document.getElementById('debugBox').style.display = document.getElementById('debugBox').style.display === 'none' ? 'block' : 'none'">🐛 Toggle Debug</div>
+    <div id="debugBox"></div>
     
     <div class="input-group">
         <label>Target Wallet <span id="btnChangeTarget" class="clear-link">Change 🔄</span></label>
@@ -622,8 +640,8 @@
         <button id="btnNext" class="page-btn">Next ▶</button>
     </div>
 
-    <div class="wip-tag">✅ v13.0 PROFESSIONAL READY</div>
-    <div class="version-tag">v13.0.0</div>
+    <div class="wip-tag">✅ v13.0.3 NETWORK TEST</div>
+    <div class="version-tag">v13.0.3</div>
 </div>
 
 <!-- Moralis Modal -->
@@ -646,10 +664,27 @@
 
 <script>
     // ============================================================================
+    // DEBUG LOGGING (for mobile without console)
+    // ============================================================================
+    function debugLog(message, data = null) {
+        console.log(message, data);
+        const debugBox = document.getElementById('debugBox');
+        if (debugBox) {
+            const timestamp = new Date().toLocaleTimeString();
+            let logLine = `[${timestamp}] ${message}`;
+            if (data) {
+                logLine += '\n' + JSON.stringify(data, null, 2);
+            }
+            debugBox.innerText += logLine + '\n\n';
+            debugBox.scrollTop = debugBox.scrollHeight;
+        }
+    }
+
+    // ============================================================================
     // CONFIG & CONSTANTS
     // ============================================================================
     const CONFIG = {
-        ALCHEMY_KEY: 'F46kIRKE_HvuVkuRbPNRbh',
+        ALCHEMY_KEY: '46kIRKE_HvuVkuRbPNRbh',
         MORALIS_KEY_ADMIN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImMzYWFkNmIxLTUyYjMtNGNkZC1iZjBkLTE4MWM0ZDY1MTkzMiIsIm9yZ0lkIjoiNDkwNDE4IiwidXNlcklkIjoiNTA0NTc3IiwidHlwZUlkIjoiNTQwNjExMjgtMzY3Zi00MDQyLWE1NDItODdjMzlkODkxMDkzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3Njg0MTI5MjMsImV4cCI6NDkyNDE3MjkyM30.wKcFrQ_mjxCe_bu1ylkPBb_VvQlBnkTklNggqmom1UU',
         ADMIN_WALLET: '0xd29c790466675153A50DF7860B9EFDb689A21cDe'.toLowerCase(),
         
@@ -939,6 +974,21 @@
         const loading = document.getElementById('loadingTokens');
         select.style.display = 'none'; loading.style.display = 'block'; select.innerHTML = '';
 
+        debugLog('🔍 Starting token load', { wallet: walletAddr });
+        debugLog('🔑 Alchemy Key', CONFIG.ALCHEMY_KEY);
+
+        // Test network connectivity first
+        try {
+            debugLog('🌐 Testing network connectivity...');
+            const testRes = await fetch('https://api.dexscreener.com/latest/dex/tokens/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913');
+            debugLog('✅ Network test OK', testRes.status);
+        } catch(e) {
+            debugLog('❌ Network test FAILED', e.message);
+            select.innerHTML='<option disabled>Network error - check connection</option>';
+            loading.style.display='none'; select.style.display='block';
+            return;
+        }
+
         try {
             let allTokens = [];
             let pageKey = null;
@@ -947,18 +997,38 @@
                 if(loopCount > 30) break; 
                 const params = { "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", "params": [walletAddr] };
                 if(pageKey) params.params.push({ pageKey: pageKey });
-                const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${CONFIG.ALCHEMY_KEY}`, { 
+                
+                debugLog(`📡 Fetch attempt ${loopCount + 1}`, params);
+                
+                const url = `https://base-mainnet.g.alchemy.com/v2/${CONFIG.ALCHEMY_KEY}`;
+                debugLog('🌍 URL', url);
+                
+                const res = await fetch(url, { 
                     method: "POST", 
                     headers: { "Content-Type": "application/json" }, 
                     body: JSON.stringify(params)
                 });
+                
+                debugLog('📥 Response status', res.status);
+                
                 const data = await res.json();
+                debugLog('📊 Response data', data);
+                
+                if(data.error) {
+                    debugLog('❌ API Error', data.error);
+                    throw new Error(data.error.message || 'API Error');
+                }
+                
                 if(data.result?.tokenBalances) allTokens = allTokens.concat(data.result.tokenBalances);
                 pageKey = data.result?.pageKey;
                 loopCount++;
             } while (pageKey);
 
+            debugLog(`✅ Total tokens: ${allTokens.length}`);
+
             let tokens = allTokens.filter(t => t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000");
+            debugLog(`✅ Non-zero tokens: ${tokens.length}`);
+            
             const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${CONFIG.ALCHEMY_KEY}`, { 
                 method: "POST", 
                 headers: { "Content-Type": "application/json" }, 
@@ -994,7 +1064,7 @@
                         const sym = pair ? pair.baseToken.symbol : (lcAddr === CONFIG.ETH_PSEUDO ? "ETH" : t.contractAddress.slice(0,6));
                         pricedTokens.push({ ca: t.contractAddress, symbol: sym, bal: bal, usd: bal * price });
                     });
-                } catch(e) { console.error(e); }
+                } catch(e) { debugLog('DexScreener error', e.message); }
                 await Utils.sleep(100);
             }
 
@@ -1022,9 +1092,11 @@
                 select.appendChild(grp);
             }
 
+            debugLog('✅ Token loading complete');
+
         } catch(e) { 
-            console.error('Token loading error:', e); 
-            select.innerHTML='<option disabled>Error loading tokens</option>'; 
+            debugLog('❌ FATAL ERROR', { message: e.message, stack: e.stack }); 
+            select.innerHTML='<option disabled>Error - check debug log</option>'; 
         } 
         finally { loading.style.display='none'; select.style.display='block'; }
     }
