@@ -649,7 +649,7 @@
     // CONFIG & CONSTANTS
     // ============================================================================
     const CONFIG = {
-        ALCHEMY_KEY: 'XF46kIRKE_HvuVkuRbPNRbh',
+        ALCHEMY_KEY: 'F46kIRKE_HvuVkuRbPNRbh',
         MORALIS_KEY_ADMIN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImMzYWFkNmIxLTUyYjMtNGNkZC1iZjBkLTE4MWM0ZDY1MTkzMiIsIm9yZ0lkIjoiNDkwNDE4IiwidXNlcklkIjoiNTA0NTc3IiwidHlwZUlkIjoiNTQwNjExMjgtMzY3Zi00MDQyLWE1NDItODdjMzlkODkxMDkzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3Njg0MTI5MjMsImV4cCI6NDkyNDE3MjkyM30.wKcFrQ_mjxCe_bu1ylkPBb_VvQlBnkTklNggqmom1UU',
         ADMIN_WALLET: '0xd29c790466675153A50DF7860B9EFDb689A21cDe'.toLowerCase(),
         
@@ -951,16 +951,10 @@
             do {
                 if (loopCount > 30) break;
                 
-                const params = {
-                    "id": 1,
-                    "jsonrpc": "2.0",
-                    "method": "alchemy_getTokenBalances",
-                    "params": [walletAddr]
-                };
+                const params = [walletAddr];
+                if (pageKey) params.push({ pageKey: pageKey });
                 
-                if (pageKey) params.params[0].pageKey = pageKey;
-                
-                const data = await API.alchemyRPC("alchemy_getTokenBalances", params.params);
+                const data = await API.alchemyRPC("alchemy_getTokenBalances", params);
                 
                 if (data.result?.tokenBalances) {
                     allTokens = allTokens.concat(data.result.tokenBalances);
@@ -1117,21 +1111,42 @@
 
             if (dexData.pairs && dexData.pairs.length > 0) {
                 const pair = dexData.pairs.find(p => p.chainId === 'base') || dexData.pairs[0];
-                STATE.currentPricePerToken = parseFloat(pair.priceUsd);
-                STATE.currentTokenSymbol = pair.baseToken.symbol;
+                STATE.currentPricePerToken = parseFloat(pair.priceUsd) || 0;
+                STATE.currentTokenSymbol = pair.baseToken?.symbol || 'TOKEN';
 
                 document.getElementById('tokenSym').innerText = STATE.currentTokenSymbol;
                 document.getElementById('tokenPrice').innerText = Utils.formatUSD(STATE.currentPricePerToken);
                 document.getElementById('tokenImg').src = pair.info?.imageUrl || 
                     `https://dd.dexscreener.com/ds-data/tokens/base/${STATE.currentTokenCA}.png`;
                 document.getElementById('tokenHeader').style.display = 'flex';
+            } else {
+                // No pair found - use fallbacks
+                STATE.currentPricePerToken = 0;
+                STATE.currentTokenSymbol = STATE.currentTokenCA.slice(0, 8);
+                document.getElementById('tokenSym').innerText = STATE.currentTokenSymbol;
+                document.getElementById('tokenPrice').innerText = 'Price N/A';
+                document.getElementById('tokenHeader').style.display = 'flex';
             }
         } catch (e) {
+            console.error('Token metadata fetch failed:', e);
             STATE.currentPricePerToken = 0;
+            STATE.currentTokenSymbol = STATE.currentTokenCA.slice(0, 8);
+            document.getElementById('tokenSym').innerText = STATE.currentTokenSymbol;
+            document.getElementById('tokenPrice').innerText = 'Price N/A';
+            document.getElementById('tokenHeader').style.display = 'flex';
         }
 
         // Fetch transactions
+        status.innerText = "📡 Fetching transactions...";
         const rawTxs = await fetchUnifiedTransfers(wallet, STATE.currentTokenCA, limit, status);
+        
+        console.log(`✅ Fetched ${rawTxs.length} transactions`);
+        
+        if (rawTxs.length === 0) {
+            status.innerText = "⚠️ No transactions found for this token";
+            Utils.hideProgress();
+            return;
+        }
         
         Utils.updateProgress(rawTxs.length, rawTxs.length, 'Creating event database');
 
