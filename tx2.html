@@ -14,23 +14,7 @@
 </script>
 
 <style>
-    :root { 
-        --primary: #0052FF; 
-        --bg: #f5f5f7; 
-        --card-bg: #ffffff; 
-        --text: #1a1a1a; 
-        --green: #2ecc71; 
-        --red: #ff4757; 
-        --orange: #ff9f43; 
-        --purple: #9c27b0; 
-        --dark: #34495e; 
-        --pink: #d63384; 
-        --cyan: #00bcd4; 
-        --indigo: #3f51b5; 
-        --teal: #16a085; 
-        --lime: #cddc39;
-        --amber: #ffc107;
-    }
+    :root { --primary: #0052FF; --bg: #f5f5f7; --card-bg: #ffffff; --text: #1a1a1a; --green: #2ecc71; --red: #ff4757; --orange: #ff9f43; --purple: #9c27b0; --dark: #34495e; --pink: #d63384; --cyan: #00bcd4; --indigo: #3f51b5; --fuchsia: #ff00ff; --teal: #16a085; }
     
     body { 
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -49,179 +33,40 @@
         overflow-x: hidden; 
     }
     
-    .nav-header { 
-        width: 100%; 
-        max-width: 600px; 
-        display: flex; 
-        margin-bottom: 20px; 
-        justify-content: space-between; 
-        align-items: center;
-    }
-    .back-btn { 
-        text-decoration: none; 
-        color: #666; 
-        font-weight: 600; 
-        background: white; 
-        padding: 8px 15px; 
-        border-radius: 20px; 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-        font-size: 0.9rem; 
-    }
-    .wast-mini { 
-        font-weight: 900; 
-        font-size: 1rem; 
-        letter-spacing: 2px; 
-        color: var(--primary); 
-        margin-left: 10px; 
-    }
+    .nav-header { width: 100%; max-width: 600px; display: flex; margin-bottom: 20px; justify-content: space-between; align-items: center;}
+    .back-btn { text-decoration: none; color: #666; font-weight: 600; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.9rem; }
+    .wast-mini { font-weight: 900; font-size: 1rem; letter-spacing: 2px; color: var(--primary); margin-left: 10px; }
     
-    .container { 
-        background: var(--card-bg); 
-        padding: 20px; 
-        border-radius: 20px; 
-        box-shadow: 0 10px 40px rgba(0,0,0,0.06); 
-        width: 100%; 
-        max-width: 600px; 
-        box-sizing: border-box; 
-        position: relative; 
-    }
+    .container { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 600px; box-sizing: border-box; position: relative; }
     
     .input-group { margin-bottom: 15px; }
-    label { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        font-weight: 600; 
-        font-size: 0.75rem; 
-        margin-bottom: 6px; 
-        color: #666; 
-        text-transform: uppercase; 
-    }
+    label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.75rem; margin-bottom: 6px; color: #666; text-transform: uppercase; }
     
-    .clear-link { 
-        color: white; 
-        background-color: var(--primary); 
-        padding: 4px 10px; 
-        border-radius: 6px; 
-        cursor: pointer; 
-        font-size: 0.75rem; 
-        text-decoration: none; 
-        font-weight: 700; 
-        box-shadow: 0 2px 5px rgba(0,82,255,0.2); 
-        transition: opacity 0.2s; 
-    }
+    .clear-link { color: white; background-color: var(--primary); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; text-decoration: none; font-weight: 700; box-shadow: 0 2px 5px rgba(0,82,255,0.2); transition: opacity 0.2s; }
     
-    input, select { 
-        width: 100%; 
-        padding: 12px; 
-        border: 2px solid #e1e4e8; 
-        border-radius: 12px; 
-        font-size: 14px; 
-        outline: none; 
-        background: #fafafa; 
-        box-sizing: border-box; 
-        font-family: inherit; 
-    }
+    input, select { width: 100%; padding: 12px; border: 2px solid #e1e4e8; border-radius: 12px; font-size: 14px; outline: none; background: #fafafa; box-sizing: border-box; font-family: inherit; }
     
-    .loading-text { 
-        font-size: 0.8rem; 
-        color: #999; 
-        font-style: italic; 
-        margin-top: 5px; 
-        display: none; 
-        text-align: center; 
-    }
+    .loading-text { font-size: 0.8rem; color: #999; font-style: italic; margin-top: 5px; display: none; text-align: center; }
 
-    .btn-group { 
-        display: flex; 
-        gap: 8px; 
-        margin-top: 15px; 
-        width: 100%; 
-        flex-wrap: wrap; 
-    }
-    button { 
-        flex: 1; 
-        border: none; 
-        padding: 12px; 
-        border-radius: 10px; 
-        font-weight: 700; 
-        font-size: 0.8rem; 
-        cursor: pointer; 
-        transition: all 0.2s; 
-        color: white; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        gap: 5px; 
-        min-width: 80px; 
-    }
+    .btn-group { display: flex; gap: 8px; margin-top: 15px; width: 100%; flex-wrap: wrap; }
+    button { flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s; color: white; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 80px; }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
-    button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-    
-    .btn-fast { background: linear-gradient(135deg, var(--primary), #0080FF); }
-    .btn-full { background: linear-gradient(135deg, var(--dark), #2c3e50); }
-    .btn-hist { background: linear-gradient(135deg, var(--purple), #8e24aa); display: none; } 
-    .btn-moralis { background: linear-gradient(135deg, var(--teal), #138d75); display: none; } 
-    .btn-copy { background: linear-gradient(135deg, #27ae60, #229954); display: none; }
-    .btn-test { background: linear-gradient(135deg, var(--red), #e74c3c); width: 100%; margin-top: 5px; display: none; }
+    .btn-fast { background-color: var(--primary); }
+    .btn-full { background-color: var(--dark); }
+    .btn-hist { background-color: var(--purple); display: none; } 
+    .btn-moralis { background-color: var(--teal); display: none; } 
+    .btn-copy { background-color: #27ae60; display: none; }
+    .btn-test { background-color: #ff4757; width: 100%; margin-top: 5px; display: none; }
 
-    .token-header { 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        gap: 15px; 
-        margin-bottom: 20px; 
-        padding-bottom: 15px; 
-        border-bottom: 1px solid #eee; 
-        display: none; 
-    }
-    .token-icon { 
-        width: 48px; 
-        height: 48px; 
-        border-radius: 50%; 
-        background: #eee; 
-        object-fit: cover; 
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-    }
-    .token-info h3 { 
-        margin: 0; 
-        font-size: 1.4rem; 
-        font-weight: 900; 
-        color: #333; 
-        line-height: 1; 
-    }
-    .token-info span { 
-        font-size: 0.85rem; 
-        color: #666; 
-        font-weight: 500; 
-    }
+    .token-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; display: none; }
+    .token-icon { width: 48px; height: 48px; border-radius: 50%; background: #eee; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .token-info h3 { margin: 0; font-size: 1.4rem; font-weight: 900; color: #333; line-height: 1; }
+    .token-info span { font-size: 0.85rem; color: #666; font-weight: 500; }
 
-    .dashboard-grid { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 10px; 
-        margin-bottom: 15px; 
-        display: none; 
-    }
-    .stat-card { 
-        background: #f8f9fa; 
-        padding: 12px; 
-        border-radius: 12px; 
-        border: 1px solid #eee; 
-        display: flex; 
-        flex-direction: column; 
-    }
+    .dashboard-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; display: none; }
+    .stat-card { background: #f8f9fa; padding: 12px; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; }
     
-    .stat-title { 
-        font-size: 0.8rem; 
-        text-transform: uppercase; 
-        font-weight: 900; 
-        margin-bottom: 6px; 
-        border-bottom: 2px solid #eee; 
-        padding-bottom: 4px; 
-        display: flex; 
-        justify-content: space-between; 
-    }
+    .stat-title { font-size: 0.8rem; text-transform: uppercase; font-weight: 900; margin-bottom: 6px; border-bottom: 2px solid #eee; padding-bottom: 4px; display: flex; justify-content: space-between; }
     
     .t-buy { color: var(--green); border-color: var(--green); }
     .t-sell { color: var(--red); border-color: var(--red); }
@@ -229,185 +74,57 @@
     .t-out { color: var(--orange); border-color: var(--orange); }
     .t-stake { color: var(--cyan); border-color: var(--cyan); }
     .t-unstake { color: var(--indigo); border-color: var(--indigo); }
-    .t-wrap { color: var(--lime); border-color: var(--lime); }
-    .t-lp { color: var(--amber); border-color: var(--amber); }
 
-    .stat-line { 
-        display: flex; 
-        justify-content: space-between; 
-        font-size: 0.85rem; 
-        margin-bottom: 2px; 
-        font-family: monospace; 
-        color: #444; 
-    }
+    .stat-line { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 2px; font-family: monospace; color: #444; }
     .stat-line strong { font-weight: 700; color: #000; }
     .val-hist { color: var(--purple); }
     .val-curr { color: #666; }
     
     .filter-section { margin-top: 20px; display: none; }
-    .filter-select { 
-        padding: 8px; 
-        border-radius: 8px; 
-        border: 1px solid #ddd; 
-        width: 100%; 
-        font-weight: 600; 
-        background: white; 
-    }
+    .filter-select { padding: 8px; border-radius: 8px; border: 1px solid #ddd; width: 100%; font-weight: 600; background: white; }
 
-    table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        font-size: 0.8rem; 
-        margin-top: 10px; 
-        table-layout: fixed; 
-    }
-    th { 
-        text-align: left; 
-        color: #999; 
-        font-weight: 600; 
-        padding-bottom: 8px; 
-        border-bottom: 1px solid #eee; 
-    }
-    td { 
-        padding: 12px 0; 
-        border-bottom: 1px solid #f0f0f0; 
-        vertical-align: middle; 
-    }
-    .col-type { width: 35%; } 
-    .col-amount { width: 65%; text-align: right; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; table-layout: fixed; }
+    th { text-align: left; color: #999; font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+    td { padding: 12px 0; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    .col-type { width: 35%; } .col-amount { width: 65%; text-align: right; }
     
-    .tag { 
-        font-size: 0.6rem; 
-        padding: 3px 6px; 
-        border-radius: 4px; 
-        font-weight: 800; 
-        text-transform: uppercase; 
-        margin-right: 4px; 
-        display: inline-block; 
-    }
+    .tag { font-size: 0.6rem; padding: 3px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-right: 4px; display: inline-block; }
     .bg-buy { background: #e6fffa; color: var(--green); border: 1px solid #b2f5ea; }
     .bg-sell { background: #fff5f5; color: var(--red); border: 1px solid #fed7d7; }
     .bg-receive { background: #f3e5f5; color: var(--purple); border: 1px solid #e1bee7; }
     .bg-send { background: #fffaf0; color: var(--orange); border: 1px solid #feebc8; }
     .bg-stake { background: #e0f7fa; color: var(--cyan); border: 1px solid #b2ebf2; }
     .bg-unstake { background: #e8eaf6; color: var(--indigo); border: 1px solid #c5cae9; }
-    .bg-wrap { background: #f9fbe7; color: #827717; border: 1px solid #dce775; }
-    .bg-lp { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
-    .bg-failed { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
-    .bg-approval { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
     .bg-pending { background: #eee; color: #999; border: 1px solid #ddd; }
     
-    .tx-usd-row { 
-        font-size: 0.75rem; 
-        display: flex; 
-        justify-content: flex-end; 
-        gap: 5px; 
-        margin-top: 2px; 
-        align-items: center; 
-    }
+    .tx-usd-row { font-size: 0.75rem; display: flex; justify-content: flex-end; gap: 5px; margin-top: 2px; align-items: center; }
     .curr-val { color: #666; font-weight: 500; }
     .hist-val { color: var(--purple); font-weight: 700; }
-    .var-val { 
-        font-size: 0.7rem; 
-        font-weight: 800; 
-        padding: 1px 4px; 
-        border-radius: 4px; 
-    }
+    .recent-val { color: var(--fuchsia); font-weight: 700; } 
+    .var-val { font-size: 0.7rem; font-weight: 800; padding: 1px 4px; border-radius: 4px; }
     .var-pos { background: #e6fffa; color: var(--green); }
     .var-neg { background: #fff5f5; color: var(--red); }
     .var-neu { color: #ccc; }
 
-    .confidence-badge {
-        font-size: 0.65rem;
-        padding: 2px 5px;
-        border-radius: 3px;
-        font-weight: 800;
-        margin-left: 4px;
-    }
-    .conf-high { background: #e6fffa; color: var(--green); }
-    .conf-med { background: #fff8e1; color: var(--amber); }
-    .conf-low { background: #ffebee; color: var(--red); }
-
-    .pagination { 
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        gap: 15px; 
-        margin-top: 20px; 
-        display: none; 
-    }
-    .page-btn { 
-        background: #fff; 
-        border: 1px solid #ddd; 
-        padding: 5px 15px; 
-        border-radius: 8px; 
-        cursor: pointer; 
-        color: #333; 
-        font-weight: 600; 
-        font-size: 0.8rem; 
-        transition: all 0.2s;
-    }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; display: none; }
+    .page-btn { background: #fff; border: 1px solid #ddd; padding: 5px 15px; border-radius: 8px; cursor: pointer; color: #333; font-weight: 600; font-size: 0.8rem; }
     .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .page-btn:hover:not(:disabled) { background: var(--primary); color: white; }
     .page-info { font-size: 0.8rem; color: #666; font-weight: 600; }
 
     #exportArea { margin-top: 15px; text-align: center; min-height: 40px; }
-    #status { 
-        text-align: center; 
-        margin: 15px 0; 
-        font-weight: 600; 
-        font-size: 0.85rem; 
-        min-height: 20px; 
-        padding: 0 10px; 
-    }
-    #deepStatus { 
-        font-size: 0.75rem; 
-        color: var(--primary); 
-        text-align: center; 
-        margin-bottom: 10px; 
-        display: none; 
-    }
+    #status { text-align: center; margin: 15px 0; font-weight: 600; font-size: 0.85rem; min-height: 20px; padding: 0 10px; }
+    #deepStatus { font-size: 0.75rem; color: var(--primary); text-align: center; margin-bottom: 10px; display:none; }
 
-    .status-bar {
-        background: #f0f0f0;
-        border-radius: 8px;
-        padding: 10px;
-        margin: 10px 0;
-        display: none;
-    }
-    .status-bar-inner {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.75rem;
-    }
-    .status-progress {
-        height: 4px;
-        background: var(--primary);
-        border-radius: 2px;
-        margin-top: 5px;
-        transition: width 0.3s;
-    }
-
-    .wip-tag { 
-        text-align: center; 
-        font-size: 0.8rem; 
-        color: var(--green); 
-        margin-top: 10px; 
-        font-weight: 900; 
-        letter-spacing: 1px; 
-        text-transform: uppercase; 
-        border: 1px solid var(--green); 
-        padding: 5px; 
-        border-radius: 8px; 
-        background: #e6fffa; 
-    }
+    .wip-tag { text-align: center; font-size: 0.8rem; color: #2ecc71; margin-top: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; border: 1px solid #2ecc71; padding: 5px; border-radius: 8px; background: #e6fffa; }
+    .version-tag { text-align: center; font-size: 0.7rem; color: #0052FF; margin-top: 25px; font-weight: 800; font-family: monospace; opacity: 0.8; }
+    
+    /* Debug Box */
     #debugBox { 
         background: #1a1a1a; 
         color: #00ff00; 
         padding: 10px; 
         border-radius: 8px; 
-        font-family: monospace; 
+        font-family: 'Courier New', monospace; 
         font-size: 0.7rem; 
         margin: 10px 0; 
         max-height: 200px; 
@@ -416,83 +133,28 @@
         white-space: pre-wrap;
         word-break: break-all;
     }
-    .debug-toggle {
-        background: #1a1a1a;
-        color: #00ff00;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 0.7rem;
-        cursor: pointer;
-        margin-bottom: 10px;
-        display: inline-block;
-    }
-
-    /* Profit/Loss Row Highlighting */
-    tr.profit-row { background: rgba(46, 204, 113, 0.05); }
-    tr.loss-row { background: rgba(255, 71, 87, 0.05); }
-
-    /* Modal for Moralis Setup */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        backdrop-filter: blur(4px);
-    }
-    .modal-content {
-        background: white;
-        margin: 15% auto;
-        padding: 25px;
-        border-radius: 16px;
-        width: 90%;
-        max-width: 400px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    }
-    .modal-content h3 {
-        margin-top: 0;
-        color: var(--primary);
-        font-size: 1.2rem;
-    }
-    .modal-content p {
-        color: #666;
-        font-size: 0.9rem;
-        line-height: 1.5;
-    }
-    .modal-buttons {
+    .debug-controls {
         display: flex;
-        gap: 10px;
-        margin-top: 20px;
+        gap: 5px;
+        margin-bottom: 10px;
     }
-    .modal-btn {
-        flex: 1;
-        padding: 10px;
-        border: none;
-        border-radius: 8px;
+    .debug-btn {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.7rem;
         font-weight: 700;
         cursor: pointer;
-        transition: all 0.2s;
-    }
-    .modal-btn-primary {
-        background: var(--primary);
+        border: none;
         color: white;
     }
-    .modal-btn-secondary {
-        background: #e0e0e0;
-        color: #333;
-    }
-    .modal-input {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        box-sizing: border-box;
-    }
+    .debug-toggle { background: #1a1a1a; }
+    .debug-copy { background: var(--primary); }
+    
+    /* Debug Tools */
+    .debug-controls { display: flex; gap: 5px; margin-bottom: 10px; }
+    .debug-toggle { background: #1a1a1a; color: #00ff00; padding: 5px 10px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; display: inline-block; border: 1px solid #00ff00; font-weight: 600; }
+    .debug-copy { background: #0052FF; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; display: inline-block; border: none; font-weight: 600; }
+    #debugBox { background: #1a1a1a; color: #00ff00; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.7rem; margin: 10px 0; max-height: 200px; overflow-y: auto; display: none; white-space: pre-wrap; word-break: break-all; }
 </style>
 ```
 
@@ -505,10 +167,13 @@
 </div>
 
 <div class="container">
-    <h2 style="text-align:center; margin-top:0;">🔬 Professional Analyzer</h2>
-    <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Engine: v13.0.3 · Smart Classification · Adaptive Rate Limiting</p>
+    <h2 style="text-align:center; margin-top:0;">Professional Analyzer</h2>
+    <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">Engine: v13.0.1 (Debug Tools)</p>
     
-    <div class="debug-toggle" onclick="document.getElementById('debugBox').style.display = document.getElementById('debugBox').style.display === 'none' ? 'block' : 'none'">🐛 Toggle Debug</div>
+    <div class="debug-controls">
+        <button class="debug-btn debug-toggle" onclick="toggleDebug()">🐛 Toggle Debug</button>
+        <button class="debug-btn debug-copy" onclick="copyDebugLog()">📋 Copy Log</button>
+    </div>
     <div id="debugBox"></div>
     
     <div class="input-group">
@@ -518,36 +183,19 @@
 
     <div class="input-group">
         <label>Token to Analyze <span id="toggleTokenMode" class="clear-link" style="background:#34495e;">Custom CA ✍️</span></label>
-        <div id="selectContainer">
-            <select id="tokenSelect">
-                <option value="" disabled selected>Waiting for wallet...</option>
-            </select>
-            <div id="loadingTokens" class="loading-text">Scanning...</div>
-        </div>
-        <div id="inputContainer" style="display:none;">
-            <input type="text" id="tokenInput" placeholder="Paste Token CA (0x...)" />
-        </div>
+        <div id="selectContainer"><select id="tokenSelect"><option value="" disabled selected>Waiting for wallet...</option></select><div id="loadingTokens" class="loading-text">Scanning...</div></div>
+        <div id="inputContainer" style="display:none;"><input type="text" id="tokenInput" placeholder="Paste Token CA (0x...)" /></div>
     </div>
 
     <div class="btn-group">
-        <button class="btn-fast" id="btnFast">⚡ Fast (500)</button>
-        <button class="btn-full" id="btnFull">🔍 Deep (5k)</button>
-    </div>
-    <div class="btn-group">
-        <button id="btnHistory" class="btn-hist">📜 Historical Prices</button>
-        <button id="btnMoralis" class="btn-moralis">Ⓜ️ Moralis Premium</button>
-        <button id="btnCopy" class="btn-copy">📋 Export CSV</button>
+        <button class="btn-fast" id="btnFast">⚡ Last 500</button>
+        <button class="btn-full" id="btnFull">🐢 Deep (5k)</button>
+        <button id="btnHistory" class="btn-hist">🔮 Time Machine</button>
+        <button id="btnMoralis" class="btn-moralis">Ⓜ️ Moralis (Test)</button>
+        <button id="btnCopy" class="btn-copy">📋 Copy for Excel (*)</button>
     </div>
     <div class="btn-group">
         <button id="btnTest" class="btn-test">🧪 TEST (5 Txs)</button>
-    </div>
-    
-    <div class="status-bar" id="statusBar">
-        <div class="status-bar-inner">
-            <span id="statusText">Ready</span>
-            <span id="statusCount">0/0</span>
-        </div>
-        <div class="status-progress" id="statusProgress" style="width: 0%"></div>
     </div>
     
     <div id="status"></div>
@@ -563,25 +211,25 @@
 
     <div id="dashboard" class="dashboard-grid">
         <div class="stat-card">
-            <div class="stat-title t-buy">BUY (DEX SWAP)</div>
+            <div class="stat-title t-buy">BUY</div>
             <div class="stat-line"><span>Tokens:</span> <strong id="buyTokens">0</strong></div>
             <div class="stat-line"><span>Hist $:</span> <strong id="buyHist" class="val-hist">---</strong></div>
             <div class="stat-line"><span>Curr $:</span> <strong id="buyCurr" class="val-curr">$0.00</strong></div>
         </div>
         <div class="stat-card">
-            <div class="stat-title t-sell">SELL (DEX SWAP)</div>
+            <div class="stat-title t-sell">SELL</div>
             <div class="stat-line"><span>Tokens:</span> <strong id="sellTokens">0</strong></div>
             <div class="stat-line"><span>Hist $:</span> <strong id="sellHist" class="val-hist">---</strong></div>
             <div class="stat-line"><span>Curr $:</span> <strong id="sellCurr" class="val-curr">$0.00</strong></div>
         </div>
         <div class="stat-card">
-            <div class="stat-title t-stake">STAKE (SUPERFLUID)</div>
+            <div class="stat-title t-stake">STREAM STAKE (SUPERFLUID)</div>
             <div class="stat-line"><span>Tokens:</span> <strong id="stakeTokens">0</strong></div>
             <div class="stat-line"><span>Hist $:</span> <strong id="stakeHist" class="val-hist">---</strong></div>
             <div class="stat-line"><span>Curr $:</span> <strong id="stakeCurr" class="val-curr">$0.00</strong></div>
         </div>
         <div class="stat-card">
-            <div class="stat-title t-unstake">UNSTAKE (SUPERFLUID)</div>
+            <div class="stat-title t-unstake">STREAM UNSTAKE (SUPERFLUID)</div>
             <div class="stat-line"><span>Tokens:</span> <strong id="unstakeTokens">0</strong></div>
             <div class="stat-line"><span>Hist $:</span> <strong id="unstakeHist" class="val-hist">---</strong></div>
             <div class="stat-line"><span>Curr $:</span> <strong id="unstakeCurr" class="val-curr">$0.00</strong></div>
@@ -598,73 +246,39 @@
             <div class="stat-line"><span>Hist $:</span> <strong id="sendHist" class="val-hist">---</strong></div>
             <div class="stat-line"><span>Curr $:</span> <strong id="sendCurr" class="val-curr">$0.00</strong></div>
         </div>
-        <div class="stat-card">
-            <div class="stat-title t-wrap">WRAP/UNWRAP (ETH↔WETH)</div>
-            <div class="stat-line"><span>Tokens:</span> <strong id="wrapTokens">0</strong></div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-title t-lp">LIQUIDITY (ADD/REMOVE)</div>
-            <div class="stat-line"><span>Tokens:</span> <strong id="lpTokens">0</strong></div>
-        </div>
     </div>
 
     <div id="filterContainer" class="filter-section">
         <label>Filter Transactions:</label>
         <select id="txFilter" class="filter-select">
-            <option value="ALL">📊 Show All</option>
+            <option value="ALL">Show All</option>
             <option value="BUY">🟢 Buys</option>
             <option value="SELL">🔴 Sells</option>
-            <option value="STAKE">🔵 Stakes</option>
-            <option value="UNSTAKE">🟣 Unstakes</option>
+            <option value="STAKE">🔵 Stream Stakes</option>
+            <option value="UNSTAKE">🟣 Stream Unstakes</option>
             <option value="RECEIVE">🟣 Receives</option>
             <option value="SEND">🟠 Sends</option>
-            <option value="WRAP">🟡 Wraps</option>
-            <option value="LP">🟡 LP Operations</option>
-            <option value="FAILED">❌ Failed</option>
         </select>
     </div>
 
     <table id="txTable" style="display:none;">
-        <thead>
-            <tr>
-                <th class="col-type">Type / Date</th>
-                <th class="col-amount">Amount / Value</th>
-            </tr>
-        </thead>
+        <thead><tr><th class="col-type">Type / Date</th><th class="col-amount">Amount / Value</th></tr></thead>
         <tbody id="txList"></tbody>
     </table>
 
     <div id="paginationContainer" class="pagination">
-        <button id="btnPrev" class="page-btn">◀ Prev</button>
+        <button id="btnPrev" class="page-btn">Previous</button>
         <span id="pageIndicator" class="page-info">Page 1</span>
-        <button id="btnNext" class="page-btn">Next ▶</button>
+        <button id="btnNext" class="page-btn">Next</button>
     </div>
 
-    <div class="wip-tag">✅ v13.0.3 NETWORK TEST</div>
-    <div class="version-tag">v13.0.3</div>
-</div>
-
-<!-- Moralis Modal -->
-<div id="moralisModal" class="modal">
-    <div class="modal-content">
-        <h3>🔐 Moralis API Configuration</h3>
-        <p>Moralis provides highly accurate block-level pricing but has API limits.</p>
-        <p><strong>Your Options:</strong></p>
-        <ul style="font-size: 0.85rem; color: #666;">
-            <li>Use your own Moralis API key (free tier available)</li>
-            <li>Skip Moralis and use free alternatives</li>
-        </ul>
-        <input type="text" id="moralisKeyInput" class="modal-input" placeholder="Paste your Moralis API key (optional)">
-        <div class="modal-buttons">
-            <button class="modal-btn modal-btn-secondary" id="btnSkipMoralis">Skip</button>
-            <button class="modal-btn modal-btn-primary" id="btnUseMoralis">Use Key</button>
-        </div>
-    </div>
+    <div class="wip-tag">✅ v13.0.1 DEBUG TOOLS</div>
+    <div class="version-tag">v13.0.1</div>
 </div>
 
 <script>
     // ============================================================================
-    // DEBUG LOGGING (for mobile without console)
+    // DEBUG SYSTEM
     // ============================================================================
     function debugLog(message, data = null) {
         console.log(message, data);
@@ -672,322 +286,99 @@
         if (debugBox) {
             const timestamp = new Date().toLocaleTimeString();
             let logLine = `[${timestamp}] ${message}`;
-            if (data) {
-                logLine += '\n' + JSON.stringify(data, null, 2);
+            if (data !== null && data !== undefined) {
+                try {
+                    logLine += '\n' + JSON.stringify(data, null, 2);
+                } catch(e) {
+                    logLine += '\n' + String(data);
+                }
             }
             debugBox.innerText += logLine + '\n\n';
             debugBox.scrollTop = debugBox.scrollHeight;
         }
     }
 
-    // ============================================================================
-    // CONFIG & CONSTANTS
-    // ============================================================================
-    const CONFIG = {
-        ALCHEMY_KEY: '46kIRKE_HvuVkuRbPNRbh',
-        MORALIS_KEY_ADMIN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImMzYWFkNmIxLTUyYjMtNGNkZC1iZjBkLTE4MWM0ZDY1MTkzMiIsIm9yZ0lkIjoiNDkwNDE4IiwidXNlcklkIjoiNTA0NTc3IiwidHlwZUlkIjoiNTQwNjExMjgtMzY3Zi00MDQyLWE1NDItODdjMzlkODkxMDkzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3Njg0MTI5MjMsImV4cCI6NDkyNDE3MjkyM30.wKcFrQ_mjxCe_bu1ylkPBb_VvQlBnkTklNggqmom1UU',
-        ADMIN_WALLET: '0xd29c790466675153A50DF7860B9EFDb689A21cDe'.toLowerCase(),
-        
-        BATCH_SIZE_INITIAL: 10,
-        BATCH_SIZE_MIN: 3,
-        RETRY_MAX: 3,
-        RETRY_DELAY_BASE: 1000,
-        
-        LIQUID_ASSETS: [
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC
-            "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a", // TYSM
-            "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", // USDB
-            "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca", // USDbC
-            "0x4200000000000000000000000000000000000006", // WETH
-            "0x0000000000000000000000000000000000000000"  // ETH
-        ],
-        
-        USDC_BASE: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-        ETH_PSEUDO: "0x0000000000000000000000000000000000000000",
-        WETH_ADDR: "0x4200000000000000000000000000000000000006",
-        
-        // Event Signatures
-        EVT_UPGRADE: "0x49755b9e9d962892997c0da9e7b243403a6094366c3c43494793db64f4347781",
-        EVT_DOWNGRADE: "0x24a737475a242040b2f0c74906f36934c264a4066922df674603946006e23293",
-        EVT_TRANSFER: "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-        EVT_DEPOSIT: "0xe1fffcc4923d04b559f4d29a8bfc6cda04eb5b0d3c460751c2402c5c5cc9109c", // WETH Deposit
-        EVT_WITHDRAWAL: "0x7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65", // WETH Withdrawal
-    };
+    function toggleDebug() {
+        const box = document.getElementById('debugBox');
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function copyDebugLog() {
+        const debugBox = document.getElementById('debugBox');
+        const text = debugBox.innerText || '(Empty log)';
+        navigator.clipboard.writeText(text).then(() => {
+            alert('✅ Debug log copied!');
+        }).catch(err => {
+            alert('❌ Copy failed: ' + err);
+        });
+    }
 
     // ============================================================================
-    // STATE MANAGEMENT
+    // CONSTANTS
     // ============================================================================
-    const STATE = {
-        globalEvents: [],
-        currentTokenCA: "",
-        currentTokenSymbol: "TOKEN",
-        currentPricePerToken: 0,
-        isCustomTokenMode: false,
-        currentPage: 1,
-        rowsPerPage: 50,
-        currentBatchSize: CONFIG.BATCH_SIZE_INITIAL,
-        priceCache: {}, // { timestamp: price }
-        moralisKey: null,
-        isAdmin: false
-    };
+    const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh'; 
+    const MORALIS_KEY_INTEGRATED = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImMzYWFkNmIxLTUyYjMtNGNkZC1iZjBkLTE4MWM0ZDY1MTkzMiIsIm9yZ0lkIjoiNDkwNDE4IiwidXNlcklkIjoiNTA0NTc3IiwidHlwZUlkIjoiNTQwNjExMjgtMzY3Zi00MDQyLWE1NDItODdjMzlkODkxMDkzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3Njg0MTI5MjMsImV4cCI6NDkyNDE3MjkyM30.wKcFrQ_mjxCe_bu1ylkPBb_VvQlBnkTklNggqmom1UU';
+    const ADMIN_WALLET = '0xd29c790466675153A50DF7860B9EFDb689A21cDe'.toLowerCase();
 
-    // ============================================================================
-    // UTILITY FUNCTIONS
-    // ============================================================================
-    const Utils = {
-        sleep: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
-        
-        formatNumber: (n, decimals = 2) => {
-            return n.toLocaleString(undefined, {
-                minimumFractionDigits: decimals,
-                maximumFractionDigits: decimals
-            });
-        },
-        
-        formatUSD: (n) => `$${Utils.formatNumber(n, 2)}`,
-        
-        updateProgress: (current, total, text) => {
-            const statusBar = document.getElementById('statusBar');
-            const statusText = document.getElementById('statusText');
-            const statusCount = document.getElementById('statusCount');
-            const statusProgress = document.getElementById('statusProgress');
-            
-            statusBar.style.display = 'block';
-            statusText.innerText = text;
-            statusCount.innerText = `${current}/${total}`;
-            
-            const percent = total > 0 ? (current / total * 100) : 0;
-            statusProgress.style.width = `${percent}%`;
-        },
-        
-        hideProgress: () => {
-            document.getElementById('statusBar').style.display = 'none';
-        },
-        
-        getCacheKey: (timestamp, tokenCA) => {
-            // Round to hour for better cache hits
-            const hour = Math.floor(timestamp / 3600) * 3600;
-            return `${tokenCA}-${hour}`;
-        },
-        
-        getCachedPrice: (timestamp, tokenCA) => {
-            const key = Utils.getCacheKey(timestamp, tokenCA);
-            return STATE.priceCache[key] || null;
-        },
-        
-        setCachedPrice: (timestamp, tokenCA, price) => {
-            const key = Utils.getCacheKey(timestamp, tokenCA);
-            STATE.priceCache[key] = price;
-            
-            // Save to localStorage (max 1000 entries)
-            try {
-                const cacheSize = Object.keys(STATE.priceCache).length;
-                if (cacheSize > 1000) {
-                    // Clear oldest 200 entries
-                    const sorted = Object.keys(STATE.priceCache).sort();
-                    sorted.slice(0, 200).forEach(k => delete STATE.priceCache[k]);
-                }
-                localStorage.setItem('wast_price_cache', JSON.stringify(STATE.priceCache));
-            } catch(e) {}
-        },
-        
-        loadPriceCache: () => {
-            try {
-                const cached = localStorage.getItem('wast_price_cache');
-                if (cached) {
-                    STATE.priceCache = JSON.parse(cached);
-                }
-            } catch(e) {}
-        }
-    };
+    let globalEvents = []; 
+    let currentTokenCA = "";
+    let currentTokenSymbol = "TOKEN";
+    let currentPricePerToken = 0; 
+    let isCustomTokenMode = false;
+    
+    let currentPage = 1;
+    const rowsPerPage = 50;
+    const BATCH_SIZE = 5;
 
-    // ============================================================================
-    // API WRAPPER WITH RETRY LOGIC
-    // ============================================================================
-    const API = {
-        async fetchWithRetry(url, options = {}, retries = CONFIG.RETRY_MAX) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    
-                    if (response.status === 429) {
-                        // Rate limited - exponential backoff
-                        const delay = CONFIG.RETRY_DELAY_BASE * Math.pow(2, i);
-                        console.log(`Rate limited. Retry ${i+1}/${retries} after ${delay}ms`);
-                        await Utils.sleep(delay);
-                        continue;
-                    }
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    
-                    return await response.json();
-                } catch (error) {
-                    if (i === retries - 1) throw error;
-                    
-                    const delay = CONFIG.RETRY_DELAY_BASE * Math.pow(2, i);
-                    console.log(`Error: ${error.message}. Retry ${i+1}/${retries} after ${delay}ms`);
-                    await Utils.sleep(delay);
-                }
-            }
-        },
-        
-        async alchemyRPC(method, params) {
-            const url = `https://base-mainnet.g.alchemy.com/v2/${CONFIG.ALCHEMY_KEY}`;
-            const body = {
-                jsonrpc: "2.0",
-                id: 1,
-                method: method,
-                params: params
-            };
-            
-            return await API.fetchWithRetry(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            });
-        },
-        
-        async alchemyBatchRPC(requests) {
-            const url = `https://base-mainnet.g.alchemy.com/v2/${CONFIG.ALCHEMY_KEY}`;
-            
-            return await API.fetchWithRetry(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requests)
-            });
-        }
-    };
+    const LIQUID_ASSETS = [
+        "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", 
+        "0xfde4c96c8593536e31f229ea8f37b2adb8523a2a", 
+        "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", 
+        "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca", 
+        "0x4200000000000000000000000000000000000006", 
+        "0x0000000000000000000000000000000000000000"
+    ];
 
-    // ============================================================================
-    // INITIALIZATION
-    // ============================================================================
+    const USDC_BASE = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
+    const ETH_PSEUDO = "0x0000000000000000000000000000000000000000"; 
+    const WETH_ADDR = "0x4200000000000000000000000000000000000006";
+
+    const EVT_UPGRADE = "0x49755b9e9d962892997c0da9e7b243403a6094366c3c43494793db64f4347781";
+    const EVT_DOWNGRADE = "0x24a737475a242040b2f0c74906f36934c264a4066922df674603946006e23293";
+    const EVT_TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+
     window.addEventListener('DOMContentLoaded', () => {
-        Utils.loadPriceCache();
-        
         const myIdentity = localStorage.getItem('tysm_wallet');
-        if (myIdentity) {
-            document.getElementById('walletInput').value = myIdentity;
-            
-            // Check if admin
-            if (myIdentity.toLowerCase() === CONFIG.ADMIN_WALLET) {
-                STATE.isAdmin = true;
-                STATE.moralisKey = CONFIG.MORALIS_KEY_ADMIN;
-            }
-            
-            loadUserTokens(myIdentity);
-        }
+        if(myIdentity) document.getElementById('walletInput').value = myIdentity;
+        const wInput = document.getElementById('walletInput');
+        if(wInput.value) loadUserTokens(wInput.value);
     });
 
-    // ============================================================================
-    // EVENT LISTENERS
-    // ============================================================================
     document.getElementById('walletInput').addEventListener('change', (e) => {
-        if (e.target.value.trim().startsWith('0x')) {
-            const wallet = e.target.value.trim();
-            
-            // Check if admin
-            if (wallet.toLowerCase() === CONFIG.ADMIN_WALLET) {
-                STATE.isAdmin = true;
-                STATE.moralisKey = CONFIG.MORALIS_KEY_ADMIN;
-            } else {
-                STATE.isAdmin = false;
-                STATE.moralisKey = null;
-            }
-            
-            loadUserTokens(wallet);
-        }
+        if(e.target.value.trim().startsWith('0x')) loadUserTokens(e.target.value.trim());
     });
-
     document.getElementById('btnChangeTarget').addEventListener('click', () => {
         document.getElementById('walletInput').value = "";
         document.getElementById('tokenSelect').innerHTML = '<option disabled selected>Waiting...</option>';
-        STATE.isAdmin = false;
-        STATE.moralisKey = null;
     });
-
     document.getElementById('toggleTokenMode').addEventListener('click', () => {
-        const s = document.getElementById('selectContainer');
-        const i = document.getElementById('inputContainer');
-        if (s.style.display === 'none') {
-            s.style.display = 'block';
-            i.style.display = 'none';
-            STATE.isCustomTokenMode = false;
-        } else {
-            s.style.display = 'none';
-            i.style.display = 'block';
-            STATE.isCustomTokenMode = true;
-        }
+        const s = document.getElementById('selectContainer'), i = document.getElementById('inputContainer');
+        if(s.style.display==='none'){s.style.display='block';i.style.display='none';isCustomTokenMode=false;}
+        else{s.style.display='none';i.style.display='block';isCustomTokenMode=true;}
     });
-
     document.getElementById('tokenSelect').addEventListener('change', (e) => {
         document.getElementById('tokenInput').value = e.target.value;
     });
+    document.getElementById('txFilter').addEventListener('change', () => { currentPage=1; renderTable(); });
+    document.getElementById('btnPrev').addEventListener('click', () => { if(currentPage>1) {currentPage--; renderTable();} });
+    document.getElementById('btnNext').addEventListener('click', () => { currentPage++; renderTable(); });
 
-    document.getElementById('txFilter').addEventListener('change', () => {
-        STATE.currentPage = 1;
-        renderTable();
-    });
-
-    document.getElementById('btnPrev').addEventListener('click', () => {
-        if (STATE.currentPage > 1) {
-            STATE.currentPage--;
-            renderTable();
-        }
-    });
-
-    document.getElementById('btnNext').addEventListener('click', () => {
-        STATE.currentPage++;
-        renderTable();
-    });
-
-    document.getElementById('btnFast').addEventListener('click', () => runAnalysis(500));
-    document.getElementById('btnFull').addEventListener('click', () => runAnalysis(5000));
-    document.getElementById('btnTest').addEventListener('click', () => runAnalysis(5));
-    document.getElementById('btnHistory').addEventListener('click', fetchHistoricalPrices);
-    document.getElementById('btnMoralis').addEventListener('click', showMoralisModal);
-    document.getElementById('btnCopy').addEventListener('click', copyToClipboard);
-
-    // Moralis Modal
-    document.getElementById('btnSkipMoralis').addEventListener('click', () => {
-        document.getElementById('moralisModal').style.display = 'none';
-        document.getElementById('status').innerText = 'Moralis skipped';
-    });
-
-    document.getElementById('btnUseMoralis').addEventListener('click', () => {
-        const key = document.getElementById('moralisKeyInput').value.trim();
-        if (key) {
-            STATE.moralisKey = key;
-            document.getElementById('moralisModal').style.display = 'none';
-            fetchMoralisPrices();
-        } else {
-            alert('Please enter a valid API key or click Skip');
-        }
-    });
-
-    // ============================================================================
-    // TOKEN LOADING
-    // ============================================================================
     async function loadUserTokens(walletAddr) {
         const select = document.getElementById('tokenSelect');
         const loading = document.getElementById('loadingTokens');
         select.style.display = 'none'; loading.style.display = 'block'; select.innerHTML = '';
 
-        debugLog('🔍 Starting token load', { wallet: walletAddr });
-        debugLog('🔑 Alchemy Key', CONFIG.ALCHEMY_KEY);
-
-        // Test network connectivity first
-        try {
-            debugLog('🌐 Testing network connectivity...');
-            const testRes = await fetch('https://api.dexscreener.com/latest/dex/tokens/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913');
-            debugLog('✅ Network test OK', testRes.status);
-        } catch(e) {
-            debugLog('❌ Network test FAILED', e.message);
-            select.innerHTML='<option disabled>Network error - check connection</option>';
-            loading.style.display='none'; select.style.display='block';
-            return;
-        }
+        debugLog('🔍 Loading tokens', { wallet: walletAddr });
 
         try {
             let allTokens = [];
@@ -996,46 +387,26 @@
             do {
                 if(loopCount > 30) break; 
                 const params = { "id": 1, "jsonrpc": "2.0", "method": "alchemy_getTokenBalances", "params": [walletAddr] };
-                if(pageKey) params.params.push({ pageKey: pageKey });
+                if(pageKey) params.params[0].pageKey = pageKey;
                 
-                debugLog(`📡 Fetch attempt ${loopCount + 1}`, params);
+                debugLog(`📡 Alchemy request ${loopCount + 1}`, { hasPageKey: !!pageKey });
                 
-                const url = `https://base-mainnet.g.alchemy.com/v2/${CONFIG.ALCHEMY_KEY}`;
-                debugLog('🌍 URL', url);
-                
-                const res = await fetch(url, { 
-                    method: "POST", 
-                    headers: { "Content-Type": "application/json" }, 
-                    body: JSON.stringify(params)
-                });
-                
-                debugLog('📥 Response status', res.status);
-                
+                const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params)});
                 const data = await res.json();
-                debugLog('📊 Response data', data);
                 
-                if(data.error) {
-                    debugLog('❌ API Error', data.error);
-                    throw new Error(data.error.message || 'API Error');
-                }
+                debugLog(`📥 Response ${loopCount + 1}`, { status: res.status, tokenCount: data.result?.tokenBalances?.length || 0 });
                 
                 if(data.result?.tokenBalances) allTokens = allTokens.concat(data.result.tokenBalances);
                 pageKey = data.result?.pageKey;
                 loopCount++;
             } while (pageKey);
 
-            debugLog(`✅ Total tokens: ${allTokens.length}`);
+            debugLog(`✅ Fetched total`, { tokens: allTokens.length });
 
             let tokens = allTokens.filter(t => t.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000");
-            debugLog(`✅ Non-zero tokens: ${tokens.length}`);
-            
-            const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${CONFIG.ALCHEMY_KEY}`, { 
-                method: "POST", 
-                headers: { "Content-Type": "application/json" }, 
-                body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] }) 
-            });
+            const ethRes = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "eth_getBalance", "params": [walletAddr, "latest"] }) });
             const ethData = await ethRes.json();
-            if(ethData.result && ethData.result !== "0x0") tokens.push({ contractAddress: CONFIG.ETH_PSEUDO, tokenBalance: ethData.result });
+            if(ethData.result && ethData.result !== "0x0") tokens.push({ contractAddress: ETH_PSEUDO, tokenBalance: ethData.result });
 
             const uniqueMap = new Map();
             for(const t of tokens) uniqueMap.set(t.contractAddress.toLowerCase(), t);
@@ -1047,25 +418,25 @@
             for (let i=0; i<tokens.length; i+=30) chunks.push(tokens.slice(i, i+30));
 
             for(const chunk of chunks) {
-                const queryAddrs = chunk.map(t => t.contractAddress === CONFIG.ETH_PSEUDO ? CONFIG.WETH_ADDR : t.contractAddress).join(',');
+                const queryAddrs = chunk.map(t => t.contractAddress === ETH_PSEUDO ? WETH_ADDR : t.contractAddress).join(',');
                 try {
                     const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${queryAddrs}`);
                     const dexData = await dexRes.json();
                     chunk.forEach(t => {
                         const lcAddr = t.contractAddress.toLowerCase();
-                        const pair = dexData.pairs ? dexData.pairs.find(p => p.baseToken.address.toLowerCase() === (lcAddr === CONFIG.ETH_PSEUDO ? CONFIG.WETH_ADDR : lcAddr)) : null;
+                        const pair = dexData.pairs ? dexData.pairs.find(p => p.baseToken.address.toLowerCase() === (lcAddr === ETH_PSEUDO ? WETH_ADDR : lcAddr)) : null;
                         const decimals = 18; 
                         const bal = Number(BigInt(t.tokenBalance)) / (10**decimals);
                         
                         let price = pair ? parseFloat(pair.priceUsd) : 0;
-                        if(lcAddr === CONFIG.USDC_BASE) price = 1.0;
-                        if(price === 0 && (lcAddr === CONFIG.ETH_PSEUDO || lcAddr === CONFIG.WETH_ADDR)) price = 2500; 
+                        if(lcAddr === USDC_BASE) price = 1.0;
+                        if(price === 0 && (lcAddr === ETH_PSEUDO || lcAddr === WETH_ADDR)) price = 2500; 
 
-                        const sym = pair ? pair.baseToken.symbol : (lcAddr === CONFIG.ETH_PSEUDO ? "ETH" : t.contractAddress.slice(0,6));
+                        const sym = pair ? pair.baseToken.symbol : (lcAddr === ETH_PSEUDO ? "ETH" : t.contractAddress.slice(0,6));
                         pricedTokens.push({ ca: t.contractAddress, symbol: sym, bal: bal, usd: bal * price });
                     });
-                } catch(e) { debugLog('DexScreener error', e.message); }
-                await Utils.sleep(100);
+                } catch(e) {}
+                await new Promise(r=>setTimeout(r, 100));
             }
 
             pricedTokens.sort((a,b) => b.usd - a.usd);
@@ -1092,760 +463,438 @@
                 select.appendChild(grp);
             }
 
-            debugLog('✅ Token loading complete');
+            debugLog('✅ Token loading complete', { valued: valued.length, others: others.length });
 
         } catch(e) { 
-            debugLog('❌ FATAL ERROR', { message: e.message, stack: e.stack }); 
-            select.innerHTML='<option disabled>Error - check debug log</option>'; 
+            debugLog('❌ Token loading error', { message: e.message, stack: e.stack }); 
+            console.error(e); 
+            select.innerHTML='<option disabled>Error</option>'; 
         } 
         finally { loading.style.display='none'; select.style.display='block'; }
     }
 
-    // ============================================================================
-    // MAIN ANALYSIS
-    // ============================================================================
+    document.getElementById('btnFast').addEventListener('click', () => runAnalysis(500)); 
+    document.getElementById('btnFull').addEventListener('click', () => runAnalysis(5000)); 
+    document.getElementById('btnTest').addEventListener('click', () => runAnalysis(5));
+    document.getElementById('btnHistory').addEventListener('click', fetchHistoricalPrices);
+    document.getElementById('btnMoralis').addEventListener('click', fetchMoralisPrices);
+    document.getElementById('btnCopy').addEventListener('click', copyToClipboard);
+
     async function runAnalysis(limit) {
         const wallet = document.getElementById('walletInput').value.trim().toLowerCase();
-        STATE.currentTokenCA = STATE.isCustomTokenMode ? 
-            document.getElementById('tokenInput').value.trim().toLowerCase() : 
-            document.getElementById('tokenSelect').value.trim().toLowerCase();
-
-        // Reset UI
-        document.getElementById('dashboard').style.display = 'none';
-        document.getElementById('txTable').style.display = 'none';
-        document.getElementById('tokenHeader').style.display = 'none';
-        document.getElementById('btnHistory').style.display = 'none';
-        document.getElementById('btnMoralis').style.display = 'none';
-        document.getElementById('btnCopy').style.display = 'none';
-        document.getElementById('paginationContainer').style.display = 'none';
-        document.getElementById('deepStatus').style.display = 'none';
-        document.getElementById('txList').innerHTML = "";
-        document.getElementById('filterContainer').style.display = 'none';
+        currentTokenCA = isCustomTokenMode ? document.getElementById('tokenInput').value.trim().toLowerCase() : document.getElementById('tokenSelect').value.trim().toLowerCase();
         
+        debugLog('🚀 Starting analysis', { wallet, token: currentTokenCA, limit });
+        
+        document.getElementById('dashboard').style.display='none';
+        document.getElementById('txTable').style.display='none';
+        document.getElementById('tokenHeader').style.display='none';
+        document.getElementById('btnHistory').style.display='none';
+        document.getElementById('btnMoralis').style.display='none';
+        document.getElementById('btnCopy').style.display='none';
+        document.getElementById('paginationContainer').style.display='none';
+        document.getElementById('deepStatus').style.display='none';
+        document.getElementById('btnHistory').innerText = "🔮 Time Machine"; 
+        document.getElementById('btnHistory').disabled = false;
+        document.getElementById('txList').innerHTML = "";
         const status = document.getElementById('status');
-        STATE.globalEvents = [];
-        STATE.currentPage = 1;
-        STATE.currentBatchSize = CONFIG.BATCH_SIZE_INITIAL;
+        globalEvents = []; 
+        currentPage = 1;
 
-        if (!wallet.startsWith('0x') || !STATE.currentTokenCA.startsWith('0x')) {
-            status.innerText = '❌ Invalid wallet or token address';
-            return;
-        }
+        if(!wallet.startsWith('0x') || !currentTokenCA.startsWith('0x')) return;
 
-        status.innerText = "🔍 Initializing...";
-
+        status.innerText = "Initializing...";
+        
         try {
-            // Fetch token metadata
-            const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${STATE.currentTokenCA}`);
+            const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${currentTokenCA}`);
             const dexData = await dexRes.json();
-
-            if (dexData.pairs && dexData.pairs.length > 0) {
-                const pair = dexData.pairs.find(p => p.chainId === 'base') || dexData.pairs[0];
-                STATE.currentPricePerToken = parseFloat(pair.priceUsd) || 0;
-                STATE.currentTokenSymbol = pair.baseToken?.symbol || 'TOKEN';
-
-                document.getElementById('tokenSym').innerText = STATE.currentTokenSymbol;
-                document.getElementById('tokenPrice').innerText = Utils.formatUSD(STATE.currentPricePerToken);
-                document.getElementById('tokenImg').src = pair.info?.imageUrl || 
-                    `https://dd.dexscreener.com/ds-data/tokens/base/${STATE.currentTokenCA}.png`;
-                document.getElementById('tokenHeader').style.display = 'flex';
-            } else {
-                // No pair found - use fallbacks
-                STATE.currentPricePerToken = 0;
-                STATE.currentTokenSymbol = STATE.currentTokenCA.slice(0, 8);
-                document.getElementById('tokenSym').innerText = STATE.currentTokenSymbol;
-                document.getElementById('tokenPrice').innerText = 'Price N/A';
+            if(dexData.pairs && dexData.pairs.length > 0) {
+                const pair = dexData.pairs.find(p=>p.chainId==='base');
+                currentPricePerToken = parseFloat(pair.priceUsd);
+                currentTokenSymbol = pair.baseToken.symbol;
+                document.getElementById('tokenSym').innerText = currentTokenSymbol;
+                document.getElementById('tokenPrice').innerText = `$${currentPricePerToken}`;
+                document.getElementById('tokenImg').src = pair.info?.imageUrl || `https://dd.dexscreener.com/ds-data/tokens/base/${currentTokenCA}.png`;
                 document.getElementById('tokenHeader').style.display = 'flex';
             }
-        } catch (e) {
-            console.error('Token metadata fetch failed:', e);
-            STATE.currentPricePerToken = 0;
-            STATE.currentTokenSymbol = STATE.currentTokenCA.slice(0, 8);
-            document.getElementById('tokenSym').innerText = STATE.currentTokenSymbol;
-            document.getElementById('tokenPrice').innerText = 'Price N/A';
-            document.getElementById('tokenHeader').style.display = 'flex';
-        }
+        } catch(e){ currentPricePerToken = 0; }
 
-        // Fetch transactions
-        status.innerText = "📡 Fetching transactions...";
-        const rawTxs = await fetchUnifiedTransfers(wallet, STATE.currentTokenCA, limit, status);
+        const rawTxs = await fetchUnifiedTransfers(wallet, currentTokenCA, limit, status);
+        status.innerText = `Analyzing ${rawTxs.length} transactions...`;
         
-        console.log(`✅ Fetched ${rawTxs.length} transactions`);
-        
-        if (rawTxs.length === 0) {
-            status.innerText = "⚠️ No transactions found for this token";
-            Utils.hideProgress();
-            return;
-        }
-        
-        Utils.updateProgress(rawTxs.length, rawTxs.length, 'Creating event database');
+        debugLog('📊 Transactions fetched', { count: rawTxs.length });
 
-        // Create initial events
-        STATE.globalEvents = rawTxs.map(tx => {
+        globalEvents = rawTxs.map(tx => {
             const myWallet = wallet.toLowerCase();
             const isIncoming = tx.to && tx.to.toLowerCase() === myWallet;
             const val = parseFloat(tx.value);
             const dateObj = new Date(tx.metadata.blockTimestamp);
             const date = dateObj.toLocaleDateString();
-            const timestamp = Math.floor(dateObj.getTime() / 1000);
+            const timestamp = Math.floor(dateObj.getTime() / 1000); 
+            const category = isIncoming ? 'IN (Pend)' : 'OUT (Pend)'; 
 
             return {
                 hash: tx.hash,
-                block: parseInt(tx.blockNum, 16),
-                ts: timestamp,
+                block: parseInt(tx.blockNum, 16), 
+                ts: timestamp, 
                 amount: val,
                 date: date,
                 rowId: `tx-${tx.hash}`,
                 rawVal: val,
-                currVal: val * STATE.currentPricePerToken,
+                currVal: val * currentPricePerToken,
                 histVal: null,
-                histPrice: null,
-                confidence: null,
-                type: 'PENDING',
-                isIncoming: isIncoming,
-                status: 'success' // will be refined
+                histPrice: null, 
+                isRecentFallback: false,
+                type: category,
+                isIncoming: isIncoming
             };
         });
 
-        // Show UI
-        document.getElementById('dashboard').style.display = 'flex';
-        document.getElementById('filterContainer').style.display = 'block';
-        document.getElementById('txTable').style.display = 'table';
-        document.getElementById('paginationContainer').style.display = 'flex';
-        document.getElementById('deepStatus').style.display = 'block';
-
-        if (STATE.globalEvents.length > 0) {
-            document.getElementById('btnHistory').style.display = 'flex';
-            document.getElementById('btnMoralis').style.display = 'flex';
-            document.getElementById('btnCopy').style.display = 'flex';
+        document.getElementById('dashboard').style.display='flex';
+        document.getElementById('filterContainer').style.display='block';
+        document.getElementById('txTable').style.display='table';
+        document.getElementById('paginationContainer').style.display='flex';
+        document.getElementById('deepStatus').style.display='block';
+        
+        if(globalEvents.length > 0) {
+            document.getElementById('btnHistory').style.display='flex';
+            document.getElementById('btnMoralis').style.display='flex';
+            document.getElementById('btnCopy').style.display='flex';
         }
 
         renderTable();
-        
-        // Start background refinement
-        await refineDataInBackground(wallet, STATE.currentTokenCA);
+        refineDataInBackground(wallet, currentTokenCA);
     }
 
-    // ============================================================================
-    // BACKGROUND REFINEMENT WITH ADAPTIVE BATCHING
-    // ============================================================================
     async function refineDataInBackground(wallet, tokenCA) {
         const deepStatus = document.getElementById('deepStatus');
-        let currentBatchSize = STATE.currentBatchSize;
-        let consecutiveErrors = 0;
+        const batchSize = BATCH_SIZE; 
+        
+        for (let i = 0; i < globalEvents.length; i += batchSize) {
+            const batch = globalEvents.slice(i, i + batchSize);
+            deepStatus.innerText = `Refining Data: ${Math.min(i + batchSize, globalEvents.length)} / ${globalEvents.length}...`;
 
-        for (let i = 0; i < STATE.globalEvents.length; i += currentBatchSize) {
-            const batch = STATE.globalEvents.slice(i, i + currentBatchSize);
-            
-            Utils.updateProgress(
-                Math.min(i + currentBatchSize, STATE.globalEvents.length),
-                STATE.globalEvents.length,
-                'Refining transactions'
-            );
+            const requestBody = batch.map((evt, idx) => ({ jsonrpc: "2.0", id: idx, method: "eth_getTransactionReceipt", params: [evt.hash] }));
 
-            const requestBody = batch.map((evt, idx) => ({
-                jsonrpc: "2.0",
-                id: idx,
-                method: "eth_getTransactionReceipt",
-                params: [evt.hash]
-            }));
+            let batchSuccess = false;
+            let responses = null;
 
             try {
-                const responses = await API.alchemyBatchRPC(requestBody);
-                
-                if (Array.isArray(responses)) {
-                    processReceipts(responses, i, wallet, tokenCA);
-                    consecutiveErrors = 0;
-                    
-                    // Gradually increase batch size on success
-                    if (currentBatchSize < CONFIG.BATCH_SIZE_INITIAL && consecutiveErrors === 0) {
-                        currentBatchSize = Math.min(currentBatchSize + 1, CONFIG.BATCH_SIZE_INITIAL);
-                    }
-                } else {
-                    throw new Error('Invalid batch response');
+                const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody)});
+                if(res.ok) {
+                    const json = await res.json();
+                    if(Array.isArray(json)) { responses = json; batchSuccess = true; }
                 }
-            } catch (e) {
-                console.error('Batch failed, using fallback:', e);
-                consecutiveErrors++;
-                
-                // Decrease batch size on errors
-                currentBatchSize = Math.max(CONFIG.BATCH_SIZE_MIN, currentBatchSize - 1);
-                
-                // Fallback to single requests
+            } catch(e) {}
+
+            if (batchSuccess && responses) {
+                processReceipts(responses, i, wallet, tokenCA);
+            } else {
                 for (let j = 0; j < batch.length; j++) {
+                    const evt = batch[j];
                     try {
-                        const data = await API.alchemyRPC("eth_getTransactionReceipt", [batch[j].hash]);
-                        processReceipts([data], i + j, wallet, tokenCA, true);
-                    } catch (err) {
-                        console.error('Single request failed:', err);
-                    }
-                    await Utils.sleep(100);
+                        const r = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getTransactionReceipt", params: [evt.hash] }) });
+                        const json = await r.json();
+                        processReceipts([json], i + j, wallet, tokenCA, true);
+                    } catch(e) {}
+                    await new Promise(r => setTimeout(r, 50));
                 }
             }
-
-            // Update UI every batch
-            recalcAllTotals();
-            if (i % (currentBatchSize * 3) === 0) {
-                renderTable();
-            }
-
-            await Utils.sleep(250);
+            await new Promise(r => setTimeout(r, 300));
+            recalcAllTotals(); 
         }
 
-        finalizePending();
-        Utils.hideProgress();
-        deepStatus.innerText = "✅ Classification Complete";
-        document.getElementById('status').innerText = "✅ Analysis Complete";
-        renderTable();
+        finalizePending(); 
+        deepStatus.innerText = "Data Fully Refined ✅";
+        document.getElementById('status').innerText = "Complete ✅";
+        renderTable(); 
     }
 
-    // ============================================================================
-    // RECEIPT PROCESSING & CLASSIFICATION
-    // ============================================================================
-    function processReceipts(responses, offset, wallet, tokenCA, isSingle = false) {
+    function processReceipts(responses, offset, wallet, tokenCA, isSingle=false) {
         responses.forEach(r => {
             if (!r.result) return;
-
             const evtIndex = isSingle ? offset : (offset + r.id);
-            if (!STATE.globalEvents[evtIndex]) return;
+            if (!globalEvents[evtIndex]) return;
 
             const logs = r.result.logs;
-            const evt = STATE.globalEvents[evtIndex];
+            const evt = globalEvents[evtIndex];
             const myWallet = wallet.toLowerCase().replace("0x", "");
-            const status = r.result.status;
-
-            // Check transaction status
-            evt.status = status === "0x1" ? "success" : "failed";
-
-            if (evt.status === "failed") {
-                evt.type = "FAILED";
-                return;
-            }
-
+            
             let sentLiquid = false;
             let receivedLiquid = false;
             let isSF_Upgrade = false;
             let isSF_Downgrade = false;
-            let isWETH_Wrap = false;
-            let isWETH_Unwrap = false;
-            let tokenTransferCount = 0;
 
             logs.forEach(log => {
-                // Superfluid events
-                if (log.topics[0] === CONFIG.EVT_UPGRADE) isSF_Upgrade = true;
-                if (log.topics[0] === CONFIG.EVT_DOWNGRADE) isSF_Downgrade = true;
+                if (log.topics[0] === EVT_UPGRADE) isSF_Upgrade = true;
+                if (log.topics[0] === EVT_DOWNGRADE) isSF_Downgrade = true;
 
-                // WETH wrap/unwrap
-                if (log.address.toLowerCase() === CONFIG.WETH_ADDR) {
-                    if (log.topics[0] === CONFIG.EVT_DEPOSIT) isWETH_Wrap = true;
-                    if (log.topics[0] === CONFIG.EVT_WITHDRAWAL) isWETH_Unwrap = true;
-                }
-
-                // Transfer events
-                if (log.topics[0] === CONFIG.EVT_TRANSFER) {
+                if (log.topics[0] === EVT_TRANSFER) {
                     const contractAddr = log.address.toLowerCase();
                     const fromMe = log.topics[1] && log.topics[1].toLowerCase().includes(myWallet);
                     const toMe = log.topics[2] && log.topics[2].toLowerCase().includes(myWallet);
 
-                    // Count transfers of target token
-                    if (contractAddr === tokenCA.toLowerCase()) {
-                        tokenTransferCount++;
-                    }
-
-                    // Check for liquid asset transfers
-                    if (CONFIG.LIQUID_ASSETS.includes(contractAddr)) {
+                    if (LIQUID_ASSETS.includes(contractAddr)) {
                         if (fromMe) sentLiquid = true;
                         if (toMe) receivedLiquid = true;
                     }
                 }
             });
 
-            // Classification logic
             let newType = 'UNKNOWN';
+            if (isSF_Upgrade) { newType = 'STAKE'; }
+            else if (isSF_Downgrade) { newType = 'UNSTAKE'; }
+            else if (evt.isIncoming) { if (sentLiquid) newType = 'BUY'; else newType = 'RECEIVE'; }
+            else { if (receivedLiquid) newType = 'SELL'; else newType = 'SEND'; }
 
-            if (evt.status === "failed") {
-                newType = 'FAILED';
-            } else if (isWETH_Wrap || isWETH_Unwrap) {
-                newType = 'WRAP';
-            } else if (tokenTransferCount > 2) {
-                // Multiple token movements suggest LP operation
-                newType = 'LP';
-            } else if (isSF_Upgrade) {
-                newType = 'STAKE';
-            } else if (isSF_Downgrade) {
-                newType = 'UNSTAKE';
-            } else if (evt.isIncoming) {
-                if (sentLiquid) {
-                    newType = 'BUY';
-                } else {
-                    newType = 'RECEIVE';
-                }
-            } else {
-                if (receivedLiquid) {
-                    newType = 'SELL';
-                } else {
-                    newType = 'SEND';
-                }
-            }
-
-            STATE.globalEvents[evtIndex].type = newType;
+            globalEvents[evtIndex].type = newType;
         });
     }
 
     function finalizePending() {
-        STATE.globalEvents.forEach(evt => {
-            if (evt.type === 'PENDING') {
-                if (evt.isIncoming) {
-                    evt.type = 'RECEIVE';
-                } else {
-                    evt.type = 'SEND';
-                }
+        globalEvents.forEach(evt => {
+            if(evt.type.includes('(Pend)')) {
+                if(evt.isIncoming) evt.type = 'RECEIVE';
+                else evt.type = 'SEND';
             }
         });
         recalcAllTotals();
     }
 
-    // ============================================================================
-    // TOTALS CALCULATION
-    // ============================================================================
     function recalcAllTotals() {
-        const totals = {
-            buy: 0, sell: 0, stake: 0, unstake: 0, recv: 0, send: 0, wrap: 0, lp: 0,
-            buyV: 0, sellV: 0, stakeV: 0, unstakeV: 0, recvV: 0, sendV: 0
-        };
-
-        STATE.globalEvents.forEach(evt => {
-            if (evt.status === 'failed') return; // Skip failed transactions
-
-            const val = evt.histVal || 0;
-            
-            switch (evt.type) {
-                case 'BUY':
-                    totals.buy += evt.amount;
-                    totals.buyV += val;
-                    break;
-                case 'SELL':
-                    totals.sell += evt.amount;
-                    totals.sellV += val;
-                    break;
-                case 'STAKE':
-                    totals.stake += evt.amount;
-                    totals.stakeV += val;
-                    break;
-                case 'UNSTAKE':
-                    totals.unstake += evt.amount;
-                    totals.unstakeV += val;
-                    break;
-                case 'RECEIVE':
-                    totals.recv += evt.amount;
-                    totals.recvV += val;
-                    break;
-                case 'SEND':
-                    totals.send += evt.amount;
-                    totals.sendV += val;
-                    break;
-                case 'WRAP':
-                    totals.wrap += evt.amount;
-                    break;
-                case 'LP':
-                    totals.lp += evt.amount;
-                    break;
-            }
+        let t = { buy:0, sell:0, stake:0, unstake:0, recv:0, send:0, 
+                  buyV:0, sellV:0, stakeV:0, unstakeV:0, recvV:0, sendV:0 };
+        
+        globalEvents.forEach(evt => {
+            const val = evt.histVal || 0; 
+            if(evt.type === 'BUY') { t.buy += evt.amount; t.buyV += val; }
+            else if(evt.type === 'SELL') { t.sell += evt.amount; t.sellV += val; }
+            else if(evt.type === 'STAKE') { t.stake += evt.amount; t.stakeV += val; }
+            else if(evt.type === 'UNSTAKE') { t.unstake += evt.amount; t.unstakeV += val; }
+            else if(evt.type === 'RECEIVE') { t.recv += evt.amount; t.recvV += val; }
+            else if(evt.type === 'SEND') { t.send += evt.amount; t.sendV += val; }
         });
 
-        // Update UI
-        const fmt = (n) => Utils.formatNumber(n, 2);
-        const fmtU = (n) => Utils.formatUSD(n * STATE.currentPricePerToken);
-        const fmtH = (n) => n ? Utils.formatUSD(n) : "---";
+        const fmt = (n) => n.toLocaleString(undefined, {maximumFractionDigits:2});
+        const fmtU = (n) => `$${(n * currentPricePerToken).toLocaleString(undefined, {maximumFractionDigits:2})}`;
+        const fmtH = (n) => `$${n.toLocaleString(undefined, {maximumFractionDigits:2})}`;
 
-        document.getElementById('buyTokens').innerText = fmt(totals.buy);
-        document.getElementById('buyCurr').innerText = fmtU(totals.buy);
-        document.getElementById('buyHist').innerText = fmtH(totals.buyV);
-
-        document.getElementById('sellTokens').innerText = fmt(totals.sell);
-        document.getElementById('sellCurr').innerText = fmtU(totals.sell);
-        document.getElementById('sellHist').innerText = fmtH(totals.sellV);
-
-        document.getElementById('stakeTokens').innerText = fmt(totals.stake);
-        document.getElementById('stakeCurr').innerText = fmtU(totals.stake);
-        document.getElementById('stakeHist').innerText = fmtH(totals.stakeV);
-
-        document.getElementById('unstakeTokens').innerText = fmt(totals.unstake);
-        document.getElementById('unstakeCurr').innerText = fmtU(totals.unstake);
-        document.getElementById('unstakeHist').innerText = fmtH(totals.unstakeV);
-
-        document.getElementById('recvTokens').innerText = fmt(totals.recv);
-        document.getElementById('recvCurr').innerText = fmtU(totals.recv);
-        document.getElementById('recvHist').innerText = fmtH(totals.recvV);
-
-        document.getElementById('sendTokens').innerText = fmt(totals.send);
-        document.getElementById('sendCurr').innerText = fmtU(totals.send);
-        document.getElementById('sendHist').innerText = fmtH(totals.sendV);
-
-        document.getElementById('wrapTokens').innerText = fmt(totals.wrap);
-        document.getElementById('lpTokens').innerText = fmt(totals.lp);
+        document.getElementById('buyTokens').innerText = fmt(t.buy); document.getElementById('buyCurr').innerText = fmtU(t.buy); document.getElementById('buyHist').innerText = t.buyV ? fmtH(t.buyV) : "---";
+        document.getElementById('sellTokens').innerText = fmt(t.sell); document.getElementById('sellCurr').innerText = fmtU(t.sell); document.getElementById('sellHist').innerText = t.sellV ? fmtH(t.sellV) : "---";
+        document.getElementById('stakeTokens').innerText = fmt(t.stake); document.getElementById('stakeCurr').innerText = fmtU(t.stake); document.getElementById('stakeHist').innerText = t.stakeV ? fmtH(t.stakeV) : "---";
+        document.getElementById('unstakeTokens').innerText = fmt(t.unstake); document.getElementById('unstakeCurr').innerText = fmtU(t.unstake); document.getElementById('unstakeHist').innerText = t.unstakeV ? fmtH(t.unstakeV) : "---";
+        document.getElementById('recvTokens').innerText = fmt(t.recv); document.getElementById('recvCurr').innerText = fmtU(t.recv); document.getElementById('recvHist').innerText = t.recvV ? fmtH(t.recvV) : "---";
+        document.getElementById('sendTokens').innerText = fmt(t.send); document.getElementById('sendCurr').innerText = fmtU(t.send); document.getElementById('sendHist').innerText = t.sendV ? fmtH(t.sendV) : "---";
     }
 
-    // ============================================================================
-    // TABLE RENDERING
-    // ============================================================================
     function renderTable() {
         const filter = document.getElementById('txFilter').value;
         const tbody = document.getElementById('txList');
         tbody.innerHTML = "";
 
-        const filteredData = STATE.globalEvents.filter(evt => {
+        const filteredData = globalEvents.filter(evt => {
             if (filter === 'ALL') return true;
-            return evt.type === filter;
+            if (filter === 'BUY' && (evt.type === 'BUY' || evt.type === 'IN (Pend)')) return true;
+            if (filter === 'SELL' && (evt.type === 'SELL' || evt.type === 'OUT (Pend)')) return true;
+            if (filter === 'STAKE' && evt.type === 'STAKE') return true;
+            if (filter === 'UNSTAKE' && evt.type === 'UNSTAKE') return true;
+            if (filter === 'RECEIVE' && (evt.type === 'RECEIVE' || evt.type === 'IN (Pend)')) return true;
+            if (filter === 'SEND' && (evt.type === 'SEND' || evt.type === 'OUT (Pend)')) return true;
+            return false;
         });
 
-        const totalPages = Math.ceil(filteredData.length / STATE.rowsPerPage);
-        if (STATE.currentPage > totalPages) STATE.currentPage = totalPages;
-        if (STATE.currentPage < 1) STATE.currentPage = 1;
+        const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+        if(currentPage > totalPages) currentPage = totalPages;
+        if(currentPage < 1) currentPage = 1;
 
-        const start = (STATE.currentPage - 1) * STATE.rowsPerPage;
-        const end = start + STATE.rowsPerPage;
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
         const pageData = filteredData.slice(start, end);
 
         let html = "";
         pageData.forEach(evt => {
-            // Determine badge class
-            const badgeMap = {
-                'BUY': 'bg-buy',
-                'SELL': 'bg-sell',
-                'STAKE': 'bg-stake',
-                'UNSTAKE': 'bg-unstake',
-                'RECEIVE': 'bg-receive',
-                'SEND': 'bg-send',
-                'WRAP': 'bg-wrap',
-                'LP': 'bg-lp',
-                'FAILED': 'bg-failed',
-                'PENDING': 'bg-pending'
-            };
-            const badge = badgeMap[evt.type] || 'bg-pending';
+            let badge = 'bg-pending';
+            if(evt.type==='BUY') badge='bg-buy';
+            else if(evt.type==='SELL') badge='bg-sell';
+            else if(evt.type==='STAKE') badge='bg-stake';
+            else if(evt.type==='UNSTAKE') badge='bg-unstake';
+            else if(evt.type==='RECEIVE') badge='bg-receive';
+            else if(evt.type==='SEND') badge='bg-send';
 
-            // Current value
-            const currHtml = `<div class="curr-val">Now: ${Utils.formatUSD(evt.currVal)}</div>`;
-
-            // Historical value with confidence
-            let histHtml = '<div class="hist-val" style="color:#ccc;">Hist: ---</div>';
-            let confBadge = '';
+            const currHtml = `<div class="curr-val">Curr: $${evt.currVal.toLocaleString(undefined, {maximumFractionDigits:2})}</div>`;
             
-            if (evt.histVal !== null) {
-                const confMap = {
-                    'high': 'conf-high',
-                    'medium': 'conf-med',
-                    'low': 'conf-low'
-                };
-                if (evt.confidence) {
-                    confBadge = `<span class="confidence-badge ${confMap[evt.confidence]}">${evt.confidence.toUpperCase()}</span>`;
-                }
-                histHtml = `<div class="hist-val">Then: ${Utils.formatUSD(evt.histVal)}${confBadge}</div>`;
+            let histHtml = '<div class="hist-val" style="color:#ccc;">Hist: ---</div>';
+            if(evt.histVal !== null) {
+                const colorClass = evt.isRecentFallback ? 'recent-val' : 'hist-val';
+                histHtml = `<div class="${colorClass}">Hist: $${evt.histVal.toLocaleString(undefined, {maximumFractionDigits:2})}</div>`;
+            } else if (evt.histChecked) {
+                histHtml = `<div class="hist-val" style="color:#999;">Hist: N/A</div>`;
             }
 
-            // Variance
-            let varHtml = '<div class="var-val var-neu">Δ: ---</div>';
-            if (evt.histPrice > 0) {
-                const varPct = ((STATE.currentPricePerToken - evt.histPrice) / evt.histPrice) * 100;
+            let varHtml = '<div class="var-val var-neu">Var: ---</div>';
+            if(evt.histPrice > 0) {
+                const varPct = ((currentPricePerToken - evt.histPrice) / evt.histPrice) * 100;
                 const varClass = varPct >= 0 ? 'var-pos' : 'var-neg';
                 const sign = varPct >= 0 ? '+' : '';
-                varHtml = `<div class="var-val ${varClass}">Δ: ${sign}${varPct.toFixed(1)}%</div>`;
+                varHtml = `<div class="var-val ${varClass}">Var: ${sign}${varPct.toFixed(1)}%</div>`;
             }
 
-            // Profit/Loss row class
-            let rowClass = '';
-            if (evt.histVal !== null && evt.type === 'BUY') {
-                if (evt.currVal > evt.histVal) rowClass = 'profit-row';
-                else if (evt.currVal < evt.histVal) rowClass = 'loss-row';
-            }
-
-            html += `<tr id="${evt.rowId}" class="${rowClass}">
+            html += `<tr id="${evt.rowId}">
                 <td class="col-type">
-                    <span class="tag ${badge}">${evt.type}</span> 
-                    <span style="color:#999;font-size:0.7em">${evt.date}</span>
+                    <span class="tag ${badge}">${evt.type}</span> <span style="color:#999;font-size:0.7em">${evt.date}</span>
                 </td>
                 <td class="col-amount">
-                    <strong>${Utils.formatNumber(evt.rawVal, 0)}</strong>
+                    <strong>${evt.rawVal.toLocaleString(undefined, {maximumFractionDigits:0})}</strong>
                     <div class="tx-usd-row">${currHtml}</div>
                     <div class="tx-usd-row">${histHtml}</div>
                     <div class="tx-usd-row">${varHtml}</div>
                 </td>
             </tr>`;
         });
-
         tbody.innerHTML = html;
 
-        document.getElementById('pageIndicator').innerText = `Page ${STATE.currentPage} of ${totalPages || 1}`;
-        document.getElementById('btnPrev').disabled = (STATE.currentPage <= 1);
-        document.getElementById('btnNext').disabled = (STATE.currentPage >= totalPages);
+        document.getElementById('pageIndicator').innerText = `Page ${currentPage} of ${totalPages || 1}`;
+        document.getElementById('btnPrev').disabled = (currentPage <= 1);
+        document.getElementById('btnNext').disabled = (currentPage >= totalPages);
     }
 
-    // ============================================================================
-    // HISTORICAL PRICES
-    // ============================================================================
     async function fetchHistoricalPrices() {
         const btn = document.getElementById('btnHistory');
         const status = document.getElementById('status');
-        
         btn.disabled = true;
-        btn.innerText = "⏳ Fetching...";
-
-        let processed = 0;
-
-        for (const evt of STATE.globalEvents) {
-            if (evt.status === 'failed') continue;
-
-            processed++;
-            Utils.updateProgress(processed, STATE.globalEvents.length, 'Fetching historical prices');
-
-            // Check cache first
-            const cachedPrice = Utils.getCachedPrice(evt.ts, STATE.currentTokenCA);
-            if (cachedPrice !== null) {
-                evt.histPrice = cachedPrice;
-                evt.histVal = evt.amount * cachedPrice;
-                evt.confidence = 'high';
-                continue;
-            }
-
-            let histPrice = null;
-            let confidence = 'low';
-
-            try {
-                // Try DeFi Llama first
-                const llamaRes = await fetch(`https://coins.llama.fi/prices/historical/${evt.ts}/base:${STATE.currentTokenCA.toLowerCase()}`);
-                const llamaData = await llamaRes.json();
-                const key = `base:${STATE.currentTokenCA.toLowerCase()}`;
-                
-                if (llamaData.coins && llamaData.coins[key]) {
-                    histPrice = llamaData.coins[key].price;
-                    confidence = 'high';
-                }
-            } catch (e) {
-                console.log('Llama failed:', e);
-            }
-
-            // Fallback to Mobula
-            if (histPrice === null) {
-                try {
-                    const mRes = await fetch(`https://api.mobula.io/api/1/market/history?asset=${STATE.currentTokenCA}&blockchain=base&from=${evt.ts - 3600}&to=${evt.ts + 3600}`);
-                    const mData = await mRes.json();
-                    
-                    if (mData.data && mData.data.price_history && mData.data.price_history.length > 0) {
-                        histPrice = mData.data.price_history[0][1];
-                        confidence = 'medium';
-                    }
-                } catch (e) {
-                    console.log('Mobula failed:', e);
-                }
-            }
-
-            // Recent fallback (last 24h)
-            if (histPrice === null && (Date.now() / 1000 - evt.ts) < 86400) {
-                histPrice = STATE.currentPricePerToken;
-                confidence = 'low';
-            }
-
-            if (histPrice !== null) {
-                evt.histPrice = histPrice;
-                evt.histVal = evt.amount * histPrice;
-                evt.confidence = confidence;
-                
-                // Cache the price
-                Utils.setCachedPrice(evt.ts, STATE.currentTokenCA, histPrice);
-            }
-
-            if (processed % 5 === 0) {
-                recalcAllTotals();
-                renderTable();
-            }
-
-            await Utils.sleep(200);
-        }
-
-        recalcAllTotals();
-        renderTable();
-        Utils.hideProgress();
+        btn.innerText = "⏳ Running...";
         
-        status.innerText = "✅ Historical prices updated";
-        btn.innerHTML = "✅ Prices Loaded";
-    }
+        let processed = 0;
+        
+        for(const evt of globalEvents) {
+            try {
+                status.innerText = `Fetching ${processed+1}/${globalEvents.length}...`;
+                let histPrice = null;
+                evt.isRecentFallback = false;
+                
+                try {
+                    const res = await fetch(`https://coins.llama.fi/prices/historical/${evt.ts}/base:${currentTokenCA.toLowerCase()}`);
+                    const data = await res.json();
+                    const key = `base:${currentTokenCA.toLowerCase()}`;
+                    if(data.coins && data.coins[key]) histPrice = data.coins[key].price;
+                } catch(e){}
 
-    // ============================================================================
-    // MORALIS INTEGRATION
-    // ============================================================================
-    function showMoralisModal() {
-        if (STATE.isAdmin) {
-            // Admin directly uses integrated key
-            fetchMoralisPrices();
-        } else {
-            // Show modal for regular users
-            document.getElementById('moralisModal').style.display = 'block';
+                if(histPrice === null) {
+                    try {
+                        const mRes = await fetch(`https://api.mobula.io/api/1/market/history?asset=${currentTokenCA}&blockchain=base&from=${evt.ts - 3600}&to=${evt.ts + 3600}`);
+                        const mData = await mRes.json();
+                        if(mData.data && mData.data.price_history && mData.data.price_history.length > 0) histPrice = mData.data.price_history[0][1];
+                    } catch(e){}
+                }
+
+                if(histPrice === null && (Date.now()/1000 - evt.ts) < 86400) {
+                    histPrice = currentPricePerToken;
+                    evt.isRecentFallback = true;
+                }
+
+                if(histPrice !== null) {
+                    evt.histVal = evt.amount * histPrice; 
+                    evt.histPrice = histPrice;
+                    recalcAllTotals(); 
+                } else { evt.histChecked = true; }
+
+                processed++;
+                if(processed % 5 === 0) renderTable();
+                await new Promise(r => setTimeout(r, 200)); 
+            } catch(e) { console.log(e); evt.histChecked=true; }
         }
+        renderTable();
+        status.innerText = "History Updated 📜";
+        btn.innerHTML = "✅ Time Machine";
     }
 
     async function fetchMoralisPrices() {
-        if (!STATE.moralisKey) {
-            alert('No Moralis key configured');
-            return;
+        const loggedWallet = localStorage.getItem('tysm_wallet');
+        const normLogged = loggedWallet ? loggedWallet.toLowerCase() : "";
+        let keyToUse = '';
+
+        if (normLogged === ADMIN_WALLET) {
+            keyToUse = MORALIS_KEY_INTEGRATED;
+        } else {
+            keyToUse = prompt("Insert your own Moralis API Key:");
+            if (!keyToUse) return;
         }
 
         const btn = document.getElementById('btnMoralis');
         const status = document.getElementById('status');
-        
         btn.disabled = true;
         btn.innerText = "Ⓜ️ Running...";
-
+        
         let processed = 0;
-        let successCount = 0;
-
-        for (const evt of STATE.globalEvents) {
-            if (evt.status === 'failed') continue;
-            
-            // Skip if already has high confidence price
-            if (evt.confidence === 'high') continue;
-
-            processed++;
-            Utils.updateProgress(processed, STATE.globalEvents.length, 'Moralis block-level pricing');
+        for(const evt of globalEvents) {
+            if (evt.histPrice !== null && !evt.isRecentFallback) continue;
 
             try {
-                const url = `https://deep-index.moralis.io/api/v2.2/erc20/${STATE.currentTokenCA}/price?chain=base&to_block=${evt.block}`;
-                const res = await fetch(url, {
-                    headers: {
-                        "X-API-Key": STATE.moralisKey,
-                        "accept": "application/json"
-                    }
-                });
-
-                if (!res.ok) {
-                    if (res.status === 429) {
-                        status.innerText = '⚠️ Moralis rate limit reached';
-                        break;
-                    }
-                    throw new Error(`HTTP ${res.status}`);
-                }
-
+                status.innerText = `Moralis Check ${processed+1}...`;
+                const url = `https://deep-index.moralis.io/api/v2.2/erc20/${currentTokenCA}/price?chain=base&to_block=${evt.block}`;
+                const res = await fetch(url, { headers: { "X-API-Key": keyToUse, "accept": "application/json" } });
                 const data = await res.json();
-
-                if (data.usdPrice) {
-                    evt.histPrice = data.usdPrice;
-                    evt.histVal = evt.amount * data.usdPrice;
-                    evt.confidence = 'high';
-                    
-                    // Cache it
-                    Utils.setCachedPrice(evt.ts, STATE.currentTokenCA, data.usdPrice);
-                    
-                    successCount++;
+                
+                if(data.usdPrice) {
+                    const histPrice = data.usdPrice;
+                    evt.histPrice = histPrice;
+                    evt.histVal = evt.amount * histPrice;
+                    evt.isRecentFallback = false; 
+                    recalcAllTotals(); 
                 }
-            } catch (e) {
-                console.log('Moralis error:', e);
-            }
-
-            if (processed % 3 === 0) {
-                recalcAllTotals();
-                renderTable();
-            }
-
-            await Utils.sleep(300);
+                processed++;
+                if(processed % 2 === 0) renderTable(); 
+                await new Promise(r => setTimeout(r, 250)); 
+            } catch(e){ console.log(e); }
         }
-
-        recalcAllTotals();
         renderTable();
-        Utils.hideProgress();
-
-        status.innerText = `✅ Moralis updated ${successCount} prices`;
+        status.innerText = "Moralis Check Done Ⓜ️";
         btn.innerHTML = "✅ Moralis Done";
     }
 
-    // ============================================================================
-    // EXPORT TO CSV
-    // ============================================================================
     function copyToClipboard() {
+        const toIt = (n) => n.toFixed(2).replace('.', ',');
         let csvContent = "";
-        csvContent += `Date * Type * Token * Quantity * Historical Value * Current Value * Variance % * Confidence * Hash\n`;
-
-        STATE.globalEvents.forEach(evt => {
-            if (evt.status === 'failed') return;
-
+        csvContent += `Data * Tipo * Token * Quantità * Valore Storico * Valore Attuale * Hash\n`;
+        globalEvents.forEach(evt => {
             const hVal = evt.histVal ? evt.histVal.toFixed(2).replace('.', ',') : "0,00";
             const cVal = evt.currVal ? evt.currVal.toFixed(2).replace('.', ',') : "0,00";
             const qty = evt.amount.toFixed(4).replace('.', ',');
-            
-            let varPct = "---";
-            if (evt.histPrice > 0) {
-                const variance = ((STATE.currentPricePerToken - evt.histPrice) / evt.histPrice) * 100;
-                varPct = variance.toFixed(2).replace('.', ',');
-            }
-
-            const conf = evt.confidence || "unknown";
-
-            csvContent += `${evt.date} * ${evt.type} * ${STATE.currentTokenSymbol} * ${qty} * ${hVal} * ${cVal} * ${varPct} * ${conf} * ${evt.hash}\n`;
+            csvContent += `${evt.date} * ${evt.type} * ${currentTokenSymbol} * ${qty} * ${hVal} * ${cVal} * ${evt.hash}\n`;
         });
-
         navigator.clipboard.writeText(csvContent).then(() => {
             const btn = document.getElementById('btnCopy');
             const orig = btn.innerText;
             btn.innerText = "✅ COPIED!";
             setTimeout(() => btn.innerText = orig, 2000);
-        }).catch(err => {
-            alert('Failed to copy: ' + err);
         });
     }
 
-    // ============================================================================
-    // TRANSACTION FETCHING
-    // ============================================================================
     async function fetchUnifiedTransfers(wallet, token, limit, statusElement) {
         let accumulated = [];
-
         const fetchDir = async (isIncoming) => {
             let list = [];
             let pageKey = null;
             let loops = 0;
-
             do {
-                if (list.length >= limit || loops > 15) break;
-
-                const params = {
-                    "fromBlock": "0x0",
-                    "toBlock": "latest",
-                    "category": ["erc20"],
-                    "withMetadata": true,
-                    "excludeZeroValue": true,
-                    "contractAddresses": [token],
-                    "order": "desc",
-                    "maxCount": "0x3e8"
-                };
-
-                if (isIncoming) {
-                    params.toAddress = wallet;
-                } else {
-                    params.fromAddress = wallet;
-                }
-
-                if (pageKey) params.pageKey = pageKey;
-
-                const data = await API.alchemyRPC("alchemy_getAssetTransfers", [params]);
-
-                if (!data.result) break;
-
-                list = list.concat(data.result.transfers || []);
-                pageKey = data.result.pageKey;
+                if(list.length >= limit || loops > 15) break;
+                const params = { "fromBlock": "0x0", "toBlock": "latest", "category": ["erc20"], "withMetadata": true, "excludeZeroValue": true, "contractAddresses": [token], "order": "desc", "maxCount": "0x3e8" };
+                if(isIncoming) params.toAddress = wallet; else params.fromAddress = wallet;
+                if(pageKey) params.pageKey = pageKey;
+                const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ "id": 1, "jsonrpc": "2.0", "method": "alchemy_getAssetTransfers", "params": [params] }) });
+                const d = await res.json();
+                if(!d.result) break;
+                list = list.concat(d.result.transfers || []);
+                pageKey = d.result.pageKey;
                 loops++;
-
-                statusElement.innerText = `Fetching ${isIncoming ? 'incoming' : 'outgoing'} (${list.length})`;
-
-                await Utils.sleep(100);
-            } while (pageKey);
-
+                statusElement.innerText = `Fetching ${isIncoming?'IN':'OUT'}... (${list.length})`;
+                await new Promise(r => setTimeout(r, 100));
+            } while(pageKey);
             return list;
         };
-
         const [inTxs, outTxs] = await Promise.all([fetchDir(true), fetchDir(false)]);
         accumulated = [...inTxs, ...outTxs];
-
-        // Sort by block number (newest first)
         accumulated.sort((a, b) => parseInt(b.blockNum, 16) - parseInt(a.blockNum, 16));
-
         return accumulated.slice(0, limit);
     }
 </script>
