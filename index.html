@@ -11,7 +11,7 @@
 
     <style>
         /* ========================================
-           WAST3 HUB v1.0.1
+           WAST3 HUB v1.0.2
            Design System: Blue Monochrome
            Mobile-First Responsive
         ======================================== */
@@ -450,20 +450,20 @@
         }
 
         .nft-floor {
-            font-size: 0.85rem;
-            font-weight: 900;
-            color: var(--primary-blue);
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: var(--sky-blue);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 2px;
-            min-height: 20px;
+            min-height: 16px;
         }
 
         .nft-floor-usd {
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            font-weight: 600;
+            font-size: 0.9rem;
+            font-weight: 900;
+            color: var(--primary-blue);
         }
 
         .nft-link {
@@ -706,10 +706,10 @@
                     </div>
                     <div class="nft-info">
                         <div class="nft-name">Howlers</div>
-                        <div class="nft-floor" id="floorHowlers">
+                        <div class="nft-floor-usd" id="usdHowlers">
                             <div class="spinner-small"></div>
                         </div>
-                        <div class="nft-floor-usd" id="usdHowlers"></div>
+                        <div class="nft-floor" id="floorHowlers"></div>
                     </div>
                     <a id="linkHowlers" href="https://opensea.io/assets/base/0x160650efd60032aa49bbec70920a870aacffdc39" target="_blank" class="nft-link">OpenSea ↗</a>
                 </div>
@@ -722,10 +722,10 @@
                     </div>
                     <div class="nft-info">
                         <div class="nft-name">Degen Dogs</div>
-                        <div class="nft-floor" id="floorDogs">
+                        <div class="nft-floor-usd" id="usdDogs">
                             <div class="spinner-small"></div>
                         </div>
-                        <div class="nft-floor-usd" id="usdDogs"></div>
+                        <div class="nft-floor" id="floorDogs"></div>
                     </div>
                     <a id="linkDogs" href="https://opensea.io/assets/base/0x09154248ffdbaf8aa877ae8a4bf8ce1503596428" target="_blank" class="nft-link">OpenSea ↗</a>
                 </div>
@@ -738,10 +738,10 @@
                     </div>
                     <div class="nft-info">
                         <div class="nft-name">Chickens</div>
-                        <div class="nft-floor" id="floorChickens">
+                        <div class="nft-floor-usd" id="usdChickens">
                             <div class="spinner-small"></div>
                         </div>
-                        <div class="nft-floor-usd" id="usdChickens"></div>
+                        <div class="nft-floor" id="floorChickens"></div>
                     </div>
                     <a id="linkChickens" href="https://opensea.io/assets/base/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0" target="_blank" class="nft-link">OpenSea ↗</a>
                     <div class="chicken-dyor"><img src="l0.png" alt="⚠️" onerror="this.style.display='none';">DON'T BUY RED!</div>
@@ -817,7 +817,7 @@
              FOOTER
         ======================================== -->
         <footer class="footer">
-            <span class="version-tag">v1.0.1</span>
+            <span class="version-tag">v1.0.2</span>
         </footer>
 
     </div>
@@ -1098,13 +1098,13 @@
                 const floorEth = floorData.openSea?.floorPrice || 0;
                 const floorUsd = floorEth * ethPrice;
                 
-                // Update floor price
+                // Update floor price - USD big, ETH small
                 if (floorEth > 0) {
-                    floorEl.innerHTML = `${floorEth.toFixed(4)} Ξ`;
                     usdEl.innerHTML = `$${floorUsd.toFixed(2)}`;
+                    floorEl.innerHTML = `${floorEth.toFixed(4)} Ξ`;
                 } else {
-                    floorEl.innerHTML = '---';
-                    usdEl.innerHTML = '';
+                    usdEl.innerHTML = '---';
+                    floorEl.innerHTML = '';
                 }
                 
             } catch(e) {
