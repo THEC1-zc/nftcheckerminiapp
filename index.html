@@ -11,7 +11,7 @@
 
     <style>
         /* ========================================
-           WAST3 HUB v1.0.2
+           WAST3 HUB v1.0.3
            Design System: Blue Monochrome
            Mobile-First Responsive
         ======================================== */
@@ -104,16 +104,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-        }
-
-        .header-logo {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
-            object-fit: contain;
-            box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
-            border: 2px solid var(--primary-blue);
         }
 
         .header-brand {
@@ -645,15 +635,10 @@
     ======================================== -->
     <header class="header-bar">
         <div class="header-left">
-            <button id="btnTip" class="btn-tip-header">💙 Tip 1$</button>
-        </div>
-
-        <div class="header-center">
-            <img src="icon.png" class="header-logo" alt="WAST3 Logo">
             <span class="header-brand">WAST3</span>
         </div>
 
-        <div class="header-right">
+        <div class="header-center">
             <div class="wallet-container" id="walletContainer">
                 <button id="btnWallet" class="btn-wallet">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -669,6 +654,10 @@
                     <button class="dropdown-item" id="btnLogout">❌ Logout</button>
                 </div>
             </div>
+        </div>
+
+        <div class="header-right">
+            <button id="btnTip" class="btn-tip-header">💙 Tip 1$</button>
         </div>
     </header>
 
@@ -817,7 +806,7 @@
              FOOTER
         ======================================== -->
         <footer class="footer">
-            <span class="version-tag">v1.0.2</span>
+            <span class="version-tag">v1.0.3</span>
         </footer>
 
     </div>
