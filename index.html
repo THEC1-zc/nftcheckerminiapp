@@ -82,9 +82,9 @@
         background: rgba(255, 255, 255, 0.98);
         backdrop-filter: blur(20px);
         border-bottom: 2px solid var(--primary-blue);
-        padding: 12px 16px;
-        display: flex;
-        justify-content: space-between;
+        padding: 10px 12px;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
         align-items: center;
         box-shadow: 0 4px 20px rgba(0, 82, 255, 0.15);
         animation: slideDown 0.5s ease-out;
@@ -98,27 +98,67 @@
     .header-left {
         display: flex;
         align-items: center;
-        gap: 10px;
+        justify-content: flex-start;
+    }
+
+    .header-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
     }
 
     .header-logo {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         border-radius: 10px;
-        background: white;
         object-fit: contain;
         box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
         border: 2px solid var(--primary-blue);
     }
 
     .header-brand {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
         font-weight: 900;
         letter-spacing: 2px;
         background: linear-gradient(135deg, var(--primary-blue), var(--sky-blue));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    /* Tip Button in Header */
+    .btn-tip-header {
+        background: linear-gradient(135deg, var(--electric-blue), var(--sky-blue));
+        color: white;
+        padding: 8px 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-radius: 10px;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 3px 12px rgba(0, 128, 255, 0.4);
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+    }
+
+    .btn-tip-header:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 128, 255, 0.5);
+    }
+
+    .btn-tip-header:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 
     /* Wallet Button */
@@ -273,23 +313,23 @@
     }
 
     .hero-icon {
-        width: 70px;
-        height: 70px;
-        margin: 0 auto 16px;
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 12px;
         background: linear-gradient(135deg, var(--primary-blue), var(--sky-blue));
-        border-radius: 18px;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 36px;
-        box-shadow: 0 12px 30px rgba(0, 82, 255, 0.4);
+        font-size: 30px;
+        box-shadow: 0 10px 25px rgba(0, 82, 255, 0.4);
         border: 2px solid rgba(255, 255, 255, 0.5);
         animation: float 3s ease-in-out infinite;
     }
 
     @keyframes float {
         0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-8px); }
+        50% { transform: translateY(-6px); }
     }
 
     .hero-title {
@@ -446,6 +486,27 @@
         background: var(--electric-blue);
     }
 
+    /* Chickens DYOR Warning - Small */
+    .chicken-dyor {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        background: linear-gradient(135deg, #ffe8e8, #fff0f0);
+        padding: 4px 6px;
+        font-size: 0.55rem;
+        font-weight: 700;
+        color: #c0392b;
+        border-top: 1px solid #ffcccc;
+    }
+
+    .chicken-dyor img {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        object-fit: cover;
+    }
+
     /* ========================================
        ACTION CARDS (TYSM, TXS)
     ======================================== */
@@ -504,6 +565,27 @@
         line-height: 1.3;
     }
 
+    /* Chickens DYOR Warning - Small */
+    .chicken-dyor {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        background: linear-gradient(135deg, #ffe8e8, #fff0f0);
+        padding: 4px 6px;
+        font-size: 0.55rem;
+        font-weight: 700;
+        color: #c0392b;
+        border-top: 1px solid #ffcccc;
+    }
+
+    .chicken-dyor img {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        object-fit: cover;
+    }
+
     /* Coming Soon Card */
     .coming-soon-card {
         background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
@@ -530,38 +612,10 @@
        FOOTER
     ======================================== */
     .footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+        text-align: center;
         margin-top: 30px;
         padding-top: 20px;
         border-top: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .btn-tip {
-        background: linear-gradient(135deg, var(--electric-blue), var(--sky-blue));
-        color: white;
-        padding: 10px 18px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        border-radius: 10px;
-        cursor: pointer;
-        border: none;
-        box-shadow: 0 4px 15px rgba(0, 128, 255, 0.4);
-        transition: all 0.3s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .btn-tip:hover:not(:disabled) {
-        transform: translateY(-2px) scale(1.03);
-        box-shadow: 0 8px 25px rgba(0, 128, 255, 0.5);
-    }
-
-    .btn-tip:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
     }
 
     .version-tag {
@@ -598,23 +652,29 @@
 ======================================== -->
 <header class="header-bar">
     <div class="header-left">
+        <button id="btnTip" class="btn-tip-header">💙 Tip 1$</button>
+    </div>
+
+    <div class="header-center">
         <img src="icon.png" class="header-logo" alt="WAST3 Logo">
         <span class="header-brand">WAST3</span>
     </div>
 
-    <div class="wallet-container" id="walletContainer">
-        <button id="btnWallet" class="btn-wallet">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/>
-                <path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/>
-                <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/>
-            </svg>
-            <span id="walletText">Connect</span>
-            <span class="wallet-arrow" id="walletArrow" style="display: none;">▼</span>
-        </button>
+    <div class="header-right">
+        <div class="wallet-container" id="walletContainer">
+            <button id="btnWallet" class="btn-wallet">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/>
+                    <path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/>
+                    <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/>
+                </svg>
+                <span id="walletText">Connect</span>
+                <span class="wallet-arrow" id="walletArrow" style="display: none;">▼</span>
+            </button>
 
-        <div class="wallet-dropdown" id="walletDropdown">
-            <button class="dropdown-item" id="btnLogout">❌ Logout</button>
+            <div class="wallet-dropdown" id="walletDropdown">
+                <button class="dropdown-item" id="btnLogout">❌ Logout</button>
+            </div>
         </div>
     </div>
 </header>
@@ -648,8 +708,8 @@
             <!-- Howlers -->
             <div class="nft-card" id="cardHowlers">
                 <div class="nft-img-wrapper">
-                    <img id="imgHowlers" class="nft-img" src="" alt="Howlers" style="display:none;">
-                    <span id="placeholderHowlers" class="nft-placeholder">🐺</span>
+                    <img id="imgHowlers" class="nft-img" src="h.png" alt="Howlers" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span id="placeholderHowlers" class="nft-placeholder" style="display:none;">🐺</span>
                 </div>
                 <div class="nft-info">
                     <div class="nft-name">Howlers</div>
@@ -658,14 +718,14 @@
                     </div>
                     <div class="nft-floor-usd" id="usdHowlers"></div>
                 </div>
-                <a id="linkHowlers" href="#" target="_blank" class="nft-link">OpenSea ↗</a>
+                <a id="linkHowlers" href="https://opensea.io/assets/base/0x160650efd60032aa49bbec70920a870aacffdc39" target="_blank" class="nft-link">OpenSea ↗</a>
             </div>
 
             <!-- Degen Dogs -->
             <div class="nft-card" id="cardDogs">
                 <div class="nft-img-wrapper">
-                    <img id="imgDogs" class="nft-img" src="" alt="Degen Dogs" style="display:none;">
-                    <span id="placeholderDogs" class="nft-placeholder">🐶</span>
+                    <img id="imgDogs" class="nft-img" src="dog.png" alt="Degen Dogs" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span id="placeholderDogs" class="nft-placeholder" style="display:none;">🐶</span>
                 </div>
                 <div class="nft-info">
                     <div class="nft-name">Degen Dogs</div>
@@ -674,14 +734,14 @@
                     </div>
                     <div class="nft-floor-usd" id="usdDogs"></div>
                 </div>
-                <a id="linkDogs" href="https://opensea.io/collection/degen-dogs-club" target="_blank" class="nft-link">OpenSea ↗</a>
+                <a id="linkDogs" href="https://opensea.io/assets/base/0x09154248ffdbaf8aa877ae8a4bf8ce1503596428" target="_blank" class="nft-link">OpenSea ↗</a>
             </div>
 
             <!-- Chickens -->
             <div class="nft-card" id="cardChickens">
                 <div class="nft-img-wrapper">
-                    <img id="imgChickens" class="nft-img" src="" alt="Chickens" style="display:none;">
-                    <span id="placeholderChickens" class="nft-placeholder">🐔</span>
+                    <img id="imgChickens" class="nft-img" src="l5.png" alt="Chickens" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span id="placeholderChickens" class="nft-placeholder" style="display:none;">🐔</span>
                 </div>
                 <div class="nft-info">
                     <div class="nft-name">Chickens</div>
@@ -690,7 +750,8 @@
                     </div>
                     <div class="nft-floor-usd" id="usdChickens"></div>
                 </div>
-                <a id="linkChickens" href="https://opensea.io/collection/chickens-by-eggs" target="_blank" class="nft-link">OpenSea ↗</a>
+                <a id="linkChickens" href="https://opensea.io/assets/base/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0" target="_blank" class="nft-link">OpenSea ↗</a>
+                <div class="chicken-dyor"><img src="l0.png" alt="⚠️" onerror="this.style.display='none';">No RED!</div>
             </div>
         </div>
     </section>
@@ -763,7 +824,6 @@
          FOOTER
     ======================================== -->
     <footer class="footer">
-        <button id="btnTip" class="btn-tip">💙 Tip 1$</button>
         <span class="version-tag">v1.0.0</span>
     </footer>
 
@@ -789,19 +849,19 @@
         howlers: {
             contract: '0x160650efd60032aa49bbec70920a870aacffdc39',
             name: 'Howlers',
-            opensea: 'https://opensea.io/collection/howlers-2',
+            opensea: 'https://opensea.io/assets/base/0x160650efd60032aa49bbec70920a870aacffdc39',
             fallbackEmoji: '🐺'
         },
         dogs: {
             contract: '0x09154248ffdbaf8aa877ae8a4bf8ce1503596428',
             name: 'Degen Dogs',
-            opensea: 'https://opensea.io/collection/degen-dogs-club',
+            opensea: 'https://opensea.io/assets/base/0x09154248ffdbaf8aa877ae8a4bf8ce1503596428',
             fallbackEmoji: '🐶'
         },
         chickens: {
             contract: '0x84eea2be67b17698b0e09b57eeeda47aa921bbf0',
             name: 'Chickens',
-            opensea: 'https://opensea.io/collection/chickens-by-eggs',
+            opensea: 'https://opensea.io/assets/base/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0',
             fallbackEmoji: '🐔'
         }
     };
@@ -1036,12 +1096,9 @@
     async function loadCollectionData(key, coll, ethPrice) {
         const floorEl = document.getElementById(`floor${capitalize(key)}`);
         const usdEl = document.getElementById(`usd${capitalize(key)}`);
-        const imgEl = document.getElementById(`img${capitalize(key)}`);
-        const placeholderEl = document.getElementById(`placeholder${capitalize(key)}`);
-        const linkEl = document.getElementById(`link${capitalize(key)}`);
         
         try {
-            // 1. Get Floor Price
+            // Get Floor Price only (images are static)
             const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${coll.contract}`;
             const floorRes = await fetch(floorUrl);
             const floorData = await floorRes.json();
@@ -1055,55 +1112,6 @@
             } else {
                 floorEl.innerHTML = '---';
                 usdEl.innerHTML = '';
-            }
-            
-            // 2. Get Image (from collection metadata or first NFT)
-            let imageUrl = null;
-            
-            // Try metadata first
-            try {
-                const metaUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getContractMetadata?contractAddress=${coll.contract}`;
-                const metaRes = await fetch(metaUrl);
-                const metaData = await metaRes.json();
-                
-                if (metaData.openSea?.imageUrl) {
-                    imageUrl = metaData.openSea.imageUrl;
-                }
-            } catch(e) {}
-            
-            // If no image, try getting first NFT
-            if (!imageUrl || imageUrl.includes('placehold')) {
-                try {
-                    const nftsUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getNftsForContract?contractAddress=${coll.contract}&pageSize=1`;
-                    const nftsRes = await fetch(nftsUrl);
-                    const nftsData = await nftsRes.json();
-                    
-                    if (nftsData.nfts && nftsData.nfts.length > 0) {
-                        const nft = nftsData.nfts[0];
-                        imageUrl = nft.image?.cachedUrl || nft.image?.originalUrl || nft.image?.pngUrl;
-                    }
-                } catch(e) {}
-            }
-            
-            // Handle IPFS URLs
-            if (imageUrl && imageUrl.startsWith('ipfs://')) {
-                imageUrl = imageUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
-            }
-            
-            // Show image or fallback
-            if (imageUrl && !imageUrl.includes('placehold')) {
-                imgEl.src = imageUrl;
-                imgEl.style.display = 'block';
-                imgEl.onload = () => { placeholderEl.style.display = 'none'; };
-                imgEl.onerror = () => { 
-                    imgEl.style.display = 'none'; 
-                    placeholderEl.style.display = 'block'; 
-                };
-            }
-            
-            // Update OpenSea link
-            if (linkEl) {
-                linkEl.href = coll.opensea;
             }
             
         } catch(e) {
