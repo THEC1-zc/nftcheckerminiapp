@@ -6,1134 +6,1157 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WAST3 Hub</title>
 
-    <meta property="og:image" content="https://nftcheckerminiapp.vercel.app/icon.png" />
-    <meta name="fc:miniapp" content='{"version": "1", "imageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "button": { "title": "🚀 Open WAST3", "name": "WAST3 Hub", "url": "https://nftcheckerminiapp.vercel.app", "splashImageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "splashBackgroundColor": "#0052FF" } }' />
-
-    <style>
-        /* ========================================
-           WAST3 HUB v1.0.3
-           Design System: Blue Monochrome
-           Mobile-First Responsive
-        ======================================== */
-        
-        :root { 
-            --deepest-blue: #001F66;
-            --deep-blue: #003D99;
-            --primary-blue: #0052FF;
-            --electric-blue: #0080FF;
-            --sky-blue: #00B4FF;
-            --text-primary: #001F66;
-            --text-secondary: #0052FF;
-            --text-muted: #6B8DBF;
-            --success: #00D9A3;
-            --danger: #FF4757;
-            --warning: #ff9f43;
-            --card-bg: rgba(255, 255, 255, 0.95);
-            --card-border: rgba(0, 82, 255, 0.2);
-        }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
-            color: var(--text-primary); 
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        /* Background Image */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('back.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            opacity: 0.25;
-            z-index: -2;
-        }
-
-        /* Vignette Overlay */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, transparent 0%, rgba(0, 15, 40, 0.6) 100%);
-            z-index: -1;
-        }
-
-        /* ========================================
-           HEADER - Sticky
-        ======================================== */
-        .header-bar {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            border-bottom: 2px solid var(--primary-blue);
-            padding: 10px 12px;
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0, 82, 255, 0.15);
-            animation: slideDown 0.5s ease-out;
-        }
-
-        @keyframes slideDown {
-            from { transform: translateY(-100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-        }
-
-        .header-center {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .header-brand {
-            font-size: 1.3rem;
-            font-weight: 900;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, var(--primary-blue), var(--sky-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        /* Tip Button in Header */
-        .btn-tip-header {
-            background: linear-gradient(135deg, var(--electric-blue), var(--sky-blue));
-            color: white;
-            padding: 8px 12px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            border-radius: 10px;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 3px 12px rgba(0, 128, 255, 0.4);
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            white-space: nowrap;
-        }
-
-        .btn-tip-header:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 128, 255, 0.5);
-        }
-
-        .btn-tip-header:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Wallet Button */
-        .wallet-container {
-            position: relative;
-        }
-
-        .btn-wallet {
-            background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
-            color: white;
-            padding: 8px 14px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            border-radius: 10px;
-            cursor: pointer;
-            border: none;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 4px 15px rgba(0, 82, 255, 0.4);
-        }
-
-        .btn-wallet:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 82, 255, 0.5);
-        }
-
-        .btn-wallet:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-wallet.connected {
-            background: linear-gradient(135deg, var(--success), #00B87C);
-        }
-
-        .wallet-arrow {
-            transition: transform 0.3s;
-            font-size: 0.6rem;
-        }
-
-        .wallet-container.open .wallet-arrow {
-            transform: rotate(180deg);
-        }
-
-        .wallet-dropdown {
-            position: absolute;
-            top: calc(100% + 8px);
-            right: 0;
-            background: white;
-            border: 2px solid var(--primary-blue);
-            border-radius: 10px;
-            box-shadow: 0 8px 25px rgba(0, 82, 255, 0.3);
-            min-width: 160px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s;
-            overflow: hidden;
-        }
-
-        .wallet-container.open .wallet-dropdown {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .dropdown-item {
-            padding: 10px 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--danger);
-            border: none;
-            background: transparent;
-            width: 100%;
-            text-align: left;
-        }
-
-        .dropdown-item:hover {
-            background: rgba(255, 71, 87, 0.1);
-        }
-
-        /* Spinner */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .spinner {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-
-        .spinner-small {
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(0,82,255,0.2);
-            border-top-color: var(--primary-blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto;
-        }
-
-        /* Error Message */
-        .error-message {
-            position: fixed;
-            top: 70px;
-            right: 16px;
-            background: rgba(255, 71, 87, 0.98);
-            color: white;
-            padding: 12px 18px;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: none;
-            z-index: 200;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
-            max-width: 280px;
-        }
-
-        /* ========================================
-           MAIN CONTAINER
-        ======================================== */
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px 16px 30px;
-        }
-
-        /* Hero Section */
-        .hero {
-            text-align: center;
-            margin-bottom: 24px;
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .hero-icon-img {
-            width: 70px;
-            height: 70px;
-            margin: 0 auto 12px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 82, 255, 0.4);
-            border: 3px solid rgba(255, 255, 255, 0.5);
-            animation: float 3s ease-in-out infinite;
-            object-fit: contain;
-            background: linear-gradient(135deg, var(--primary-blue), var(--sky-blue));
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
-
-        .hero-title {
-            font-size: 2rem;
-            font-weight: 900;
-            letter-spacing: -1px;
-            margin-bottom: 6px;
-            color: white;
-            text-shadow: 0 2px 10px rgba(0, 82, 255, 0.4);
-        }
-
-        .hero-subtitle {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            font-weight: 500;
-        }
-
-        /* ========================================
-           SECTIONS
-        ======================================== */
-        .section {
-            margin-bottom: 20px;
-            animation: fadeInUp 0.5s ease-out backwards;
-        }
-
-        .section:nth-child(1) { animation-delay: 0.1s; }
-        .section:nth-child(2) { animation-delay: 0.15s; }
-        .section:nth-child(3) { animation-delay: 0.2s; }
-        .section:nth-child(4) { animation-delay: 0.25s; }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .section-line {
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3) 20%, rgba(0,180,255,0.5) 50%, rgba(255,255,255,0.3) 80%, transparent);
-        }
-
-        .section-title {
-            font-size: 0.7rem;
-            font-weight: 800;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.8);
-            white-space: nowrap;
-        }
-
-        /* ========================================
-           GO FISHIN' - NFT Cards
-        ======================================== */
-        .nft-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .nft-card {
-            background: var(--card-bg);
-            border-radius: 14px;
-            overflow: hidden;
-            text-decoration: none;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 82, 255, 0.15);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .nft-card:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 12px 30px rgba(0, 82, 255, 0.3);
-        }
-
-        .nft-img-wrapper {
-            width: 100%;
-            aspect-ratio: 1/1;
-            background: linear-gradient(135deg, #f0f4ff, #e8f0ff);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .nft-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.4s;
-        }
-
-        .nft-card:hover .nft-img {
-            transform: scale(1.08);
-        }
-
-        .nft-placeholder {
-            font-size: 40px;
-            opacity: 0.8;
-        }
-
-        .nft-info {
-            padding: 10px 8px;
-            text-align: center;
-            background: white;
-        }
-
-        .nft-name {
-            font-size: 0.7rem;
-            font-weight: 800;
-            color: var(--deepest-blue);
-            margin-bottom: 4px;
-            line-height: 1.2;
-        }
-
-        .nft-floor {
-            font-size: 0.6rem;
-            font-weight: 700;
-            color: var(--sky-blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            min-height: 16px;
-        }
-
-        .nft-floor-usd {
-            font-size: 0.9rem;
-            font-weight: 900;
-            color: var(--primary-blue);
-        }
-
-        .nft-link {
-            display: block;
-            background: var(--primary-blue);
-            color: white;
-            font-size: 0.6rem;
-            font-weight: 700;
-            padding: 6px 4px;
-            text-align: center;
-            text-decoration: none;
-            transition: background 0.2s;
-        }
-
-        .nft-link:hover {
-            background: var(--electric-blue);
-        }
-
-        /* Chickens DYOR Warning - Small */
-        .chicken-dyor {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            background: linear-gradient(135deg, #ffe8e8, #fff0f0);
-            padding: 4px 6px;
-            font-size: 0.55rem;
-            font-weight: 700;
-            color: #c0392b;
-            border-top: 1px solid #ffcccc;
-        }
-
-        .chicken-dyor img {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
-            object-fit: cover;
-        }
-
-        /* ========================================
-           ACTION CARDS (TYSM, TXS)
-        ======================================== */
-        .action-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .action-card {
-            background: var(--card-bg);
-            border-radius: 14px;
-            padding: 16px 12px;
-            text-decoration: none;
-            color: var(--text-primary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 82, 255, 0.1);
-            text-align: center;
-        }
-
-        .action-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(0, 82, 255, 0.25);
-        }
-
-        .action-icon {
-            font-size: 32px;
-            width: 55px;
-            height: 55px;
-            background: linear-gradient(135deg, rgba(0, 82, 255, 0.1), rgba(0, 180, 255, 0.15));
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.3s;
-        }
-
-        .action-card:hover .action-icon {
-            transform: rotate(8deg) scale(1.1);
-        }
-
-        .action-title {
-            font-size: 0.85rem;
-            font-weight: 800;
-            color: var(--deepest-blue);
-        }
-
-        .action-desc {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            font-weight: 500;
-            line-height: 1.3;
-        }
-
-        /* Chickens DYOR Warning - Small */
-        .chicken-dyor {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            background: linear-gradient(135deg, #ffe8e8, #fff0f0);
-            padding: 4px 6px;
-            font-size: 0.55rem;
-            font-weight: 700;
-            color: #c0392b;
-            border-top: 1px solid #ffcccc;
-        }
-
-        .chicken-dyor img {
-            width: 14px;
-            height: 14px;
-            border-radius: 3px;
-            object-fit: cover;
-        }
-
-        /* Coming Soon Card */
-        .coming-soon-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-            border: 2px dashed rgba(255,255,255,0.3);
-            border-radius: 14px;
-            padding: 20px;
-            text-align: center;
-            color: rgba(255,255,255,0.6);
-        }
-
-        .coming-soon-icon {
-            font-size: 36px;
-            margin-bottom: 8px;
-            opacity: 0.7;
-        }
-
-        .coming-soon-text {
-            font-size: 0.85rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        /* ========================================
-           FOOTER
-        ======================================== */
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .version-tag {
-            font-size: 0.65rem;
-            color: rgba(255, 255, 255, 0.4);
-            font-weight: 700;
-            font-family: monospace;
-            letter-spacing: 1px;
-        }
-
-        /* ========================================
-           RESPONSIVE
-        ======================================== */
-        @media (min-width: 400px) {
-            .nft-name { font-size: 0.75rem; }
-            .nft-floor { font-size: 0.9rem; }
-            .action-icon { width: 60px; height: 60px; font-size: 36px; }
-        }
-
-        @media (min-width: 500px) {
-            .container { padding: 30px 20px 40px; }
-            .hero-title { font-size: 2.4rem; }
-            .hero-icon { width: 80px; height: 80px; font-size: 42px; }
-        }
-    </style>
+```
+<meta property="og:image" content="https://nftcheckerminiapp.vercel.app/icon.png" />
+<meta name="fc:miniapp" content='{"version": "1", "imageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "button": { "title": "🚀 Open WAST3", "name": "WAST3 Hub", "url": "https://nftcheckerminiapp.vercel.app", "splashImageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "splashBackgroundColor": "#0052FF" } }' />
+
+<style>
+    /* ========================================
+       WAST3 HUB v1.0.4
+       Design System: Blue Monochrome
+       Mobile-First Responsive
+    ======================================== */
+    
+    :root { 
+        --deepest-blue: #001F66;
+        --deep-blue: #003D99;
+        --primary-blue: #0052FF;
+        --electric-blue: #0080FF;
+        --sky-blue: #00B4FF;
+        --text-primary: #001F66;
+        --text-secondary: #0052FF;
+        --text-muted: #6B8DBF;
+        --success: #00D9A3;
+        --danger: #FF4757;
+        --warning: #ff9f43;
+        --card-bg: rgba(255, 255, 255, 0.95);
+        --card-border: rgba(0, 82, 255, 0.2);
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+        background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+        color: var(--text-primary); 
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Background Image */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('back.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        opacity: 0.25;
+        z-index: -2;
+    }
+
+    /* Vignette Overlay */
+    body::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, transparent 0%, rgba(0, 15, 40, 0.6) 100%);
+        z-index: -1;
+    }
+
+    /* ========================================
+       HEADER - Sticky
+    ======================================== */
+    .header-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        border-bottom: 2px solid var(--primary-blue);
+        padding: 10px 12px;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        box-shadow: 0 4px 20px rgba(0, 82, 255, 0.15);
+        animation: slideDown 0.5s ease-out;
+    }
+
+    @keyframes slideDown {
+        from { transform: translateY(-100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .header-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .header-brand {
+        font-size: 1.3rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        background: linear-gradient(135deg, var(--primary-blue), var(--sky-blue));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    /* Tip Button in Header */
+    .btn-tip-header {
+        background: linear-gradient(135deg, var(--electric-blue), var(--sky-blue));
+        color: white;
+        padding: 8px 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-radius: 10px;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 3px 12px rgba(0, 128, 255, 0.4);
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+    }
+
+    .btn-tip-header:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 128, 255, 0.5);
+    }
+
+    .btn-tip-header:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Wallet Button */
+    .wallet-container {
+        position: relative;
+    }
+
+    .btn-wallet {
+        background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
+        color: white;
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        border-radius: 10px;
+        cursor: pointer;
+        border: none;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 4px 15px rgba(0, 82, 255, 0.4);
+    }
+
+    .btn-wallet:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 82, 255, 0.5);
+    }
+
+    .btn-wallet:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .btn-wallet.connected {
+        background: linear-gradient(135deg, var(--success), #00B87C);
+    }
+
+    .wallet-arrow {
+        transition: transform 0.3s;
+        font-size: 0.6rem;
+    }
+
+    .wallet-container.open .wallet-arrow {
+        transform: rotate(180deg);
+    }
+
+    .wallet-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: white;
+        border: 2px solid var(--primary-blue);
+        border-radius: 10px;
+        box-shadow: 0 8px 25px rgba(0, 82, 255, 0.3);
+        min-width: 160px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.3s;
+        overflow: hidden;
+    }
+
+    .wallet-container.open .wallet-dropdown {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .dropdown-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--danger);
+        border: none;
+        background: transparent;
+        width: 100%;
+        text-align: left;
+    }
+
+    .dropdown-item:hover {
+        background: rgba(255, 71, 87, 0.1);
+    }
+
+    /* Spinner */
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .spinner {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    .spinner-small {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(0,82,255,0.2);
+        border-top-color: var(--primary-blue);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto;
+    }
+
+    /* Error Message */
+    .error-message {
+        position: fixed;
+        top: 70px;
+        right: 16px;
+        background: rgba(255, 71, 87, 0.98);
+        color: white;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: none;
+        z-index: 200;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
+        max-width: 280px;
+    }
+
+    /* ========================================
+       MAIN CONTAINER
+    ======================================== */
+    .container {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 20px 16px 30px;
+    }
+
+    /* Hero Section */
+    .hero {
+        text-align: center;
+        margin-bottom: 24px;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-icon-img {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 12px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0, 82, 255, 0.4);
+        border: 3px solid rgba(255, 255, 255, 0.5);
+        animation: float 3s ease-in-out infinite;
+        object-fit: contain;
+        background: linear-gradient(135deg, var(--primary-blue), var(--sky-blue));
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+    }
+
+    .hero-title {
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: -1px;
+        margin-bottom: 6px;
+        color: white;
+        text-shadow: 0 2px 10px rgba(0, 82, 255, 0.4);
+    }
+
+    .hero-subtitle {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+    }
+
+    /* ========================================
+       SECTIONS
+    ======================================== */
+    .section {
+        margin-bottom: 20px;
+        animation: fadeInUp 0.5s ease-out backwards;
+    }
+
+    .section:nth-child(1) { animation-delay: 0.1s; }
+    .section:nth-child(2) { animation-delay: 0.15s; }
+    .section:nth-child(3) { animation-delay: 0.2s; }
+    .section:nth-child(4) { animation-delay: 0.25s; }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .section-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3) 20%, rgba(0,180,255,0.5) 50%, rgba(255,255,255,0.3) 80%, transparent);
+    }
+
+    .section-title {
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.8);
+        white-space: nowrap;
+    }
+
+    /* ========================================
+       GO FISHIN' - NFT Cards
+    ======================================== */
+    .nft-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .nft-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        overflow: hidden;
+        text-decoration: none;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(0, 82, 255, 0.15);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .nft-card:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 12px 30px rgba(0, 82, 255, 0.3);
+    }
+
+    .nft-img-wrapper {
+        width: 100%;
+        aspect-ratio: 1/1;
+        background: linear-gradient(135deg, #f0f4ff, #e8f0ff);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .nft-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s;
+    }
+
+    .nft-card:hover .nft-img {
+        transform: scale(1.08);
+    }
+
+    .nft-placeholder {
+        font-size: 40px;
+        opacity: 0.8;
+    }
+
+    .nft-info {
+        padding: 10px 8px;
+        text-align: center;
+        background: white;
+    }
+
+    .nft-name {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--deepest-blue);
+        margin-bottom: 4px;
+        line-height: 1.2;
+    }
+
+    .nft-floor {
+        font-size: 0.6rem;
+        font-weight: 700;
+        color: var(--sky-blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        min-height: 16px;
+    }
+
+    .nft-floor-usd {
+        font-size: 0.9rem;
+        font-weight: 900;
+        color: var(--primary-blue);
+    }
+
+    .nft-link {
+        display: block;
+        background: var(--primary-blue);
+        color: white;
+        font-size: 0.6rem;
+        font-weight: 700;
+        padding: 6px 4px;
+        text-align: center;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+
+    .nft-link:hover {
+        background: var(--electric-blue);
+    }
+
+    /* Chickens DYOR Warning - Small */
+    .chicken-dyor {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        background: linear-gradient(135deg, #ffe8e8, #fff0f0);
+        padding: 4px 6px;
+        font-size: 0.55rem;
+        font-weight: 700;
+        color: #c0392b;
+        border-top: 1px solid #ffcccc;
+    }
+
+    .chicken-dyor img {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        object-fit: cover;
+    }
+
+    /* Chickens Details Link */
+    .chicken-details {
+        display: block;
+        background: linear-gradient(135deg, var(--electric-blue), var(--sky-blue));
+        color: white;
+        text-decoration: none;
+        font-size: 0.55rem;
+        font-weight: 700;
+        padding: 5px 4px;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .chicken-details:hover {
+        background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
+    }
+
+    /* ========================================
+       ACTION CARDS (TYSM, TXS)
+    ======================================== */
+    .action-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .action-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 16px 12px;
+        text-decoration: none;
+        color: var(--text-primary);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(0, 82, 255, 0.1);
+        text-align: center;
+    }
+
+    .action-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0, 82, 255, 0.25);
+    }
+
+    .action-icon {
+        font-size: 32px;
+        width: 55px;
+        height: 55px;
+        background: linear-gradient(135deg, rgba(0, 82, 255, 0.1), rgba(0, 180, 255, 0.15));
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s;
+    }
+
+    .action-card:hover .action-icon {
+        transform: rotate(8deg) scale(1.1);
+    }
+
+    .action-title {
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: var(--deepest-blue);
+    }
+
+    .action-desc {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        line-height: 1.3;
+    }
+
+    /* Chickens DYOR Warning - Small */
+    .chicken-dyor {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        background: linear-gradient(135deg, #ffe8e8, #fff0f0);
+        padding: 4px 6px;
+        font-size: 0.55rem;
+        font-weight: 700;
+        color: #c0392b;
+        border-top: 1px solid #ffcccc;
+    }
+
+    .chicken-dyor img {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        object-fit: cover;
+    }
+
+    /* Coming Soon Card */
+    .coming-soon-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        border: 2px dashed rgba(255,255,255,0.3);
+        border-radius: 14px;
+        padding: 20px;
+        text-align: center;
+        color: rgba(255,255,255,0.6);
+    }
+
+    .coming-soon-icon {
+        font-size: 36px;
+        margin-bottom: 8px;
+        opacity: 0.7;
+    }
+
+    .coming-soon-text {
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    /* ========================================
+       FOOTER
+    ======================================== */
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .version-tag {
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.4);
+        font-weight: 700;
+        font-family: monospace;
+        letter-spacing: 1px;
+    }
+
+    /* ========================================
+       RESPONSIVE
+    ======================================== */
+    @media (min-width: 400px) {
+        .nft-name { font-size: 0.75rem; }
+        .nft-floor { font-size: 0.9rem; }
+        .action-icon { width: 60px; height: 60px; font-size: 36px; }
+    }
+
+    @media (min-width: 500px) {
+        .container { padding: 30px 20px 40px; }
+        .hero-title { font-size: 2.4rem; }
+        .hero-icon { width: 80px; height: 80px; font-size: 42px; }
+    }
+</style>
+```
+
 </head>
 <body>
 
-    <!-- ========================================
-         HEADER
-    ======================================== -->
-    <header class="header-bar">
-        <div class="header-left">
-            <span class="header-brand">WAST3</span>
-        </div>
+```
+<!-- ========================================
+     HEADER
+======================================== -->
+<header class="header-bar">
+    <div class="header-left">
+        <span class="header-brand">WAST3</span>
+    </div>
 
-        <div class="header-center">
-            <div class="wallet-container" id="walletContainer">
-                <button id="btnWallet" class="btn-wallet">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/>
-                        <path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/>
-                        <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/>
-                    </svg>
-                    <span id="walletText">Connect</span>
-                    <span class="wallet-arrow" id="walletArrow" style="display: none;">▼</span>
-                </button>
+    <div class="header-center">
+        <div class="wallet-container" id="walletContainer">
+            <button id="btnWallet" class="btn-wallet">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/>
+                    <path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/>
+                    <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/>
+                </svg>
+                <span id="walletText">Connect</span>
+                <span class="wallet-arrow" id="walletArrow" style="display: none;">▼</span>
+            </button>
 
-                <div class="wallet-dropdown" id="walletDropdown">
-                    <button class="dropdown-item" id="btnLogout">❌ Logout</button>
-                </div>
+            <div class="wallet-dropdown" id="walletDropdown">
+                <button class="dropdown-item" id="btnLogout">❌ Logout</button>
             </div>
         </div>
+    </div>
 
-        <div class="header-right">
-            <button id="btnTip" class="btn-tip-header">💙 Tip 1$</button>
-        </div>
-    </header>
+    <div class="header-right">
+        <button id="btnTip" class="btn-tip-header">💙 Tip 1$</button>
+    </div>
+</header>
 
-    <!-- Error Message -->
-    <div id="errorMessage" class="error-message"></div>
+<!-- Error Message -->
+<div id="errorMessage" class="error-message"></div>
 
-    <!-- ========================================
-         MAIN CONTENT
-    ======================================== -->
-    <div class="container">
-        
-        <!-- Hero -->
-        <div class="hero">
-            <img src="icon.png" class="hero-icon-img" alt="WAST3">
-            <h1 class="hero-title">WAST3</h1>
-            <p class="hero-subtitle">Tools I like, made for you</p>
-        </div>
-
-        <!-- ========================================
-             SECTION 1: GO FISHIN'
-        ======================================== -->
-        <section class="section">
-            <div class="section-header">
-                <div class="section-line"></div>
-                <h2 class="section-title">🎣 Go Fishin'</h2>
-                <div class="section-line"></div>
-            </div>
-            
-            <div class="nft-grid">
-                <!-- Howlers -->
-                <div class="nft-card" id="cardHowlers">
-                    <div class="nft-img-wrapper">
-                        <img id="imgHowlers" class="nft-img" src="h.png" alt="Howlers" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <span id="placeholderHowlers" class="nft-placeholder" style="display:none;">🐺</span>
-                    </div>
-                    <div class="nft-info">
-                        <div class="nft-name">Howlers</div>
-                        <div class="nft-floor-usd" id="usdHowlers">
-                            <div class="spinner-small"></div>
-                        </div>
-                        <div class="nft-floor" id="floorHowlers"></div>
-                    </div>
-                    <a id="linkHowlers" href="https://opensea.io/assets/base/0x160650efd60032aa49bbec70920a870aacffdc39" target="_blank" class="nft-link">OpenSea ↗</a>
-                </div>
-
-                <!-- Degen Dogs -->
-                <div class="nft-card" id="cardDogs">
-                    <div class="nft-img-wrapper">
-                        <img id="imgDogs" class="nft-img" src="dog.png" alt="Degen Dogs" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <span id="placeholderDogs" class="nft-placeholder" style="display:none;">🐶</span>
-                    </div>
-                    <div class="nft-info">
-                        <div class="nft-name">Degen Dogs</div>
-                        <div class="nft-floor-usd" id="usdDogs">
-                            <div class="spinner-small"></div>
-                        </div>
-                        <div class="nft-floor" id="floorDogs"></div>
-                    </div>
-                    <a id="linkDogs" href="https://opensea.io/assets/base/0x09154248ffdbaf8aa877ae8a4bf8ce1503596428" target="_blank" class="nft-link">OpenSea ↗</a>
-                </div>
-
-                <!-- Chickens -->
-                <div class="nft-card" id="cardChickens">
-                    <div class="nft-img-wrapper">
-                        <img id="imgChickens" class="nft-img" src="l5.jpeg" alt="Chickens" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <span id="placeholderChickens" class="nft-placeholder" style="display:none;">🐔</span>
-                    </div>
-                    <div class="nft-info">
-                        <div class="nft-name">Chickens</div>
-                        <div class="nft-floor-usd" id="usdChickens">
-                            <div class="spinner-small"></div>
-                        </div>
-                        <div class="nft-floor" id="floorChickens"></div>
-                    </div>
-                    <a id="linkChickens" href="https://opensea.io/assets/base/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0" target="_blank" class="nft-link">OpenSea ↗</a>
-                    <div class="chicken-dyor"><img src="l0.png" alt="⚠️" onerror="this.style.display='none';">DON'T BUY RED!</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ========================================
-             SECTION 2: SWEET TYSM
-        ======================================== -->
-        <section class="section">
-            <div class="section-header">
-                <div class="section-line"></div>
-                <h2 class="section-title">🙏 Sweet TYSM</h2>
-                <div class="section-line"></div>
-            </div>
-            
-            <div class="action-grid">
-                <a href="scanner.html" id="linkScanner" class="action-card">
-                    <div class="action-icon">🔍</div>
-                    <div class="action-title">Scanner</div>
-                    <div class="action-desc">Check NFT holdings</div>
-                </a>
-                <a href="tl.html" id="linkLeaderboard" class="action-card">
-                    <div class="action-icon">🏆</div>
-                    <div class="action-title">Leaderboard</div>
-                    <div class="action-desc">Top holders</div>
-                </a>
-            </div>
-        </section>
-
-        <!-- ========================================
-             SECTION 3: CHECK YOUR TXS
-        ======================================== -->
-        <section class="section">
-            <div class="section-header">
-                <div class="section-line"></div>
-                <h2 class="section-title">🧾 Check Your TXs</h2>
-                <div class="section-line"></div>
-            </div>
-            
-            <div class="action-grid">
-                <a href="txs.html" id="linkTxs" class="action-card">
-                    <div class="action-icon">📊</div>
-                    <div class="action-title">TX Analyzer</div>
-                    <div class="action-desc">Wallet history</div>
-                </a>
-                <a href="tx2.html" id="linkTx2" class="action-card">
-                    <div class="action-icon">🧪</div>
-                    <div class="action-title">TX V2 Beta</div>
-                    <div class="action-desc">New features</div>
-                </a>
-            </div>
-        </section>
-
-        <!-- ========================================
-             SECTION 4: COMING SOON
-        ======================================== -->
-        <section class="section">
-            <div class="section-header">
-                <div class="section-line"></div>
-                <h2 class="section-title">🔮 Coming Soon</h2>
-                <div class="section-line"></div>
-            </div>
-            
-            <div class="coming-soon-card">
-                <div class="coming-soon-icon">✨</div>
-                <div class="coming-soon-text">Stay tuned...</div>
-            </div>
-        </section>
-
-        <!-- ========================================
-             FOOTER
-        ======================================== -->
-        <footer class="footer">
-            <span class="version-tag">v1.0.3</span>
-        </footer>
-
+<!-- ========================================
+     MAIN CONTENT
+======================================== -->
+<div class="container">
+    
+    <!-- Hero -->
+    <div class="hero">
+        <img src="icon.png" class="hero-icon-img" alt="WAST3">
+        <h1 class="hero-title">WAST3</h1>
+        <p class="hero-subtitle">Tools I like, made for you</p>
     </div>
 
     <!-- ========================================
-         JAVASCRIPT
+         SECTION 1: GO FISHIN'
     ======================================== -->
-    <script type="module">
-        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+    <section class="section">
+        <div class="section-header">
+            <div class="section-line"></div>
+            <h2 class="section-title">🎣 Go Fishin'</h2>
+            <div class="section-line"></div>
+        </div>
         
-        // ========================================
-        // CONFIG
-        // ========================================
-        const BASE_CHAIN_ID = '0x2105';
-        const USDC_CONTRACT = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-        const TIP_RECIPIENT = '0xFd144C774582a450a3F578ae742502ff11Ff92Df';
-        const TIP_AMOUNT = '1000000'; // 1 USDC (6 decimals)
-        const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh';
+        <div class="nft-grid">
+            <!-- Howlers -->
+            <div class="nft-card" id="cardHowlers">
+                <div class="nft-img-wrapper">
+                    <img id="imgHowlers" class="nft-img" src="h.png" alt="Howlers" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span id="placeholderHowlers" class="nft-placeholder" style="display:none;">🐺</span>
+                </div>
+                <div class="nft-info">
+                    <div class="nft-name">Howlers</div>
+                    <div class="nft-floor-usd" id="usdHowlers">
+                        <div class="spinner-small"></div>
+                    </div>
+                    <div class="nft-floor" id="floorHowlers"></div>
+                </div>
+                <a id="linkHowlers" href="https://opensea.io/assets/base/0x160650efd60032aa49bbec70920a870aacffdc39" target="_blank" class="nft-link">OpenSea ↗</a>
+            </div>
 
-        // NFT Collections
-        const COLLECTIONS = {
-            howlers: {
-                contract: '0x160650efd60032aa49bbec70920a870aacffdc39',
-                name: 'Howlers',
-                opensea: 'https://opensea.io/assets/base/0x160650efd60032aa49bbec70920a870aacffdc39',
-                fallbackEmoji: '🐺'
-            },
-            dogs: {
-                contract: '0x09154248ffdbaf8aa877ae8a4bf8ce1503596428',
-                name: 'Degen Dogs',
-                opensea: 'https://opensea.io/assets/base/0x09154248ffdbaf8aa877ae8a4bf8ce1503596428',
-                fallbackEmoji: '🐶'
-            },
-            chickens: {
-                contract: '0x84eea2be67b17698b0e09b57eeeda47aa921bbf0',
-                name: 'Chickens',
-                opensea: 'https://opensea.io/assets/base/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0',
-                fallbackEmoji: '🐔'
-            }
-        };
+            <!-- Degen Dogs -->
+            <div class="nft-card" id="cardDogs">
+                <div class="nft-img-wrapper">
+                    <img id="imgDogs" class="nft-img" src="dog.png" alt="Degen Dogs" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span id="placeholderDogs" class="nft-placeholder" style="display:none;">🐶</span>
+                </div>
+                <div class="nft-info">
+                    <div class="nft-name">Degen Dogs</div>
+                    <div class="nft-floor-usd" id="usdDogs">
+                        <div class="spinner-small"></div>
+                    </div>
+                    <div class="nft-floor" id="floorDogs"></div>
+                </div>
+                <a id="linkDogs" href="https://opensea.io/assets/base/0x09154248ffdbaf8aa877ae8a4bf8ce1503596428" target="_blank" class="nft-link">OpenSea ↗</a>
+            </div>
 
-        // ========================================
-        // INIT FARCASTER SDK
-        // ========================================
-        const initSDK = async () => { 
-            try { await sdk.actions.ready(); } 
-            catch(e) { console.log('SDK init:', e); }
-        };
-        initSDK();
+            <!-- Chickens -->
+            <div class="nft-card" id="cardChickens">
+                <div class="nft-img-wrapper">
+                    <img id="imgChickens" class="nft-img" src="l5.jpeg" alt="Chickens" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span id="placeholderChickens" class="nft-placeholder" style="display:none;">🐔</span>
+                </div>
+                <div class="nft-info">
+                    <div class="nft-name">Chickens</div>
+                    <div class="nft-floor-usd" id="usdChickens">
+                        <div class="spinner-small"></div>
+                    </div>
+                    <div class="nft-floor" id="floorChickens"></div>
+                </div>
+                <a id="linkChickens" href="https://opensea.io/assets/base/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0" target="_blank" class="nft-link">OpenSea ↗</a>
+                <div class="chicken-dyor"><img src="l0.png" alt="⚠️" onerror="this.style.display='none';">DON'T BUY RED!</div>
+                <a href="chickenfish.html" class="chicken-details">📊 Floor by Level</a>
+            </div>
+        </div>
+    </section>
 
-        // ========================================
-        // WALLET FUNCTIONS
-        // ========================================
-        function setConnectedState(address) {
-            const btn = document.getElementById('btnWallet');
-            const btnText = document.getElementById('walletText');
-            const arrow = document.getElementById('walletArrow');
-            if (!btn || !btnText || !arrow) return;
-            
-            btnText.innerHTML = `${address.slice(0,4)}...${address.slice(-4)}`;
-            btn.classList.add('connected');
-            arrow.style.display = 'inline';
-            localStorage.setItem('tysm_wallet', address);
-            updateLinks(address);
-            hideError();
+    <!-- ========================================
+         SECTION 2: SWEET TYSM
+    ======================================== -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-line"></div>
+            <h2 class="section-title">🙏 Sweet TYSM</h2>
+            <div class="section-line"></div>
+        </div>
+        
+        <div class="action-grid">
+            <a href="scanner.html" id="linkScanner" class="action-card">
+                <div class="action-icon">🔍</div>
+                <div class="action-title">Scanner</div>
+                <div class="action-desc">Check NFT holdings</div>
+            </a>
+            <a href="tl.html" id="linkLeaderboard" class="action-card">
+                <div class="action-icon">🏆</div>
+                <div class="action-title">Leaderboard</div>
+                <div class="action-desc">Top holders</div>
+            </a>
+        </div>
+    </section>
+
+    <!-- ========================================
+         SECTION 3: CHECK YOUR TXS
+    ======================================== -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-line"></div>
+            <h2 class="section-title">🧾 Check Your TXs</h2>
+            <div class="section-line"></div>
+        </div>
+        
+        <div class="action-grid">
+            <a href="txs.html" id="linkTxs" class="action-card">
+                <div class="action-icon">📊</div>
+                <div class="action-title">TX Analyzer</div>
+                <div class="action-desc">Wallet history</div>
+            </a>
+            <a href="tx2.html" id="linkTx2" class="action-card">
+                <div class="action-icon">🧪</div>
+                <div class="action-title">TX V2 Beta</div>
+                <div class="action-desc">New features</div>
+            </a>
+        </div>
+    </section>
+
+    <!-- ========================================
+         SECTION 4: COMING SOON
+    ======================================== -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-line"></div>
+            <h2 class="section-title">🔮 Coming Soon</h2>
+            <div class="section-line"></div>
+        </div>
+        
+        <div class="coming-soon-card">
+            <div class="coming-soon-icon">✨</div>
+            <div class="coming-soon-text">Stay tuned...</div>
+        </div>
+    </section>
+
+    <!-- ========================================
+         FOOTER
+    ======================================== -->
+    <footer class="footer">
+        <span class="version-tag">v1.0.4</span>
+    </footer>
+
+</div>
+
+<!-- ========================================
+     JAVASCRIPT
+======================================== -->
+<script type="module">
+    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+    
+    // ========================================
+    // CONFIG
+    // ========================================
+    const BASE_CHAIN_ID = '0x2105';
+    const USDC_CONTRACT = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+    const TIP_RECIPIENT = '0xFd144C774582a450a3F578ae742502ff11Ff92Df';
+    const TIP_AMOUNT = '1000000'; // 1 USDC (6 decimals)
+    const ALCHEMY_KEY = '46kIRKE_HvuVkuRbPNRbh';
+
+    // NFT Collections
+    const COLLECTIONS = {
+        howlers: {
+            contract: '0x160650efd60032aa49bbec70920a870aacffdc39',
+            name: 'Howlers',
+            opensea: 'https://opensea.io/assets/base/0x160650efd60032aa49bbec70920a870aacffdc39',
+            fallbackEmoji: '🐺'
+        },
+        dogs: {
+            contract: '0x09154248ffdbaf8aa877ae8a4bf8ce1503596428',
+            name: 'Degen Dogs',
+            opensea: 'https://opensea.io/assets/base/0x09154248ffdbaf8aa877ae8a4bf8ce1503596428',
+            fallbackEmoji: '🐶'
+        },
+        chickens: {
+            contract: '0x84eea2be67b17698b0e09b57eeeda47aa921bbf0',
+            name: 'Chickens',
+            opensea: 'https://opensea.io/assets/base/0x84eea2be67b17698b0e09b57eeeda47aa921bbf0',
+            fallbackEmoji: '🐔'
         }
+    };
 
-        function setDisconnectedState() {
-            const btn = document.getElementById('btnWallet');
-            const btnText = document.getElementById('walletText');
-            const arrow = document.getElementById('walletArrow');
-            const container = document.getElementById('walletContainer');
-            if (!btn || !btnText || !arrow) return;
-            
-            btnText.innerText = "Connect";
-            btn.classList.remove('connected');
-            arrow.style.display = 'none';
+    // ========================================
+    // INIT FARCASTER SDK
+    // ========================================
+    const initSDK = async () => { 
+        try { await sdk.actions.ready(); } 
+        catch(e) { console.log('SDK init:', e); }
+    };
+    initSDK();
+
+    // ========================================
+    // WALLET FUNCTIONS
+    // ========================================
+    function setConnectedState(address) {
+        const btn = document.getElementById('btnWallet');
+        const btnText = document.getElementById('walletText');
+        const arrow = document.getElementById('walletArrow');
+        if (!btn || !btnText || !arrow) return;
+        
+        btnText.innerHTML = `${address.slice(0,4)}...${address.slice(-4)}`;
+        btn.classList.add('connected');
+        arrow.style.display = 'inline';
+        localStorage.setItem('tysm_wallet', address);
+        updateLinks(address);
+        hideError();
+    }
+
+    function setDisconnectedState() {
+        const btn = document.getElementById('btnWallet');
+        const btnText = document.getElementById('walletText');
+        const arrow = document.getElementById('walletArrow');
+        const container = document.getElementById('walletContainer');
+        if (!btn || !btnText || !arrow) return;
+        
+        btnText.innerText = "Connect";
+        btn.classList.remove('connected');
+        arrow.style.display = 'none';
+        container.classList.remove('open');
+        localStorage.removeItem('tysm_wallet');
+        updateLinks(null);
+    }
+
+    function updateLinks(address) {
+        const param = address ? `?wallet=${address}` : "";
+        const links = [
+            { id: 'linkScanner', page: 'scanner.html' },
+            { id: 'linkLeaderboard', page: 'tl.html' },
+            { id: 'linkTxs', page: 'txs.html' },
+            { id: 'linkTx2', page: 'tx2.html' }
+        ];
+        links.forEach(({ id, page }) => {
+            const el = document.getElementById(id);
+            if (el) el.href = `${page}${param}`;
+        });
+    }
+
+    function toggleDropdown() {
+        const container = document.getElementById('walletContainer');
+        const btn = document.getElementById('btnWallet');
+        if (!btn.classList.contains('connected')) return;
+        container.classList.toggle('open');
+    }
+
+    document.addEventListener('click', (e) => {
+        const container = document.getElementById('walletContainer');
+        if (!container.contains(e.target)) {
             container.classList.remove('open');
-            localStorage.removeItem('tysm_wallet');
-            updateLinks(null);
         }
+    });
 
-        function updateLinks(address) {
-            const param = address ? `?wallet=${address}` : "";
-            const links = [
-                { id: 'linkScanner', page: 'scanner.html' },
-                { id: 'linkLeaderboard', page: 'tl.html' },
-                { id: 'linkTxs', page: 'txs.html' },
-                { id: 'linkTx2', page: 'tx2.html' }
-            ];
-            links.forEach(({ id, page }) => {
-                const el = document.getElementById(id);
-                if (el) el.href = `${page}${param}`;
-            });
+    // ========================================
+    // ERROR HANDLING
+    // ========================================
+    function showError(msg) {
+        const err = document.getElementById('errorMessage');
+        if (err) {
+            err.textContent = msg;
+            err.style.display = 'block';
+            setTimeout(hideError, 5000);
         }
+    }
 
-        function toggleDropdown() {
-            const container = document.getElementById('walletContainer');
-            const btn = document.getElementById('btnWallet');
-            if (!btn.classList.contains('connected')) return;
-            container.classList.toggle('open');
+    function hideError() {
+        const err = document.getElementById('errorMessage');
+        if (err) err.style.display = 'none';
+    }
+
+    // ========================================
+    // CONNECT WALLET
+    // ========================================
+    async function connectWallet() {
+        const btn = document.getElementById('btnWallet');
+        const btnText = document.getElementById('walletText');
+        if (!btn || !btnText) return;
+        
+        if (btn.classList.contains('connected')) {
+            toggleDropdown();
+            return;
         }
-
-        document.addEventListener('click', (e) => {
-            const container = document.getElementById('walletContainer');
-            if (!container.contains(e.target)) {
-                container.classList.remove('open');
-            }
-        });
-
-        // ========================================
-        // ERROR HANDLING
-        // ========================================
-        function showError(msg) {
-            const err = document.getElementById('errorMessage');
-            if (err) {
-                err.textContent = msg;
-                err.style.display = 'block';
-                setTimeout(hideError, 5000);
-            }
-        }
-
-        function hideError() {
-            const err = document.getElementById('errorMessage');
-            if (err) err.style.display = 'none';
-        }
-
-        // ========================================
-        // CONNECT WALLET
-        // ========================================
-        async function connectWallet() {
-            const btn = document.getElementById('btnWallet');
-            const btnText = document.getElementById('walletText');
-            if (!btn || !btnText) return;
+        
+        try {
+            hideError();
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="spinner"></span>';
             
-            if (btn.classList.contains('connected')) {
-                toggleDropdown();
-                return;
-            }
+            const provider = await sdk.wallet.getEthereumProvider();
             
             try {
-                hideError();
-                btn.disabled = true;
-                btnText.innerHTML = '<span class="spinner"></span>';
-                
-                const provider = await sdk.wallet.getEthereumProvider();
-                
-                try {
-                    await provider.request({ 
-                        method: 'wallet_switchEthereumChain', 
-                        params: [{ chainId: BASE_CHAIN_ID }] 
-                    });
-                } catch (switchError) {
-                    if (switchError.code === 4902) {
-                        showError('Please add Base Chain');
-                        throw new Error('Chain not added');
-                    }
-                    throw switchError;
-                }
-                
-                const accounts = await provider.request({ method: 'eth_requestAccounts' });
-                
-                if (accounts && accounts.length > 0) {
-                    setConnectedState(accounts[0]);
-                } else {
-                    throw new Error('No accounts');
-                }
-                
-                btn.disabled = false;
-                
-            } catch (error) {
-                console.error("Connection Error:", error);
-                btn.disabled = false;
-                btnText.innerText = "Connect";
-                
-                if (error.code === 4001) {
-                    showError('Connection cancelled');
-                } else if (error.code === -32002) {
-                    showError('Request pending - check wallet');
-                } else if (!error.message?.includes('Chain not added')) {
-                    showError('Connection failed');
-                }
-            }
-        }
-
-        // ========================================
-        // TIP FUNCTION
-        // ========================================
-        async function sendTip() {
-            const savedWallet = localStorage.getItem('tysm_wallet');
-            if (!savedWallet) {
-                showError('Connect wallet first');
-                return;
-            }
-            
-            const btnTip = document.getElementById('btnTip');
-            if (!btnTip) return;
-            
-            try {
-                hideError();
-                btnTip.disabled = true;
-                btnTip.innerHTML = '<span class="spinner"></span> Sending...';
-                
-                const provider = await sdk.wallet.getEthereumProvider();
-                
-                const transferData = '0xa9059cbb' + 
-                    TIP_RECIPIENT.slice(2).padStart(64, '0') + 
-                    parseInt(TIP_AMOUNT).toString(16).padStart(64, '0');
-                
-                const txHash = await provider.request({
-                    method: 'eth_sendTransaction',
-                    params: [{ 
-                        from: savedWallet, 
-                        to: USDC_CONTRACT, 
-                        data: transferData, 
-                        value: '0x0' 
-                    }]
+                await provider.request({ 
+                    method: 'wallet_switchEthereumChain', 
+                    params: [{ chainId: BASE_CHAIN_ID }] 
                 });
-                
-                btnTip.innerHTML = '✅ Sent!';
-                btnTip.style.background = 'linear-gradient(135deg, #00D9A3, #00B87C)';
-                
-                setTimeout(() => {
-                    if (confirm(`Transaction sent! ✅\n\nTx: ${txHash.slice(0,20)}...\n\nView on BaseScan?`)) {
-                        window.open(`https://basescan.org/tx/${txHash}`, '_blank');
-                    }
-                    btnTip.innerHTML = '💙 Tip 1$';
-                    btnTip.style.background = '';
-                    btnTip.disabled = false;
-                }, 1500);
-                
-            } catch (error) {
-                console.error("Tip Error:", error);
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    showError('Please add Base Chain');
+                    throw new Error('Chain not added');
+                }
+                throw switchError;
+            }
+            
+            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            
+            if (accounts && accounts.length > 0) {
+                setConnectedState(accounts[0]);
+            } else {
+                throw new Error('No accounts');
+            }
+            
+            btn.disabled = false;
+            
+        } catch (error) {
+            console.error("Connection Error:", error);
+            btn.disabled = false;
+            btnText.innerText = "Connect";
+            
+            if (error.code === 4001) {
+                showError('Connection cancelled');
+            } else if (error.code === -32002) {
+                showError('Request pending - check wallet');
+            } else if (!error.message?.includes('Chain not added')) {
+                showError('Connection failed');
+            }
+        }
+    }
+
+    // ========================================
+    // TIP FUNCTION
+    // ========================================
+    async function sendTip() {
+        const savedWallet = localStorage.getItem('tysm_wallet');
+        if (!savedWallet) {
+            showError('Connect wallet first');
+            return;
+        }
+        
+        const btnTip = document.getElementById('btnTip');
+        if (!btnTip) return;
+        
+        try {
+            hideError();
+            btnTip.disabled = true;
+            btnTip.innerHTML = '<span class="spinner"></span> Sending...';
+            
+            const provider = await sdk.wallet.getEthereumProvider();
+            
+            const transferData = '0xa9059cbb' + 
+                TIP_RECIPIENT.slice(2).padStart(64, '0') + 
+                parseInt(TIP_AMOUNT).toString(16).padStart(64, '0');
+            
+            const txHash = await provider.request({
+                method: 'eth_sendTransaction',
+                params: [{ 
+                    from: savedWallet, 
+                    to: USDC_CONTRACT, 
+                    data: transferData, 
+                    value: '0x0' 
+                }]
+            });
+            
+            btnTip.innerHTML = '✅ Sent!';
+            btnTip.style.background = 'linear-gradient(135deg, #00D9A3, #00B87C)';
+            
+            setTimeout(() => {
+                if (confirm(`Transaction sent! ✅\n\nTx: ${txHash.slice(0,20)}...\n\nView on BaseScan?`)) {
+                    window.open(`https://basescan.org/tx/${txHash}`, '_blank');
+                }
                 btnTip.innerHTML = '💙 Tip 1$';
+                btnTip.style.background = '';
                 btnTip.disabled = false;
-                
-                if (error.code === 4001) {
-                    showError('Tip cancelled');
-                } else if (error.message?.includes('insufficient funds')) {
-                    showError('Insufficient USDC');
-                } else {
-                    showError('Tip failed');
-                }
-            }
-        }
-
-        // ========================================
-        // NFT FLOOR PRICE LOADER
-        // ========================================
-        async function loadNFTData() {
-            let ethPrice = 0;
+            }, 1500);
             
-            // Get ETH price first
-            try {
-                const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
-                const priceJson = await priceRes.json();
-                ethPrice = parseFloat(priceJson.data.amount);
-            } catch(e) {
-                console.error('ETH price error:', e);
-                ethPrice = 2500; // Fallback
-            }
-
-            // Load each collection
-            for (const [key, coll] of Object.entries(COLLECTIONS)) {
-                loadCollectionData(key, coll, ethPrice);
-            }
-        }
-
-        async function loadCollectionData(key, coll, ethPrice) {
-            const floorEl = document.getElementById(`floor${capitalize(key)}`);
-            const usdEl = document.getElementById(`usd${capitalize(key)}`);
+        } catch (error) {
+            console.error("Tip Error:", error);
+            btnTip.innerHTML = '💙 Tip 1$';
+            btnTip.disabled = false;
             
-            try {
-                // Get Floor Price only (images are static)
-                const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${coll.contract}`;
-                const floorRes = await fetch(floorUrl);
-                const floorData = await floorRes.json();
-                const floorEth = floorData.openSea?.floorPrice || 0;
-                const floorUsd = floorEth * ethPrice;
-                
-                // Update floor price - USD big, ETH small
-                if (floorEth > 0) {
-                    usdEl.innerHTML = `$${floorUsd.toFixed(2)}`;
-                    floorEl.innerHTML = `${floorEth.toFixed(4)} Ξ`;
-                } else {
-                    usdEl.innerHTML = '---';
-                    floorEl.innerHTML = '';
-                }
-                
-            } catch(e) {
-                console.error(`Error loading ${key}:`, e);
-                floorEl.innerHTML = 'Error';
+            if (error.code === 4001) {
+                showError('Tip cancelled');
+            } else if (error.message?.includes('insufficient funds')) {
+                showError('Insufficient USDC');
+            } else {
+                showError('Tip failed');
             }
         }
+    }
 
-        function capitalize(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
+    // ========================================
+    // NFT FLOOR PRICE LOADER
+    // ========================================
+    async function loadNFTData() {
+        let ethPrice = 0;
+        
+        // Get ETH price first
+        try {
+            const priceRes = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
+            const priceJson = await priceRes.json();
+            ethPrice = parseFloat(priceJson.data.amount);
+        } catch(e) {
+            console.error('ETH price error:', e);
+            ethPrice = 2500; // Fallback
         }
 
-        // ========================================
-        // LOGOUT
-        // ========================================
-        function performLogout() {
-            setDisconnectedState();
+        // Load each collection
+        for (const [key, coll] of Object.entries(COLLECTIONS)) {
+            loadCollectionData(key, coll, ethPrice);
         }
+    }
 
-        // ========================================
-        // INIT ON DOM READY
-        // ========================================
-        window.addEventListener('DOMContentLoaded', () => {
-            // Check saved wallet
-            const savedWallet = localStorage.getItem('tysm_wallet');
-            if (savedWallet && savedWallet.startsWith('0x')) {
-                setConnectedState(savedWallet);
+    async function loadCollectionData(key, coll, ethPrice) {
+        const floorEl = document.getElementById(`floor${capitalize(key)}`);
+        const usdEl = document.getElementById(`usd${capitalize(key)}`);
+        
+        try {
+            // Get Floor Price only (images are static)
+            const floorUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_KEY}/getFloorPrice?contractAddress=${coll.contract}`;
+            const floorRes = await fetch(floorUrl);
+            const floorData = await floorRes.json();
+            const floorEth = floorData.openSea?.floorPrice || 0;
+            const floorUsd = floorEth * ethPrice;
+            
+            // Update floor price - USD big, ETH small
+            if (floorEth > 0) {
+                usdEl.innerHTML = `$${floorUsd.toFixed(2)}`;
+                floorEl.innerHTML = `${floorEth.toFixed(4)} Ξ`;
+            } else {
+                usdEl.innerHTML = '---';
+                floorEl.innerHTML = '';
             }
             
-            // Load NFT data
-            loadNFTData();
-        });
+        } catch(e) {
+            console.error(`Error loading ${key}:`, e);
+            floorEl.innerHTML = 'Error';
+        }
+    }
 
-        // ========================================
-        // EVENT LISTENERS
-        // ========================================
-        document.getElementById('btnWallet')?.addEventListener('click', connectWallet);
-        document.getElementById('btnLogout')?.addEventListener('click', performLogout);
-        document.getElementById('btnTip')?.addEventListener('click', sendTip);
-    </script>
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // ========================================
+    // LOGOUT
+    // ========================================
+    function performLogout() {
+        setDisconnectedState();
+    }
+
+    // ========================================
+    // INIT ON DOM READY
+    // ========================================
+    window.addEventListener('DOMContentLoaded', () => {
+        // Check saved wallet
+        const savedWallet = localStorage.getItem('tysm_wallet');
+        if (savedWallet && savedWallet.startsWith('0x')) {
+            setConnectedState(savedWallet);
+        }
+        
+        // Load NFT data
+        loadNFTData();
+    });
+
+    // ========================================
+    // EVENT LISTENERS
+    // ========================================
+    document.getElementById('btnWallet')?.addEventListener('click', connectWallet);
+    document.getElementById('btnLogout')?.addEventListener('click', performLogout);
+    document.getElementById('btnTip')?.addEventListener('click', sendTip);
+</script>
+```
 
 </body>
 </html>
