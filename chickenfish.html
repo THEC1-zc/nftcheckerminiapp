@@ -1,617 +1,610 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WAST3 - Chickens Floor Tracker</title>
-
-```
-<meta property="og:image" content="https://nftcheckerminiapp.vercel.app/icon.png" />
-<meta name="fc:miniapp" content='{"version": "1", "imageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "button": { "title": "🐔 Chickens Tracker", "name": "WAST3 Hub", "url": "https://nftcheckerminiapp.vercel.app/chickenfish.html", "splashImageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "splashBackgroundColor": "#0052FF" } }' />
-
-<style>
-    /* ========================================
-       WAST3 - CHICKENS FLOOR TRACKER v3.0.0
-       Design System: Blue Monochrome
-    ======================================== */
     
-    :root {
-        --deepest-blue: #001F66;
-        --deep-blue: #003D99;
-        --primary-blue: #0052FF;
-        --electric-blue: #0080FF;
-        --sky-blue: #00B4FF;
-        --success: #00D9A3;
-        --danger: #FF4757;
-        --warning: #ff9f43;
-        --card-bg: rgba(255, 255, 255, 0.95);
-    }
+    <meta property="og:image" content="https://nftcheckerminiapp.vercel.app/icon.png" />
+    <meta name="fc:miniapp" content='{"version": "1", "imageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "button": { "title": "🐔 Chickens Tracker", "name": "WAST3 Hub", "url": "https://nftcheckerminiapp.vercel.app/chickenfish.html", "splashImageUrl": "https://nftcheckerminiapp.vercel.app/icon.png", "splashBackgroundColor": "#0052FF" } }' />
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: linear-gradient(135deg, #0a0e27, #1a1f3a);
-        color: var(--deepest-blue);
-        min-height: 100vh;
-        position: relative;
-    }
-
-    body::before {
-        content: '';
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background-image: url('back.png');
-        background-size: cover;
-        background-position: center;
-        opacity: 0.25;
-        z-index: -2;
-    }
-
-    body::after {
-        content: '';
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: radial-gradient(circle at center, transparent 0%, rgba(0, 15, 40, 0.6) 100%);
-        z-index: -1;
-    }
-
-    /* Header */
-    .header-bar {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(20px);
-        border-bottom: 2px solid var(--primary-blue);
-        padding: 10px 12px;
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        align-items: center;
-    }
-
-    .header-left { display: flex; align-items: center; }
-    .header-center { display: flex; align-items: center; justify-content: center; }
-    .header-right { display: flex; align-items: center; justify-content: flex-end; }
-
-    .header-brand {
-        font-size: 1.3rem;
-        font-weight: 900;
-        letter-spacing: 2px;
-        background: linear-gradient(135deg, var(--primary-blue), var(--sky-blue));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .back-btn {
-        background: var(--primary-blue);
-        color: white;
-        text-decoration: none;
-        padding: 8px 14px;
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 0.8rem;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        transition: all 0.3s;
-    }
-
-    .back-btn:hover {
-        background: var(--electric-blue);
-        transform: translateX(-2px);
-    }
-
-    /* Container */
-    .container {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px 16px 40px;
-    }
-
-    /* Hero */
-    .hero {
-        text-align: center;
-        margin-bottom: 24px;
-    }
-
-    .hero-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 12px;
-        border-radius: 20px;
-        object-fit: cover;
-        box-shadow: 0 10px 30px rgba(0, 82, 255, 0.4);
-        border: 3px solid rgba(255, 255, 255, 0.5);
-    }
-
-    .hero-title {
-        font-size: 1.8rem;
-        font-weight: 900;
-        color: white;
-        text-shadow: 0 2px 15px rgba(0, 82, 255, 0.5);
-        margin-bottom: 6px;
-    }
-
-    .hero-subtitle {
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.7);
-        font-weight: 500;
-    }
-
-    /* Info Box */
-    .info-box {
-        background: linear-gradient(135deg, rgba(0, 82, 255, 0.15), rgba(0, 180, 255, 0.1));
-        border: 1px solid rgba(0, 180, 255, 0.3);
-        border-radius: 12px;
-        padding: 14px;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-
-    .info-box-title {
-        color: var(--sky-blue);
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 6px;
-    }
-
-    .info-box-text {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.8rem;
-        line-height: 1.5;
-    }
-
-    .info-box-text strong {
-        color: var(--success);
-    }
-
-    /* Section */
-    .section {
-        margin-bottom: 24px;
-    }
-
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 14px;
-    }
-
-    .section-line {
-        flex: 1;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    }
-
-    .section-title {
-        font-size: 0.75rem;
-        font-weight: 800;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.8);
-        white-space: nowrap;
-    }
-
-    /* Floor Grid */
-    .floor-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 8px;
-    }
-
-    @media (max-width: 500px) {
-        .floor-grid {
-            grid-template-columns: repeat(3, 1fr);
+    <style>
+        /* ========================================
+           WAST3 - CHICKENS FLOOR TRACKER v3.0.0
+           Design System: Blue Monochrome
+        ======================================== */
+        
+        :root {
+            --deepest-blue: #001F66;
+            --deep-blue: #003D99;
+            --primary-blue: #0052FF;
+            --electric-blue: #0080FF;
+            --sky-blue: #00B4FF;
+            --success: #00D9A3;
+            --danger: #FF4757;
+            --warning: #ff9f43;
+            --card-bg: rgba(255, 255, 255, 0.95);
         }
-    }
 
-    @media (max-width: 350px) {
-        .floor-grid {
-            grid-template-columns: repeat(2, 1fr);
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0e27, #1a1f3a);
+            color: var(--deepest-blue);
+            min-height: 100vh;
+            position: relative;
         }
-    }
 
-    /* Floor Card */
-    .floor-card {
-        background: var(--card-bg);
-        border-radius: 14px;
-        overflow: hidden;
-        text-align: center;
-        transition: all 0.3s;
-        box-shadow: 0 4px 15px rgba(0, 82, 255, 0.15);
-    }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: url('back.png');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.25;
+            z-index: -2;
+        }
 
-    .floor-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 30px rgba(0, 82, 255, 0.25);
-    }
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0, 15, 40, 0.6) 100%);
+            z-index: -1;
+        }
 
-    .floor-card.no-data {
-        opacity: 0.5;
-    }
+        /* Header */
+        .header-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid var(--primary-blue);
+            padding: 10px 12px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+        }
 
-    .floor-level {
-        background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
-        color: white;
-        font-size: 0.7rem;
-        font-weight: 800;
-        padding: 6px;
-        letter-spacing: 1px;
-    }
+        .header-left { display: flex; align-items: center; }
+        .header-center { display: flex; align-items: center; justify-content: center; }
+        .header-right { display: flex; align-items: center; justify-content: flex-end; }
 
-    .floor-level span {
-        font-size: 1.1rem;
-    }
+        .header-brand {
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--sky-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-    .floor-body {
-        padding: 12px 8px;
-    }
+        .back-btn {
+            background: var(--primary-blue);
+            color: white;
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s;
+        }
 
-    .floor-price-usd {
-        font-size: 1.1rem;
-        font-weight: 900;
-        color: var(--primary-blue);
-        margin-bottom: 2px;
-    }
+        .back-btn:hover {
+            background: var(--electric-blue);
+            transform: translateX(-2px);
+        }
 
-    .floor-price-eth {
-        font-size: 0.65rem;
-        font-weight: 600;
-        color: var(--sky-blue);
-        margin-bottom: 6px;
-    }
+        /* Container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+        }
 
-    .floor-count {
-        font-size: 0.6rem;
-        color: #888;
-        font-weight: 500;
-    }
+        /* Hero */
+        .hero {
+            text-align: center;
+            margin-bottom: 24px;
+        }
 
-    .floor-card.loading .floor-price-usd,
-    .floor-card.loading .floor-price-eth {
-        background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-        border-radius: 4px;
-        color: transparent;
-    }
+        .hero-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 12px;
+            border-radius: 20px;
+            object-fit: cover;
+            box-shadow: 0 10px 30px rgba(0, 82, 255, 0.4);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+        }
 
-    @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-    }
+        .hero-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 15px rgba(0, 82, 255, 0.5);
+            margin-bottom: 6px;
+        }
 
-    /* Warning Box */
-    .warning-box {
-        background: linear-gradient(135deg, #ffebee, #ffcdd2);
-        border: 2px solid var(--danger);
-        border-radius: 12px;
-        padding: 14px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 20px;
-    }
+        .hero-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
 
-    .warning-img {
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
-        border: 2px solid var(--danger);
-        object-fit: cover;
-        flex-shrink: 0;
-    }
+        /* Info Box */
+        .info-box {
+            background: linear-gradient(135deg, rgba(0, 82, 255, 0.15), rgba(0, 180, 255, 0.1));
+            border: 1px solid rgba(0, 180, 255, 0.3);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
 
-    .warning-content {
-        flex: 1;
-    }
+        .info-box-title {
+            color: var(--sky-blue);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
 
-    .warning-title {
-        font-size: 0.8rem;
-        font-weight: 800;
-        color: #c62828;
-        margin-bottom: 4px;
-    }
+        .info-box-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
 
-    .warning-text {
-        font-size: 0.7rem;
-        color: #c62828;
-        line-height: 1.4;
-    }
+        .info-box-text strong {
+            color: var(--success);
+        }
 
-    /* OpenSea Button */
-    .opensea-btn {
-        display: block;
-        background: linear-gradient(135deg, var(--deepest-blue), var(--deep-blue));
-        color: white;
-        text-decoration: none;
-        padding: 14px 20px;
-        border-radius: 12px;
-        font-weight: 800;
-        font-size: 0.9rem;
-        text-align: center;
-        transition: all 0.3s;
-        box-shadow: 0 4px 15px rgba(0, 31, 102, 0.3);
-    }
+        /* Section */
+        .section {
+            margin-bottom: 24px;
+        }
 
-    .opensea-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 31, 102, 0.4);
-        background: linear-gradient(135deg, var(--deep-blue), var(--primary-blue));
-    }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
 
-    /* Last Update */
-    .last-update {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 0.7rem;
-        color: rgba(255, 255, 255, 0.5);
-    }
+        .section-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        }
 
-    /* Error Message */
-    .error-box {
-        background: linear-gradient(135deg, #ffebee, #ffcdd2);
-        border: 2px solid var(--danger);
-        border-radius: 12px;
-        padding: 16px;
-        text-align: center;
-        color: #c62828;
-        font-weight: 600;
-        display: none;
-    }
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+        }
 
-    .error-box.show {
-        display: block;
-    }
+        /* Floor Grid */
+        .floor-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
 
-    /* Version */
-    .version-tag {
-        text-align: center;
-        margin-top: 30px;
-        font-family: monospace;
-        font-size: 0.65rem;
-        color: rgba(255, 255, 255, 0.4);
-    }
+        @media (max-width: 500px) {
+            .floor-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
 
-    /* Spinner */
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+        @media (max-width: 350px) {
+            .floor-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
 
-    .spinner {
-        width: 20px;
-        height: 20px;
-        border: 2px solid rgba(0, 82, 255, 0.2);
-        border-top-color: var(--primary-blue);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin: 10px auto;
-    }
-</style>
-```
+        /* Floor Card */
+        .floor-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            overflow: hidden;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 82, 255, 0.15);
+        }
 
+        .floor-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 82, 255, 0.25);
+        }
+
+        .floor-card.no-data {
+            opacity: 0.5;
+        }
+
+        .floor-level {
+            background: linear-gradient(135deg, var(--primary-blue), var(--electric-blue));
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 6px;
+            letter-spacing: 1px;
+        }
+
+        .floor-level span {
+            font-size: 1.1rem;
+        }
+
+        .floor-body {
+            padding: 12px 8px;
+        }
+
+        .floor-price-usd {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--primary-blue);
+            margin-bottom: 2px;
+        }
+
+        .floor-price-eth {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--sky-blue);
+            margin-bottom: 6px;
+        }
+
+        .floor-count {
+            font-size: 0.6rem;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .floor-card.loading .floor-price-usd,
+        .floor-card.loading .floor-price-eth {
+            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            color: transparent;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Warning Box */
+        .warning-box {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            border: 2px solid var(--danger);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .warning-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            border: 2px solid var(--danger);
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .warning-content {
+            flex: 1;
+        }
+
+        .warning-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #c62828;
+            margin-bottom: 4px;
+        }
+
+        .warning-text {
+            font-size: 0.7rem;
+            color: #c62828;
+            line-height: 1.4;
+        }
+
+        /* OpenSea Button */
+        .opensea-btn {
+            display: block;
+            background: linear-gradient(135deg, var(--deepest-blue), var(--deep-blue));
+            color: white;
+            text-decoration: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 31, 102, 0.3);
+        }
+
+        .opensea-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 31, 102, 0.4);
+            background: linear-gradient(135deg, var(--deep-blue), var(--primary-blue));
+        }
+
+        /* Last Update */
+        .last-update {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Error Message */
+        .error-box {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            border: 2px solid var(--danger);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            color: #c62828;
+            font-weight: 600;
+            display: none;
+        }
+
+        .error-box.show {
+            display: block;
+        }
+
+        /* Version */
+        .version-tag {
+            text-align: center;
+            margin-top: 30px;
+            font-family: monospace;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Spinner */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 82, 255, 0.2);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 10px auto;
+        }
+    </style>
 </head>
 <body>
 
-```
-<!-- Header -->
-<header class="header-bar">
-    <div class="header-left">
-        <a href="index.html" class="back-btn">← Home</a>
-    </div>
-    <div class="header-center">
-        <span class="header-brand">WAST3</span>
-    </div>
-    <div class="header-right"></div>
-</header>
-
-<!-- Main Content -->
-<div class="container">
-
-    <!-- Hero -->
-    <div class="hero">
-        <img src="l5.jpeg" class="hero-icon" alt="Chicken" onerror="this.src='https://placehold.co/80x80/0052FF/ffffff?text=🐔'">
-        <h1 class="hero-title">Chickens by $EGGS</h1>
-        <p class="hero-subtitle">Safe Floor Price by Level</p>
-    </div>
-
-    <!-- Info Box -->
-    <div class="info-box">
-        <div class="info-box-title">🛡️ Safe Listings Only</div>
-        <div class="info-box-text">
-            Showing floor prices from <strong>verified sellers</strong> only.<br>
-            (Neynar Score &gt; 0.69 OR owns Level 3+ Chicken)
+    <!-- Header -->
+    <header class="header-bar">
+        <div class="header-left">
+            <a href="index.html" class="back-btn">← Home</a>
         </div>
-    </div>
+        <div class="header-center">
+            <span class="header-brand">WAST3</span>
+        </div>
+        <div class="header-right"></div>
+    </header>
 
-    <!-- Error Box -->
-    <div id="errorBox" class="error-box"></div>
+    <!-- Main Content -->
+    <div class="container">
 
-    <!-- Floor by Level Section -->
-    <section class="section">
-        <div class="section-header">
-            <div class="section-line"></div>
-            <h2 class="section-title">📊 Floor by Level</h2>
-            <div class="section-line"></div>
+        <!-- Hero -->
+        <div class="hero">
+            <img src="l5.jpeg" class="hero-icon" alt="Chicken" onerror="this.src='https://placehold.co/80x80/0052FF/ffffff?text=🐔'">
+            <h1 class="hero-title">Chickens by $EGGS</h1>
+            <p class="hero-subtitle">Safe Floor Price by Level</p>
         </div>
 
-        <div class="floor-grid" id="floorGrid">
-            <!-- Level 1 -->
-            <div class="floor-card loading" id="card-1">
-                <div class="floor-level">LVL <span>1</span></div>
-                <div class="floor-body">
-                    <div class="floor-price-usd">$--</div>
-                    <div class="floor-price-eth">-- ETH</div>
-                    <div class="floor-count">Loading...</div>
+        <!-- Info Box -->
+        <div class="info-box">
+            <div class="info-box-title">🛡️ Safe Listings Only</div>
+            <div class="info-box-text">
+                Showing floor prices from <strong>verified sellers</strong> only.<br>
+                (Neynar Score &gt; 0.69 OR owns Level 3+ Chicken)
+            </div>
+        </div>
+
+        <!-- Error Box -->
+        <div id="errorBox" class="error-box"></div>
+
+        <!-- Floor by Level Section -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-line"></div>
+                <h2 class="section-title">📊 Floor by Level</h2>
+                <div class="section-line"></div>
+            </div>
+
+            <div class="floor-grid" id="floorGrid">
+                <!-- Level 1 -->
+                <div class="floor-card loading" id="card-1">
+                    <div class="floor-level">LVL <span>1</span></div>
+                    <div class="floor-body">
+                        <div class="floor-price-usd">$--</div>
+                        <div class="floor-price-eth">-- ETH</div>
+                        <div class="floor-count">Loading...</div>
+                    </div>
+                </div>
+                <!-- Level 2 -->
+                <div class="floor-card loading" id="card-2">
+                    <div class="floor-level">LVL <span>2</span></div>
+                    <div class="floor-body">
+                        <div class="floor-price-usd">$--</div>
+                        <div class="floor-price-eth">-- ETH</div>
+                        <div class="floor-count">Loading...</div>
+                    </div>
+                </div>
+                <!-- Level 3 -->
+                <div class="floor-card loading" id="card-3">
+                    <div class="floor-level">LVL <span>3</span></div>
+                    <div class="floor-body">
+                        <div class="floor-price-usd">$--</div>
+                        <div class="floor-price-eth">-- ETH</div>
+                        <div class="floor-count">Loading...</div>
+                    </div>
+                </div>
+                <!-- Level 4 -->
+                <div class="floor-card loading" id="card-4">
+                    <div class="floor-level">LVL <span>4</span></div>
+                    <div class="floor-body">
+                        <div class="floor-price-usd">$--</div>
+                        <div class="floor-price-eth">-- ETH</div>
+                        <div class="floor-count">Loading...</div>
+                    </div>
+                </div>
+                <!-- Level 5 -->
+                <div class="floor-card loading" id="card-5">
+                    <div class="floor-level">LVL <span>5</span></div>
+                    <div class="floor-body">
+                        <div class="floor-price-usd">$--</div>
+                        <div class="floor-price-eth">-- ETH</div>
+                        <div class="floor-count">Loading...</div>
+                    </div>
                 </div>
             </div>
-            <!-- Level 2 -->
-            <div class="floor-card loading" id="card-2">
-                <div class="floor-level">LVL <span>2</span></div>
-                <div class="floor-body">
-                    <div class="floor-price-usd">$--</div>
-                    <div class="floor-price-eth">-- ETH</div>
-                    <div class="floor-count">Loading...</div>
-                </div>
-            </div>
-            <!-- Level 3 -->
-            <div class="floor-card loading" id="card-3">
-                <div class="floor-level">LVL <span>3</span></div>
-                <div class="floor-body">
-                    <div class="floor-price-usd">$--</div>
-                    <div class="floor-price-eth">-- ETH</div>
-                    <div class="floor-count">Loading...</div>
-                </div>
-            </div>
-            <!-- Level 4 -->
-            <div class="floor-card loading" id="card-4">
-                <div class="floor-level">LVL <span>4</span></div>
-                <div class="floor-body">
-                    <div class="floor-price-usd">$--</div>
-                    <div class="floor-price-eth">-- ETH</div>
-                    <div class="floor-count">Loading...</div>
-                </div>
-            </div>
-            <!-- Level 5 -->
-            <div class="floor-card loading" id="card-5">
-                <div class="floor-level">LVL <span>5</span></div>
-                <div class="floor-body">
-                    <div class="floor-price-usd">$--</div>
-                    <div class="floor-price-eth">-- ETH</div>
-                    <div class="floor-count">Loading...</div>
+        </section>
+
+        <!-- Warning Box -->
+        <div class="warning-box">
+            <img src="l0.png" class="warning-img" alt="Red Chicken" onerror="this.src='https://placehold.co/50x50/FF4757/ffffff?text=⚠️'">
+            <div class="warning-content">
+                <div class="warning-title">⚠️ DYOR - Avoid Red Chickens!</div>
+                <div class="warning-text">
+                    Red chickens don't produce $EGGS. Always check traits before buying!
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Warning Box -->
-    <div class="warning-box">
-        <img src="l0.png" class="warning-img" alt="Red Chicken" onerror="this.src='https://placehold.co/50x50/FF4757/ffffff?text=⚠️'">
-        <div class="warning-content">
-            <div class="warning-title">⚠️ DYOR - Avoid Red Chickens!</div>
-            <div class="warning-text">
-                Red chickens don't produce $EGGS. Always check traits before buying!
-            </div>
+        <!-- OpenSea Button -->
+        <a href="https://opensea.io/collection/chickens-by-eggs" target="_blank" class="opensea-btn">
+            🌊 View Full Collection on OpenSea →
+        </a>
+
+        <!-- Last Update -->
+        <div class="last-update" id="lastUpdate">
+            Last updated: --
         </div>
+
+        <!-- Version -->
+        <div class="version-tag">v3.0.1</div>
+
     </div>
 
-    <!-- OpenSea Button -->
-    <a href="https://opensea.io/collection/chickens-by-eggs" target="_blank" class="opensea-btn">
-        🌊 View Full Collection on OpenSea →
-    </a>
+    <!-- JavaScript -->
+    <script type="module">
+        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
-    <!-- Last Update -->
-    <div class="last-update" id="lastUpdate">
-        Last updated: --
-    </div>
+        // Init Farcaster SDK
+        try { await sdk.actions.ready(); } catch(e) {}
 
-    <!-- Version -->
-    <div class="version-tag">v3.0.0</div>
+        // ========================================
+        // FETCH FLOOR DATA
+        // ========================================
+        async function loadFloorData() {
+            const errorBox = document.getElementById('errorBox');
+            const lastUpdate = document.getElementById('lastUpdate');
 
-</div>
+            try {
+                // Call our serverless function
+                const response = await fetch('/api/chickens');
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
 
-<!-- JavaScript -->
-<script type="module">
-    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+                const data = await response.json();
 
-    // Init Farcaster SDK
-    try { await sdk.actions.ready(); } catch(e) {}
+                if (!data.success) {
+                    throw new Error(data.error || 'Unknown error');
+                }
 
-    // ========================================
-    // FETCH FLOOR DATA
-    // ========================================
-    async function loadFloorData() {
-        const errorBox = document.getElementById('errorBox');
-        const lastUpdate = document.getElementById('lastUpdate');
+                const ethPrice = data.eth_price;
+                const statsByLevel = data.stats_by_level;
 
-        try {
-            // Call our serverless function
-            const response = await fetch('/api/chickens');
-            
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status}`);
-            }
+                // Update each level card
+                for (let level = 1; level <= 5; level++) {
+                    const card = document.getElementById(`card-${level}`);
+                    const levelData = statsByLevel[level];
 
-            const data = await response.json();
+                    card.classList.remove('loading');
 
-            if (!data.success) {
-                throw new Error(data.error || 'Unknown error');
-            }
+                    if (levelData && levelData.safe > 0) {
+                        // For now show count until we have floor prices
+                        card.innerHTML = `
+                            <div class="floor-level">LVL <span>${level}</span></div>
+                            <div class="floor-body">
+                                <div class="floor-price-usd">${levelData.safe} safe</div>
+                                <div class="floor-price-eth">of ${levelData.total} total</div>
+                                <div class="floor-count">chickens</div>
+                            </div>
+                        `;
+                    } else {
+                        card.classList.add('no-data');
+                        card.innerHTML = `
+                            <div class="floor-level">LVL <span>${level}</span></div>
+                            <div class="floor-body">
+                                <div class="floor-price-usd">0</div>
+                                <div class="floor-price-eth">safe chickens</div>
+                                <div class="floor-count">found</div>
+                            </div>
+                        `;
+                    }
+                }
 
-            const ethPrice = data.eth_price;
-            const floorByLevel = data.floor_by_level;
+                // Update timestamp
+                const timestamp = new Date(data.timestamp);
+                lastUpdate.textContent = `Last updated: ${timestamp.toLocaleTimeString()}`;
 
-            // Update each level card
-            for (let level = 1; level <= 5; level++) {
-                const card = document.getElementById(`card-${level}`);
-                const levelData = floorByLevel[level];
+                // Hide error box
+                errorBox.classList.remove('show');
 
-                card.classList.remove('loading');
+            } catch (error) {
+                console.error('Load error:', error);
+                
+                // Show error
+                errorBox.textContent = `Failed to load data: ${error.message}`;
+                errorBox.classList.add('show');
 
-                if (levelData) {
-                    const usdPrice = levelData.floor_eth * ethPrice;
-                    
-                    card.innerHTML = `
-                        <div class="floor-level">LVL <span>${level}</span></div>
-                        <div class="floor-body">
-                            <div class="floor-price-usd">$${usdPrice.toFixed(2)}</div>
-                            <div class="floor-price-eth">${levelData.floor_eth.toFixed(4)} ETH</div>
-                            <div class="floor-count">${levelData.count} listed</div>
-                        </div>
-                    `;
-                } else {
+                // Remove loading state
+                for (let level = 1; level <= 5; level++) {
+                    const card = document.getElementById(`card-${level}`);
+                    card.classList.remove('loading');
                     card.classList.add('no-data');
-                    card.innerHTML = `
-                        <div class="floor-level">LVL <span>${level}</span></div>
-                        <div class="floor-body">
-                            <div class="floor-price-usd">--</div>
-                            <div class="floor-price-eth">No listings</div>
-                            <div class="floor-count">0 available</div>
-                        </div>
-                    `;
                 }
             }
-
-            // Update timestamp
-            const timestamp = new Date(data.timestamp);
-            lastUpdate.textContent = `Last updated: ${timestamp.toLocaleTimeString()}`;
-
-            // Hide error box
-            errorBox.classList.remove('show');
-
-        } catch (error) {
-            console.error('Load error:', error);
-            
-            // Show error
-            errorBox.textContent = `Failed to load data: ${error.message}`;
-            errorBox.classList.add('show');
-
-            // Remove loading state
-            for (let level = 1; level <= 5; level++) {
-                const card = document.getElementById(`card-${level}`);
-                card.classList.remove('loading');
-                card.classList.add('no-data');
-            }
         }
-    }
 
-    // ========================================
-    // INIT
-    // ========================================
-    loadFloorData();
+        // ========================================
+        // INIT
+        // ========================================
+        loadFloorData();
 
-    // Auto-refresh every 60 seconds
-    setInterval(loadFloorData, 60000);
-</script>
-```
+        // Auto-refresh every 60 seconds
+        setInterval(loadFloorData, 60000);
+    </script>
 
 </body>
 </html>
