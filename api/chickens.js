@@ -1,54 +1,84 @@
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     
-    const NFTSCAN_API_KEY = process.env.NFTSCAN_API_KEY;
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
+    const BITQUERY_API_KEY = process.env.BITQUERY_API_KEY;
     const CHICKENS_CONTRACT = '0x84eea2be67b17698b0e09b57eeeda47aa921bbf0';
 
-    const results = {};
-
-    // Test 1: Collection info
-    try {
-        const url1 = `https://baseapi.nftscan.com/api/v2/collections/${CHICKENS_CONTRACT}`;
-        const res1 = await fetch(url1, {
-            headers: { 'X-API-KEY': NFTSCAN_API_KEY }
-        });
-        results.collection = await res1.json();
-    } catch (e) {
-        results.collection = { error: e.message };
+    if (!BITQUERY_API_KEY) {
+        return res.status(500).json({ success: false, error: 'BITQUERY_API_KEY not configured' });
     }
 
-    // Test 2: Assets by contract
     try {
-        const url2 = `https://baseapi.nftscan.com/api/v2/assets/${CHICKENS_CONTRACT}?limit=5`;
-        const res2 = await fetch(url2, {
-            headers: { 'X-API-KEY': NFTSCAN_API_KEY }
-        });
-        results.assets = await res2.json();
-    } catch (e) {
-        results.assets = { error: e.message };
-    }
+        // GraphQL query for NFT data on Base
+        const query = `
+        {
+          EVM(dataset: combined, network: base) {
+            Transfers(
+              where: {
+                Transfer: {
+                  Currency: {
+                    SmartContract: {
+                      is: "${CHICKENS_CONTRACT}"
+                    }
+                  }
+                }
+              }
+              limit: {count: 100}
+              orderBy: {descending: Block_Time}
+            ) {
+              Transfer {
+                Currency {
+                  Name
+                  Symbol
+                  SmartContract
+                }
+                Id
+                URI
+              }
+              Transaction {
+                Hash
+              }
+            }
+          }
+        }
+        `;
 
-    // Test 3: Try with show_attribute
-    try {
-        const url3 = `https://baseapi.nftscan.com/api/v2/assets/${CHICKENS_CONTRACT}?show_attribute=true&limit=5`;
-        const res3 = await fetch(url3, {
-            headers: { 'X-API-KEY': NFTSCAN_API_KEY }
+        const response = await fetch('https://streaming.bitquery.io/graphql', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${BITQUERY_API_KEY}`
+            },
+            body: JSON.stringify({ query })
         });
-        results.assets_with_attrs = await res3.json();
-    } catch (e) {
-        results.assets_with_attrs = { error: e.message };
-    }
 
-    // Test 4: Get single NFT
-    try {
-        const url4 = `https://baseapi.nftscan.com/api/v2/assets/${CHICKENS_CONTRACT}/1`;
-        const res4 = await fetch(url4, {
-            headers: { 'X-API-KEY': NFTSCAN_API_KEY }
+        const data = await response.json();
+
+        // Get ETH price
+        let ethPrice = 2500;
+        try {
+            const priceRes = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
+            const priceData = await priceRes.json();
+            ethPrice = parseFloat(priceData.data.amount);
+        } catch (e) {}
+
+        return res.status(200).json({
+            success: true,
+            eth_price: ethPrice,
+            contract: CHICKENS_CONTRACT,
+            bitquery_response: data,
+            timestamp: new Date().toISOString()
         });
-        results.single_nft = await res4.json();
-    } catch (e) {
-        results.single_nft = { error: e.message };
-    }
 
-    return res.status(200).json(results);
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
 };
