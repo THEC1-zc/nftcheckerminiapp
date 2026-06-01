@@ -29,9 +29,24 @@
         padding: 16px;
     }
     .container { max-width: 720px; margin: 0 auto; }
-    .topbar { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom: 16px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 16px; }
+    .brand-wrap { display:flex; align-items:center; gap:8px; }
     .topbar img { width:32px; height:32px; border-radius:8px; }
     .topbar .brand { color:#fff; font-weight:900; letter-spacing:2px; font-size:1.1rem; }
+    .actions { display:flex; align-items:center; gap:8px; position:relative; }
+    .hbtn { padding:8px 13px; border-radius:10px; font-weight:800; font-size:0.82rem; cursor:pointer;
+        border:none; white-space:nowrap; }
+    .hbtn:disabled { opacity:0.6; cursor:not-allowed; }
+    .hbtn.tip { background: rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.2); }
+    .hbtn.tip:hover { background: rgba(255,255,255,0.2); }
+    .hbtn.wallet { background:#fff; color:var(--primary-blue); }
+    .hbtn.wallet.connected { background: rgba(0,217,163,0.18); color:#fff; border:1px solid var(--success); }
+    .wallet-menu { position:absolute; top:115%; right:0; background:#fff; border:1px solid var(--card-border);
+        border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.25); padding:6px; display:none; z-index:20; min-width:150px; }
+    .wallet-menu.open { display:block; }
+    .wallet-menu button { width:100%; padding:8px 10px; border:none; background:none; text-align:left;
+        font-weight:700; font-size:0.85rem; color:var(--danger); cursor:pointer; border-radius:8px; }
+    .wallet-menu button:hover { background: rgba(255,71,87,0.08); }
     .hero { text-align:center; margin-bottom: 20px; }
     .hero h1 { color:#fff; font-size:1.8rem; font-weight:900; }
     .hero p { color: var(--sky-blue); font-size:0.9rem; margin-top:4px; }
@@ -132,8 +147,17 @@
 <body>
 <div class="container">
     <div class="topbar">
-        <img src="icon.png" alt="WAST3">
-        <span class="brand">WAST3</span>
+        <div class="brand-wrap">
+            <img src="icon.png" alt="WAST3">
+            <span class="brand">WAST3</span>
+        </div>
+        <div class="actions">
+            <button id="btnTip" class="hbtn tip">🎁 Tip 1 USDC</button>
+            <button id="btnWallet" class="hbtn wallet">Connect</button>
+            <div class="wallet-menu" id="walletMenu">
+                <button id="btnDisconnect">⏏ Disconnect</button>
+            </div>
+        </div>
     </div>
 
     <div class="hero">
@@ -219,6 +243,13 @@
     const MORALIS_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImMzYWFkNmIxLTUyYjMtNGNkZC1iZjBkLTE4MWM0ZDY1MTkzMiIsIm9yZ0lkIjoiNDkwNDE4IiwidXNlcklkIjoiNTA0NTc3IiwidHlwZUlkIjoiNTQwNjExMjgtMzY3Zi00MDQyLWE1NDItODdjMzlkODkxMDkzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3Njg0MTI5MjMsImV4cCI6NDkyNDE3MjkyM30.wKcFrQ_mjxCe_bu1ylkPBb_VvQlBnkTklNggqmom1UU';
     const BASE = 'https://deep-index.moralis.io/api/v2.2';
     const CHAIN = 'base';
+
+    // Tip config (Base)
+    const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+    const TIP_TO = '0xFd144C774582a450a3F578ae742502ff11Ff92Df';
+    const TIP_AMOUNT = '1000000'; // 1 USDC (6 decimals)
+    const BASE_HEX = '0x2105';
+    let connectedWallet = null;
 
     // Prefill from ?token= / ?wallet= or saved wallet
     const params = new URLSearchParams(location.search);
@@ -416,6 +447,48 @@
     }
 
     // ---- Connected wallet (Farcaster) ----
+    const shortAddr = a => a.slice(0,6) + '…' + a.slice(-4);
+
+    function setConnected(addr) {
+        connectedWallet = addr;
+        const b = $('btnWallet');
+        b.textContent = shortAddr(addr);
+        b.classList.add('connected');
+        localStorage.setItem('tysm_wallet', addr);
+        $('walletInput').value = addr;
+        loadTokens(addr);
+    }
+
+    function setDisconnected() {
+        connectedWallet = null;
+        const b = $('btnWallet');
+        b.textContent = 'Connect';
+        b.classList.remove('connected');
+        localStorage.removeItem('tysm_wallet');
+        $('walletMenu').classList.remove('open');
+    }
+
+    async function connectWallet() {
+        const b = $('btnWallet');
+        b.disabled = true;
+        try {
+            const provider = await sdk.wallet.getEthereumProvider();
+            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            if (accounts && accounts[0]) setConnected(accounts[0]);
+        } catch (e) {
+            const saved = localStorage.getItem('tysm_wallet');
+            if (saved) setConnected(saved);
+            else alert('Could not connect wallet. Open this inside Farcaster.');
+        }
+        b.disabled = false;
+    }
+
+    function onWalletClick() {
+        if (connectedWallet) $('walletMenu').classList.toggle('open');
+        else connectWallet();
+    }
+
+    // Inline "use my wallet" button — same connect flow
     async function useMyWallet() {
         const btn = $('btnUseWallet');
         btn.disabled = true;
@@ -430,15 +503,40 @@
             addr = localStorage.getItem('tysm_wallet') || '';
         }
         if (addr) {
-            $('walletInput').value = addr;
-            localStorage.setItem('tysm_wallet', addr);
-            loadTokens(addr);
-            btn.innerText = '✅ ' + addr.slice(0,6) + '…' + addr.slice(-4);
-            setTimeout(() => { btn.innerText = orig; btn.disabled = false; }, 1800);
+            setConnected(addr);
+            btn.innerText = '✅ ' + shortAddr(addr);
         } else {
             btn.innerText = '❌ No wallet found';
-            setTimeout(() => { btn.innerText = orig; btn.disabled = false; }, 1800);
         }
+        setTimeout(() => { btn.innerText = orig; btn.disabled = false; }, 1800);
+    }
+
+    // ---- Tip 1 USDC on Base ----
+    async function sendTip() {
+        const btn = $('btnTip');
+        const orig = btn.textContent;
+        btn.disabled = true;
+        try {
+            const provider = await sdk.wallet.getEthereumProvider();
+            let from = connectedWallet;
+            if (!from) {
+                const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                from = accounts && accounts[0];
+                if (from) setConnected(from);
+            }
+            if (!from) throw new Error('no wallet');
+            try { await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_HEX }] }); } catch (e) {}
+            const to = TIP_TO.toLowerCase().replace('0x', '').padStart(64, '0');
+            const amt = BigInt(TIP_AMOUNT).toString(16).padStart(64, '0');
+            const data = '0xa9059cbb' + to + amt;
+            btn.textContent = '⏳ Sending…';
+            await provider.request({ method: 'eth_sendTransaction', params: [{ from, to: USDC, data, value: '0x0' }] });
+            btn.textContent = '✅ Thank you!';
+        } catch (e) {
+            console.error('tip', e);
+            btn.textContent = '❌ Failed';
+        }
+        setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
     }
 
     // ---- Owned tokens dropdown (value > $1) ----
@@ -468,6 +566,9 @@
         }
     }
 
+    $('btnWallet').addEventListener('click', onWalletClick);
+    $('btnDisconnect').addEventListener('click', setDisconnected);
+    $('btnTip').addEventListener('click', sendTip);
     $('btnUseWallet').addEventListener('click', useMyWallet);
     $('tokenSelect').addEventListener('change', e => {
         if (e.target.value) $('tokenInput').value = e.target.value;
@@ -476,8 +577,13 @@
         const w = e.target.value.trim();
         if (/^0x[a-f0-9]{40}$/i.test(w)) loadTokens(w);
     });
-    // auto-load tokens if a wallet is already prefilled
-    if (savedWallet && /^0x[a-f0-9]{40}$/i.test(savedWallet)) loadTokens(savedWallet);
+    // close wallet menu on outside click
+    document.addEventListener('click', e => {
+        const actions = document.querySelector('.actions');
+        if (actions && !actions.contains(e.target)) $('walletMenu').classList.remove('open');
+    });
+    // reflect a previously-saved/prefilled wallet as connected
+    if (savedWallet && /^0x[a-f0-9]{40}$/i.test(savedWallet)) setConnected(savedWallet);
 
     $('btnCsv').addEventListener('click', downloadCsv);
     $('btnRun').addEventListener('click', run);
